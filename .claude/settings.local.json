@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"^local function UpdatePreview\\\\|^\\\\tUpdateMacroNameDefault\\(\\)$\\\\|f.pickup:SetPoint\" UI.lua)"
+    ]
+  }
+}

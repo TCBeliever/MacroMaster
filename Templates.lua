@@ -175,6 +175,7 @@ function ns.InitDB()
 	db.templates = db.templates or {}
 	db.settings  = db.settings or { pickup = true, scope = "account" }
 	db.settings.sort = db.settings.sort or "created"
+	db.icons = db.icons or {}          -- template id -> macro icon fileID chosen by the user
 	if not db.seeded then
 		for _, t in ipairs(ns.builtinTemplates) do
 			db.templates[#db.templates + 1] = CopyTemplate(t)

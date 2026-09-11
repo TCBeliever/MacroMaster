@@ -76,6 +76,37 @@ function ns.ScanBags()
 end
 
 -- ---------------------------------------------------------------------------
+-- Macro icon scan: every icon an existing macro uses, once each, named after
+-- the first macro that uses it (others are listed in the tooltip).
+-- ---------------------------------------------------------------------------
+
+local macroIcons = {}
+local MC = Constants and Constants.MacroConsts
+local MAX_ACCOUNT = (MC and MC.MAX_ACCOUNT_MACROS) or _G.MAX_ACCOUNT_MACROS or 120
+
+function ns.ScanMacroIcons()
+	wipe(macroIcons)
+	local byIcon = {}
+	local numAccount, numChar = GetNumMacros()
+	local function add(index)
+		local name, icon = GetMacroInfo(index)
+		if not name or not icon then return end
+		local e = byIcon[icon]
+		if e then
+			e.name = e.name .. ", " .. name
+		else
+			e = { id = icon, name = name, icon = icon, iconEntry = true }
+			byIcon[icon] = e
+			macroIcons[#macroIcons + 1] = e
+		end
+	end
+	for i = 1, numAccount do add(i) end
+	for i = MAX_ACCOUNT + 1, MAX_ACCOUNT + numChar do add(i) end
+	table.sort(macroIcons, function(a, b) return a.name < b.name end)
+	return macroIcons
+end
+
+-- ---------------------------------------------------------------------------
 -- Picker frame: search box + icon grid. ns.ShowSpellPicker(anchor, callback)
 -- and ns.ShowItemPicker(anchor, callback) share it; entries are
 -- { id, name, icon, item=true|nil } and the callback gets (name, spellID, itemID).
@@ -147,7 +178,9 @@ local function CreatePicker()
 		b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 		b:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			if self.isItem then GameTooltip:SetItemByID(self.entryID) else GameTooltip:SetSpellByID(self.entryID) end
+			if self.isIcon then GameTooltip:SetText(self.entryName, 1, 1, 1)
+			elseif self.isItem then GameTooltip:SetItemByID(self.entryID)
+			else GameTooltip:SetSpellByID(self.entryID) end
 			GameTooltip:Show()
 		end)
 		b:SetScript("OnLeave", GameTooltip_Hide)
@@ -180,7 +213,7 @@ local function CreatePicker()
 		for i, s in ipairs(shown) do
 			n = n + 1
 			local b = self:GetButton(n)
-			b.entryID, b.entryName, b.isItem = s.id, s.name, s.item and true or false
+			b.entryID, b.entryName, b.isItem, b.isIcon = s.id, s.name, s.item and true or false, s.iconEntry and true or false
 			b.icon:SetTexture(s.icon)
 			local col, row = (i - 1) % COLS, math.floor((i - 1) / COLS)
 			b:ClearAllPoints()
@@ -197,7 +230,9 @@ local function CreatePicker()
 		if self.suggestions and #self.suggestions > 0 then
 			n, y = LayoutSection(self, 1, self.suggestionTitle, self.suggestions, filter, n, y)
 		end
-		if self.itemMode then
+		if self.iconMode then
+			n, y = LayoutSection(self, 2, L["Icons of your macros"], macroIcons, filter, n, y)
+		elseif self.itemMode then
 			n, y = LayoutSection(self, 2, L["Bag items"], bagItems, filter, n, y)
 		else
 			n, y = LayoutSection(self, 2, L["Class spells"], classSpells, filter, n, y)
@@ -208,8 +243,8 @@ local function CreatePicker()
 	end
 
 	f:SetScript("OnShow", function(self)
-		if self.itemMode then ns.ScanBags() else ns.ScanSpellBook() end
-		self.title:SetText(self.itemMode and L["Item picker"] or L["Spell picker"])
+		if self.iconMode then ns.ScanMacroIcons() elseif self.itemMode then ns.ScanBags() else ns.ScanSpellBook() end
+		self.title:SetText(self.iconMode and L["Icon picker"] or self.itemMode and L["Item picker"] or L["Spell picker"])
 		self.search:SetText("")
 		self:Refresh()
 		self.search:SetFocus()
@@ -238,7 +273,7 @@ end
 function ns.ShowSpellPicker(anchor, callback, category)
 	picker = picker or CreatePicker()
 	picker.callback = callback
-	picker.itemMode = false
+	picker.itemMode, picker.iconMode = false, false
 	picker.suggestions = nil
 	if category and ns.ResolveSuggestions then
 		picker.suggestions = ns.ResolveSuggestions(category, true)
@@ -252,7 +287,7 @@ end
 function ns.ShowItemPicker(anchor, callback, category)
 	picker = picker or CreatePicker()
 	picker.callback = callback
-	picker.itemMode = true
+	picker.itemMode, picker.iconMode = true, false
 	picker.suggestions = nil
 	if category and ns.ResolveItemSuggestions then
 		picker.suggestions = ns.ResolveItemSuggestions(category)
@@ -263,4 +298,13 @@ end
 
 function ns.HideSpellPicker()
 	if picker then picker:Hide() end
+end
+
+-- Same grid showing the icons your existing macros use. callback(macroNames, fileID).
+function ns.ShowIconPicker(anchor, callback)
+	picker = picker or CreatePicker()
+	picker.callback = callback
+	picker.itemMode, picker.iconMode = false, true
+	picker.suggestions = nil
+	OpenPicker(anchor)
 end

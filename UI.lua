@@ -313,6 +313,15 @@ local function UpdateMacroNameDefault()
 	main.macroName:SetText(candidate)
 end
 
+-- Icon the user picked for the current template (ns.db.icons), or nil.
+local function ChosenIcon()
+	return state.templateID and ns.db.icons and ns.db.icons[state.templateID] or nil
+end
+
+local function UpdateIconButton()
+	if main.iconBtn then main.iconBtn.icon:SetTexture(ChosenIcon() or QUESTION_ICON) end
+end
+
 local function UpdatePreview()
 	local variants = ExpandVariants()
 	local base = strtrim(main.macroName:GetText())
@@ -344,6 +353,7 @@ local function UpdatePreview()
 		if t then t:SetTextColor(single and 1 or 0.5, single and 0.82 or 0.5, single and 0 or 0.5) end
 	end
 	UpdateMacroNameDefault()
+	UpdateIconButton()
 end
 
 local function RefreshRows()
@@ -622,14 +632,16 @@ end
 -- Create the macro
 -- ---------------------------------------------------------------------------
 
-local function WriteMacro(name, body, perChar, overwriteIndex, noPickup)
+-- icon: fileID the user picked for this template, or nil (new macro: question
+-- mark; overwrite: the macro keeps the icon it has)
+local function WriteMacro(name, body, perChar, overwriteIndex, noPickup, icon)
 	local index
 	if overwriteIndex then
-		EditMacro(overwriteIndex, name, nil, body)
+		EditMacro(overwriteIndex, name, icon, body)
 		index = overwriteIndex
 		Msg(L["MSG_UPDATED"], name)
 	else
-		index = CreateMacro(name, QUESTION_ICON, body, perChar)
+		index = CreateMacro(name, icon or QUESTION_ICON, body, perChar)
 		Msg(L["MSG_CREATED"], name)
 	end
 	if index and ns.db.settings.pickup and not noPickup then
@@ -645,12 +657,12 @@ local function OpenMacroFrame()
 	end
 end
 
--- jobs = { {name=, body=, index=|nil}, ... }
+-- jobs = { {name=, body=, index=|nil, icon=|nil}, ... }
 local function WriteJobs(jobs, perChar)
 	local single = #jobs == 1
 	local pickup = single and ns.db.settings.pickup
 	for _, j in ipairs(jobs) do
-		WriteMacro(j.name, j.body, perChar, j.index, not pickup)
+		WriteMacro(j.name, j.body, perChar, j.index, not pickup, j.icon)
 	end
 	if not single then Msg(L["MSG_BATCH_DONE"], #jobs) end
 	-- nothing on the cursor -> let the user drag from the macro window
@@ -699,7 +711,7 @@ local function CreateMacroFromState()
 	for _, v in ipairs(variants) do
 		local n = MacroNameFor(name, v.suffix)
 		local existing = GetMacroIndexByName(n)
-		local job = { name = n, body = v.body, index = (existing and existing > 0) and existing or nil }
+		local job = { name = n, body = v.body, index = (existing and existing > 0) and existing or nil, icon = ChosenIcon() }
 		jobs[#jobs + 1] = job
 		if job.index then overwrite[#overwrite + 1] = n end
 	end
@@ -873,8 +885,37 @@ local function CreateMain()
 	-- ===== create =======================================================
 	local cl = Label(f, L["Macro name"], "GameFontNormalSmall")
 	cl:SetPoint("TOPLEFT", rx, -(H - 80))
+	-- macro icon: left-click picks one of the icons your macros already use,
+	-- right-click goes back to the default question mark
+	f.iconBtn = CreateFrame("Button", nil, f)
+	f.iconBtn:SetSize(26, 26)
+	f.iconBtn:SetPoint("TOPLEFT", rx, -(H - 68))
+	f.iconBtn.icon = f.iconBtn:CreateTexture(nil, "ARTWORK")
+	f.iconBtn.icon:SetAllPoints()
+	f.iconBtn.icon:SetTexture(QUESTION_ICON)
+	f.iconBtn:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	f.iconBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	f.iconBtn:SetScript("OnClick", function(self, button)
+		if not state.templateID then return end
+		if button == "RightButton" then
+			ns.db.icons[state.templateID] = nil
+			UpdateIconButton()
+		else
+			ns.ShowIconPicker(f, function(_, fileID)
+				ns.db.icons[state.templateID] = fileID
+				UpdateIconButton()
+			end)
+		end
+	end)
+	f.iconBtn:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L["Macro icon"], 1, 1, 1)
+		GameTooltip:AddLine(L["ICON_HELP"], nil, nil, nil, true)
+		GameTooltip:Show()
+	end)
+	f.iconBtn:SetScript("OnLeave", GameTooltip_Hide)
 	f.macroName = EditBox(f, 150, MACRO_NAME_MAX)
-	f.macroName:SetPoint("TOPLEFT", rx + 6, -(H - 66))
+	f.macroName:SetPoint("TOPLEFT", rx + 6 + 30, -(H - 66))
 	f.macroName:SetScript("OnTextChanged", function(self, userInput)
 		if userInput then
 			state.nameTouched = true
@@ -904,7 +945,7 @@ local function CreateMain()
 
 	f.pickup = CreateFrame("CheckButton", "MacroMasterPickup", f, "UICheckButtonTemplate")
 	f.pickup:SetSize(24, 24)
-	f.pickup:SetPoint("TOPLEFT", f.macroName, "BOTTOMLEFT", -4, -4)
+	f.pickup:SetPoint("TOPLEFT", f.iconBtn, "BOTTOMLEFT", -4, -4)
 	radioText(f.pickup):SetText(L["Pick up after creating"])
 	f.pickup:SetScript("OnClick", function(self) ns.db.settings.pickup = self:GetChecked() and true or false end)
 	f.pickup:SetScript("OnEnter", function(self)
