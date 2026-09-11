@@ -466,7 +466,13 @@ local function RefreshRows()
 			if m and m.multi then state.values[key] = ALL
 			elseif m and m.default then state.values[key] = m.default
 			-- item placeholders start with the best suggested item in the bags
-			elseif itemCat then state.values[key] = ns.BestItemForCategory(itemCat) end
+			elseif itemCat then state.values[key] = ns.BestItemForCategory(itemCat)
+			-- categorised spell placeholders with the first suggestion this character knows
+			elseif not (m and (m.options or m.text)) then
+				local cat = ns.CategoryForKey(key, m)
+				local first = cat and ns.ResolveSuggestions(cat, true)[1]
+				if first then state.values[key] = first.name end
+			end
 		end
 		r.edit:SetText(state.values[key] or "")
 		-- placeholders with fixed options get a dropdown instead of the spell picker
@@ -1014,6 +1020,7 @@ local function CreateMain()
 	ShowPage(1)
 
 	f:SetScript("OnShow", function(self)
+		ns.ScanSpellBook()   -- suggestions are filtered to known spells
 		LoadValues()
 		self.pickup:SetChecked(ns.db.settings.pickup)
 		self.scope:Refresh()

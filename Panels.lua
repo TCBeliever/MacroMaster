@@ -184,56 +184,77 @@ end)
 local defaultsPanel
 function ns.ShowDefaultsPanel(parent)
 	if not defaultsPanel then
-		local f = Popup("MacroMasterDefaults", 660, 500, L["Default templates"])
+		local W, H = 720, 540
+		local f = Popup("MacroMasterDefaults", W, H, L["Default templates"])
+		f.filter = "REC"
+
+		-- filter row: recommended for this class / all / one category
+		f.tabs = {}
+		local filters = { "REC", "ALL" }
+		for _, c in ipairs(ns.templateCategories) do filters[#filters + 1] = c end
+		local prev
+		for i, key in ipairs(filters) do
+			local btn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+			btn:SetSize(60, 22)
+			btn.filter = key
+			if i == 1 then btn:SetPoint("TOPLEFT", 14, -38) else btn:SetPoint("LEFT", prev, "RIGHT", 4, 0) end
+			btn:SetScript("OnClick", function(self) f.filter = self.filter; f.selected = nil; f:Refresh() end)
+			f.tabs[i] = btn
+			prev = btn
+		end
+
 		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-		f.intro:SetPoint("TOPLEFT", 16, -36)
-		f.intro:SetWidth(628)
+		f.intro:SetPoint("TOPLEFT", 16, -68)
+		f.intro:SetWidth(W - 32)
 		f.intro:SetJustifyH("LEFT")
 		f.intro:SetText(L["DEFAULTS_INTRO"])
 
-		-- left: list of shipped templates
+		-- left: list
 		local listBox = InsetBox(f)
-		listBox:SetPoint("TOPLEFT", 14, -86)
-		listBox:SetSize(210, 500 - 86 - 50)
+		listBox:SetPoint("TOPLEFT", 14, -104)
+		listBox:SetSize(240, H - 104 - 50)
 		f.scroll = CreateFrame("ScrollFrame", nil, listBox, "UIPanelScrollFrameTemplate")
 		f.scroll:SetPoint("TOPLEFT", 6, -6)
 		f.scroll:SetPoint("BOTTOMRIGHT", -26, 6)
 		f.content = CreateFrame("Frame", nil, f.scroll)
-		f.content:SetSize(170, 10)
+		f.content:SetSize(200, 10)
 		f.scroll:SetScrollChild(f.content)
 		f.buttons = {}
 
 		-- right: read-only preview
 		f.pname = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 		f.pname:SetPoint("TOPLEFT", listBox, "TOPRIGHT", 12, -2)
-		f.pname:SetWidth(400)
+		f.pname:SetWidth(W - 240 - 14 - 12 - 14)
 		f.pname:SetJustifyH("LEFT")
 		f.pdesc = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		f.pdesc:SetPoint("TOPLEFT", f.pname, "BOTTOMLEFT", 0, -4)
-		f.pdesc:SetWidth(400)
+		f.pdesc:SetWidth(W - 240 - 14 - 12 - 14)
 		f.pdesc:SetJustifyH("LEFT")
-		f.pdesc:SetHeight(64)
+		f.pdesc:SetHeight(56)
 		f.pdesc:SetJustifyV("TOP")
 		local bodyBox = InsetBox(f)
 		bodyBox:SetPoint("TOPLEFT", f.pdesc, "BOTTOMLEFT", -6, -6)
-		bodyBox:SetPoint("BOTTOMRIGHT", -14, 72)
+		bodyBox:SetPoint("BOTTOMRIGHT", -14, 96)
 		f.bodyScroll = CreateFrame("ScrollFrame", nil, bodyBox, "UIPanelScrollFrameTemplate")
 		f.bodyScroll:SetPoint("TOPLEFT", 8, -8)
 		f.bodyScroll:SetPoint("BOTTOMRIGHT", -26, 8)
 		f.bodyContent = CreateFrame("Frame", nil, f.bodyScroll)
-		f.bodyContent:SetSize(370, 10)
+		f.bodyContent:SetSize(400, 10)
 		f.bodyScroll:SetScrollChild(f.bodyContent)
 		f.pbody = f.bodyContent:CreateFontString(nil, "OVERLAY", "ChatFontNormal")
 		f.pbody:SetPoint("TOPLEFT")
-		f.pbody:SetWidth(370)
+		f.pbody:SetWidth(400)
 		f.pbody:SetJustifyH("LEFT")
-		f.status = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+		f.status = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		f.status:SetPoint("TOPLEFT", bodyBox, "BOTTOMLEFT", 2, -6)
-		f.status:SetWidth(400)
+		f.status:SetWidth(W - 240 - 14 - 12 - 14)
 		f.status:SetJustifyH("LEFT")
+		f.status:SetHeight(40)
+		f.status:SetJustifyV("TOP")
 
+		-- actions
 		f.add = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.add:SetSize(180, 22)
+		f.add:SetSize(160, 22)
 		f.add:SetPoint("BOTTOMLEFT", listBox, "BOTTOMRIGHT", 12, 0)
 		f.add:SetText(L["Add to my templates"])
 		Fit(f.add)
@@ -251,21 +272,64 @@ function ns.ShowDefaultsPanel(parent)
 			end
 		end)
 
+		f.addRec = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.addRec:SetSize(160, 22)
+		f.addRec:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
+		f.addRec:SetText(L["Add all recommended"])
+		Fit(f.addRec)
+		f.addRec:SetScript("OnClick", function()
+			local n = ns.AddRecommended()
+			ns.ReselectTemplate()
+			ns.Msg(L["MSG_RECOMMENDED_ADDED"], n)
+			f:Refresh()
+		end)
+
 		f.reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.reset:SetSize(180, 22)
+		f.reset:SetSize(160, 22)
 		f.reset:SetPoint("BOTTOMRIGHT", -14, 14)
 		f.reset:SetText(L["Reset all to defaults"])
 		Fit(f.reset)
 		f.reset:SetScript("OnClick", function() StaticPopup_Show("MACROMASTER_RESET_ALL") end)
 
 		function f:Refresh()
-			local list = ns.builtinTemplates
-			if not self.selected then self.selected = list[1] and list[1].id end
+			local className = UnitClass("player")
+			for _, btn in ipairs(self.tabs) do
+				local key = btn.filter
+				btn:SetText(key == "REC" and string.format(L["Recommended for %s"], className)
+					or key == "ALL" and L["All"] or L["TCAT_" .. key])
+				Fit(btn)
+				btn:SetEnabled(key ~= self.filter)
+			end
+
+			-- which shipped templates this view lists
+			local rec = ns.RecommendedTemplates()
+			local recIndex = {}
+			for i, id in ipairs(rec) do recIndex[id] = i end
+			local list = {}
+			if self.filter == "REC" then
+				for _, id in ipairs(rec) do list[#list + 1] = ns.ShippedTemplate(id) end
+			else
+				for i, b in ipairs(ns.builtinTemplates) do
+					if self.filter == "ALL" or b.cat == self.filter then
+						list[#list + 1] = b
+						b.fits = ns.TemplateFitsClass(b)
+						b.order = i
+					end
+				end
+				-- what fits this class first, shipped order otherwise
+				table.sort(list, function(x, y)
+					if x.fits ~= y.fits then return x.fits end
+					return x.order < y.order
+				end)
+			end
+			if not self.selected or not ns.ShippedTemplate(self.selected) then self.selected = list[1] and list[1].id end
+
+			local known = ns.db.knownBuiltins or {}
 			for i, b in ipairs(list) do
 				local btn = self.buttons[i]
 				if not btn then
 					btn = CreateFrame("Button", nil, self.content)
-					btn:SetSize(170, 22)
+					btn:SetSize(200, 22)
 					btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 					btn.text:SetPoint("LEFT", 6, 0)
 					btn.text:SetPoint("RIGHT", -4, 0)
@@ -280,7 +344,10 @@ function ns.ShowDefaultsPanel(parent)
 				end
 				btn.templateID = b.id
 				local mine = ns.FindTemplate(b.id)
-				btn.text:SetText((mine and "" or "|cffffd100+|r ") .. b.name)
+				local fits = ns.TemplateFitsClass(b)
+				local name = fits and b.name or ("|cff808080" .. b.name .. "|r")
+				local tag = (not known[b.id]) and (" |cff40ff40" .. L["NEW"] .. "|r") or ""
+				btn.text:SetText((mine and "   " or "|cffffd100+|r ") .. name .. tag)
 				btn.sel:SetShown(b.id == self.selected)
 				btn:ClearAllPoints()
 				btn:SetPoint("TOPLEFT", 0, -(i - 1) * 22)
@@ -291,24 +358,29 @@ function ns.ShowDefaultsPanel(parent)
 
 			local b = self.selected and ns.ShippedTemplate(self.selected)
 			if b then
-				self.pname:SetText(b.name)
+				self.pname:SetText(b.name .. "  |cff808080" .. L["TCAT_" .. (b.cat or "CORE")] .. "|r")
 				self.pdesc:SetText(b.desc or "")
 				self.pbody:SetText(b.body)
 				self.bodyContent:SetHeight(self.pbody:GetStringHeight() + 10)
 				local mine = ns.FindTemplate(b.id)
-				if not mine then
-					self.status:SetText(L["(not in your list)"])
-				elseif mine.body == b.body then
-					self.status:SetText(L["(in your list, unchanged)"])
-				else
-					self.status:SetText(L["(in your list, edited)"])
-				end
+				local lines = {}
+				if not mine then lines[1] = L["(not in your list)"]
+				elseif mine.body == b.body then lines[1] = L["(in your list, unchanged)"]
+				else lines[1] = L["(in your list, edited)"] end
+				if recIndex[b.id] then lines[#lines + 1] = string.format(L["Recommended for %s"], className) .. "." end
+				if not ns.TemplateFitsClass(b) then lines[#lines + 1] = "|cff808080" .. string.format(L["FIT_NO"], className) .. "|r" end
+				self.status:SetText(table.concat(lines, "\n"))
 			else
 				self.pname:SetText(""); self.pdesc:SetText(""); self.pbody:SetText(""); self.status:SetText("")
 			end
+			local missing = 0
+			for _, id in ipairs(rec) do if not ns.FindTemplate(id) then missing = missing + 1 end end
+			self.addRec:SetEnabled(missing > 0)
 		end
 
 		f:SetScript("OnShow", f.Refresh)
+		-- everything shown once is no longer "new"
+		f:SetScript("OnHide", function() ns.MarkBuiltinsKnown(); if ns.RefreshSettingsPage then ns.RefreshSettingsPage() end end)
 		defaultsPanel = f
 		function ns.RefreshDefaultsPanel() if defaultsPanel:IsShown() then defaultsPanel:Refresh() end end
 	end
@@ -597,6 +669,10 @@ function ns.BuildSettingsPage(f, main)
 
 	function f:Refresh()
 		for _, r in ipairs(self.radios) do r:SetChecked(r.code == ns.db.settings.locale) end
+		local n = ns.NewBuiltinCount()
+		f.defaults:SetText(n > 0 and string.format(L["Default templates (%d new)"], n) or L["Default templates"])
+		Fit(f.defaults)
 	end
 	f:SetScript("OnShow", f.Refresh)
+	ns.RefreshSettingsPage = function() if f:IsShown() then f:Refresh() end end
 end

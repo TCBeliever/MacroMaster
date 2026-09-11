@@ -44,6 +44,10 @@ local function PX(label, hint, extra)
 	local m = P(label, hint, extra.options)
 	for k, v in pairs(extra) do m[k] = v end
 	if m.defaultKey then m.default = L[m.defaultKey] end
+	if m.labelKeys then
+		m.labels = {}
+		for i, k in ipairs(m.labelKeys) do m.labels[i] = L[k] end
+	end
 	return m
 end
 
@@ -111,8 +115,11 @@ ns.builtinTemplates = {
 		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
 
 	B("trinket_spell", "T_TRINKET_SPELL", "T_TRINKET_SPELL_D",
-		"#showtooltip {CD}\n/use 13\n/cast {CD}",
-		{ CD = P("P_CD", "P_CD_H") }),
+		"#showtooltip {CD}\n/use {TRINKET}\n/cast {CD}",
+		{
+			CD      = P("P_CD", "P_CD_H"),
+			TRINKET = PX("P_TRINKET", "P_TRINKET_H", { options = { "13", "14" }, labelKeys = { "TRINKET_13", "TRINKET_14" }, default = "13" }),
+		}),
 
 	B("set_focus", "T_SET_FOCUS", "T_SET_FOCUS_D",
 		"/focus\n/tm [@focus] ~{MARK}\n/mmfocus {MSG} {rt{MARK}}",
@@ -155,7 +162,149 @@ ns.builtinTemplates = {
 			HEALTHSTONE = PX("P_HEALTHSTONE", "P_HEALTHSTONE_H", { optional = true, token = true }),
 			POTION      = PX("P_POTION", "P_POTION_H", { optional = true, token = true }),
 		}),
+
+	-- Modifier clauses are tokens too: an empty {CTRL} takes its "[mod:ctrl] ...;"
+	-- clause away, so the same template serves two or three spells.
+	B("mod2", "T_MOD2", "T_MOD2_D",
+		"#showtooltip\n/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}",
+		{
+			CTRL  = PX("P_CTRL", "P_CTRL_H", { optional = true, token = true, noname = true }),
+			SHIFT = PX("P_SHIFT", "P_SHIFT_H", { optional = true, token = true, noname = true }),
+			SPELL = P("P_SPELL", "P_SPELL_H"),
+		}),
+
+	B("selfcast", "T_SELFCAST", "T_SELFCAST_D",
+		"#showtooltip\n/cast [@player] {SPELL}",
+		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
+
+	B("cancel_cast", "T_CANCEL_CAST", "T_CANCEL_CAST_D",
+		"#showtooltip {SPELL}\n/cancelaura {AURA}\n/cast {SPELL}",
+		{ SPELL = P("P_SPELL", "P_SPELL_H"), AURA = P("P_AURA", "P_AURA_H") }),
+
+	B("focus_external", "T_FOCUS_EXTERNAL", "T_FOCUS_EXTERNAL_D",
+		"#showtooltip\n/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}",
+		{ EXTERNAL = P("P_EXTERNAL", "P_EXTERNAL_H") }),
+
+	B("mouseover_altfocus", "T_MOUSEOVER_ALTFOCUS", "T_MOUSEOVER_ALTFOCUS_D",
+		"#showtooltip\n/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}",
+		{ HARM = P("P_HARM", "P_HARM_H") }),
+
+	B("combat_switch", "T_COMBAT_SWITCH", "T_COMBAT_SWITCH_D",
+		"#showtooltip\n/cast [combat] {INCOMBAT}; {SPELL}",
+		{ INCOMBAT = PX("P_INCOMBAT", "P_INCOMBAT_H", { noname = true }), SPELL = P("P_SPELL", "P_SPELL_H") }),
+
+	B("targettarget", "T_TARGETTARGET", "T_TARGETTARGET_D",
+		"#showtooltip\n/cast [@targettarget,harm,nodead][] {HARM}",
+		{ HARM = P("P_HARM", "P_HARM_H") }),
+
+	B("petattack", "T_PETATTACK", "T_PETATTACK_D",
+		"#showtooltip {SPELL}\n/petattack\n/cast {SPELL}",
+		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
+
+	B("sequence", "T_SEQUENCE", "T_SEQUENCE_D",
+		"#showtooltip\n/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}",
+		{
+			RESET   = PX("P_RESET", "P_RESET_H", { options = { "target/combat", "combat/10", "combat", "10" }, labelKeys = { "RESET_1", "RESET_2", "RESET_3", "RESET_4" }, default = "target/combat" }),
+			SPELL   = P("P_SPELL", "P_SPELL_H"),
+			SPELL_2 = P("P_SPELL2", "P_SPELL2_H"),
+			SPELL_3 = PX("P_SPELL3", "P_SPELL3_H", { optional = true, token = true }),
+		}),
+
+	B("once_per_target", "T_ONCE_PER_TARGET", "T_ONCE_PER_TARGET_D",
+		"#showtooltip {SPELL}\n/castsequence reset=target/combat {SPELL}, null",
+		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
 }
+
+-- ---------------------------------------------------------------------------
+-- Catalogue metadata: a category per built-in, which classes a template is
+-- for (only where the spell tables cannot tell), and the per-class
+-- recommended set that seeds a fresh install.
+-- ---------------------------------------------------------------------------
+
+ns.templateCategories = { "CORE", "HEAL", "PVP", "SEQ", "PET" }
+
+local CATEGORY = {
+	focus_interrupt = "CORE", cursor = "CORE", mouseover_harm = "CORE", stopcast = "CORE", trinket_spell = "CORE",
+	selfheal = "CORE", mod2 = "CORE", selfcast = "CORE", focus_external = "CORE", combat_switch = "CORE",
+	mouseover_help = "HEAL", mouseover_dispel = "HEAL", mouseover_external = "HEAL", targettarget = "HEAL",
+	arena_cc = "PVP", mouseover_purge = "PVP", set_focus = "PVP", framesort_kick = "PVP", framesort_external = "PVP",
+	framesort_dispel = "PVP", cancel_cast = "PVP", mouseover_altfocus = "PVP",
+	sequence = "SEQ", once_per_target = "SEQ",
+	petattack = "PET",
+}
+for _, b in ipairs(ns.builtinTemplates) do b.cat = CATEGORY[b.id] or "CORE" end
+
+ns.builtinClasses = {
+	petattack = { HUNTER = true, WARLOCK = true, DEATHKNIGHT = true, MAGE = true },
+}
+
+ns.classRecommended = {
+	DEATHKNIGHT = { "focus_interrupt", "mouseover_harm", "cursor", "petattack", "mod2", "selfheal", "set_focus" },
+	DEMONHUNTER = { "focus_interrupt", "mouseover_harm", "cursor", "mod2", "cancel_cast", "selfheal", "set_focus" },
+	DRUID       = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "combat_switch", "cursor", "mod2", "selfheal" },
+	EVOKER      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cursor", "cancel_cast", "selfheal", "set_focus" },
+	HUNTER      = { "focus_interrupt", "petattack", "focus_external", "mouseover_harm", "cursor", "cancel_cast", "selfheal", "set_focus" },
+	MAGE        = { "focus_interrupt", "mouseover_harm", "cursor", "mouseover_purge", "cancel_cast", "mod2", "selfheal", "set_focus" },
+	MONK        = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cursor", "mod2", "selfheal", "set_focus" },
+	PALADIN     = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cancel_cast", "mod2", "selfheal", "set_focus" },
+	PRIEST      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "mouseover_purge", "selfcast", "selfheal", "set_focus" },
+	ROGUE       = { "focus_interrupt", "focus_external", "mouseover_harm", "cancel_cast", "mod2", "selfheal", "set_focus" },
+	SHAMAN      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_purge", "cursor", "mod2", "selfheal", "set_focus" },
+	WARLOCK     = { "focus_interrupt", "petattack", "mouseover_harm", "cursor", "mouseover_purge", "sequence", "selfheal", "set_focus" },
+	WARRIOR     = { "focus_interrupt", "mouseover_harm", "cursor", "mouseover_external", "mod2", "selfheal", "set_focus" },
+}
+
+-- Ids recommended for the current class (CORE templates when the class is
+-- unknown), only those that still ship.
+function ns.RecommendedTemplates()
+	local _, class = UnitClass("player")
+	local ids = ns.classRecommended[class]
+	local out = {}
+	if ids then
+		for _, id in ipairs(ids) do
+			for _, b in ipairs(ns.builtinTemplates) do
+				if b.id == id then out[#out + 1] = id end
+			end
+		end
+	else
+		for _, b in ipairs(ns.builtinTemplates) do
+			if b.cat == "CORE" then out[#out + 1] = b.id end
+		end
+	end
+	return out
+end
+
+-- True when the current class has something to put into every categorised
+-- placeholder of shipped template `b` (and the template is not for other
+-- classes only). Derived from the spell tables, no extra bookkeeping.
+function ns.TemplateFitsClass(b)
+	local _, class = UnitClass("player")
+	local only = ns.builtinClasses[b.id]
+	if only and not only[class] then return false end
+	for _, key in ipairs(ns.GetPlaceholders(b.body)) do
+		local m = b.meta and b.meta[key]
+		if not (m and (m.options or m.text)) and not ns.ItemCategoryForKey(key, m) then
+			local cat = ns.CategoryForKey(key, m)
+			if cat and #ns.GetSuggestionIDs(cat) == 0 then return false end
+		end
+	end
+	return true
+end
+
+-- Built-ins this DB has never seen (shown as new in the catalogue).
+function ns.NewBuiltinCount()
+	local n = 0
+	for _, b in ipairs(ns.builtinTemplates) do
+		if not (ns.db and ns.db.knownBuiltins and ns.db.knownBuiltins[b.id]) then n = n + 1 end
+	end
+	return n
+end
+
+function ns.MarkBuiltinsKnown()
+	if not ns.db then return end
+	ns.db.knownBuiltins = ns.db.knownBuiltins or {}
+	for _, b in ipairs(ns.builtinTemplates) do ns.db.knownBuiltins[b.id] = true end
+end
 
 -- ---------------------------------------------------------------------------
 -- DB
@@ -198,6 +347,23 @@ local function IsShippedText(key, value)
 	return false
 end
 
+-- Copies the class's recommended templates into db.templates (which is
+-- expected to be empty) and marks them known.
+local function SeedTemplates(db)
+	db.knownBuiltins = db.knownBuiltins or {}
+	local want = {}
+	for i, id in ipairs(ns.RecommendedTemplates()) do want[id] = i end
+	local picked = {}
+	for _, t in ipairs(ns.builtinTemplates) do
+		if want[t.id] then picked[#picked + 1] = t end
+	end
+	table.sort(picked, function(a, b) return want[a.id] < want[b.id] end)
+	for _, t in ipairs(picked) do
+		db.templates[#db.templates + 1] = CopyTemplate(t)
+		db.knownBuiltins[t.id] = true
+	end
+end
+
 function ns.InitDB()
 	if type(MacroMasterDB) ~= "table" then MacroMasterDB = {} end
 	local db = MacroMasterDB
@@ -222,14 +388,14 @@ function ns.InitDB()
 			end
 		end
 	end
+	-- a fresh install starts with the set recommended for this class; the
+	-- rest waits in the catalogue (Settings -> Default templates)
 	if not db.seeded then
-		for _, t in ipairs(ns.builtinTemplates) do
-			db.templates[#db.templates + 1] = CopyTemplate(t)
-		end
+		SeedTemplates(db)
 		db.seeded = true
 	end
-	-- Built-ins added by later releases: add once, but never re-add one the
-	-- user deleted. knownBuiltins records every built-in this DB has seen.
+	-- knownBuiltins: every built-in this DB has seen; the others show as new
+	-- in the catalogue. Nothing is added to the list behind the user's back.
 	if not db.knownBuiltins then
 		-- a DB from before this bookkeeping existed: it has seen exactly the
 		-- built-ins that shipped up to 1.1.1, whether or not they still exist
@@ -237,14 +403,6 @@ function ns.InitDB()
 		for _, id in ipairs({ "focus_interrupt", "arena_cc", "cursor", "mouseover_help", "mouseover_harm",
 			"stopcast", "trinket_spell", "set_focus" }) do
 			db.knownBuiltins[id] = true
-		end
-	end
-	for _, t in ipairs(ns.builtinTemplates) do
-		if not db.knownBuiltins[t.id] then
-			db.knownBuiltins[t.id] = true
-			local exists = false
-			for _, e in ipairs(db.templates) do if e.id == t.id then exists = true end end
-			if not exists then db.templates[#db.templates + 1] = CopyTemplate(t) end
 		end
 	end
 	ns.db = db
@@ -311,6 +469,7 @@ local LEGACY_BODIES = {
 		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {rt{MARK}} {MSG}",  -- 1.2.7 – 1.2.8
 		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {MSG} {rt{MARK}}",  -- 1.3.0 dev
 	},
+	trinket_spell = { "#showtooltip {CD}\n/use 13\n/cast {CD}" },                                                  -- up to 1.3.0
 	framesort_kick = { "#showtooltip {INTERRUPT}\n#FrameSort X {FS}\n/cancelaura {CANCEL}\n/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}" },  -- 1.2.0 – 1.2.4
 	framesort_external = { "#showtooltip {EXTERNAL}\n#FrameSort X {FST}\n/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}" },      -- 1.2.3 – 1.2.4
 	framesort_dispel = { "#showtooltip {DISPEL}\n#FrameSort X {FST}\n/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}" },            -- 1.2.3 – 1.2.4
@@ -391,13 +550,20 @@ function ns.ImportBuiltin(id, overwrite)
 	return "added"
 end
 
--- Throws the whole list away (user templates included) and re-seeds it.
+-- Throws the whole list away (user templates included) and re-seeds it
+-- with the class's recommended set.
 function ns.ResetAllTemplates()
 	ns.db.templates = {}
-	for _, b in ipairs(ns.builtinTemplates) do
-		ns.db.templates[#ns.db.templates + 1] = CopyTemplate(b)
-		ns.db.knownBuiltins[b.id] = true
+	SeedTemplates(ns.db)
+end
+
+-- Adds every recommended template that is not in the list yet. Returns the count.
+function ns.AddRecommended()
+	local added = 0
+	for _, id in ipairs(ns.RecommendedTemplates()) do
+		if ns.ImportBuiltin(id, false) == "added" then added = added + 1 end
 	end
+	return added
 end
 
 -- ---------------------------------------------------------------------------
@@ -513,7 +679,8 @@ end
 -- Replace every {KEY} with values[KEY]; unfilled keys are left as-is,
 -- except optional ones (meta[key].optional), whose whole line is dropped.
 -- An unfilled list token (meta[key].token) leaves together with its comma
--- instead: "{A}, {B}, {C}" with B empty becomes "{A}, {C}".
+-- or its ";" clause instead: "{A}, {B}, {C}" with B empty becomes "{A}, {C}",
+-- "[mod:ctrl] {C}; {S}" with C empty becomes "{S}".
 -- Returns body, list of unfilled (non-optional) keys.
 function ns.Substitute(body, values, meta)
 	meta = meta or {}
@@ -524,6 +691,12 @@ function ns.Substitute(body, values, meta)
 		for key, m in pairs(meta) do
 			if m.token and not (values[key] and values[key] ~= "") then
 				local esc = ("{" .. key .. "}"):gsub("%W", "%%%0")
+				-- ";"-separated clause, with or without its [conditions]
+				line = line:gsub("%[[^%]]*%]%s*" .. esc .. "%s*;%s*", "")
+				line = line:gsub(";%s*%[[^%]]*%]%s*" .. esc, "")
+				line = line:gsub(esc .. "%s*;%s*", "")
+				line = line:gsub(";%s*" .. esc, "")
+				-- ","-separated list item
 				line = line:gsub(",%s*" .. esc, "")
 				line = line:gsub(esc .. "%s*,%s*", "")
 			end

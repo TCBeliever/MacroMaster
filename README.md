@@ -25,6 +25,18 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 | Trinket + spell | `/use 13` · `/cast {CD}` |
 | Set focus | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 | Self-heal combo | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
+| Modifier: 2-3 spells | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
+| Self-cast | `/cast [@player] {SPELL}` |
+| Cancel aura + cast | `/cancelaura {AURA}` · `/cast {SPELL}` |
+| External to focus | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
+| Mouseover, Alt = focus | `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
+| In combat / out of combat | `/cast [combat] {INCOMBAT}; {SPELL}` |
+| Target's target | `/cast [@targettarget,harm,nodead][] {HARM}` |
+| Pet attack + spell | `/petattack` · `/cast {SPELL}` |
+| Spell sequence | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
+| Once per target | `/castsequence reset=target/combat {SPELL}, null` |
+
+A fresh install starts with the templates recommended for your class (about eight); the rest live in the catalogue (*Settings* -> *Default templates*), grouped by category, with what fits your class first. Categorised placeholders start filled with the first suggestion your character knows.
 
 The self-heal combo is a plain `/castsequence`: a step whose spell is on cooldown or whose item you no longer carry stalls the sequence until it resets after combat, so leave slots you do not use empty.
 
