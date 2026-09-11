@@ -1,0 +1,19 @@
+## Interface: 120100
+## Title: |cff66ccffMacro|rMaster
+## Notes: Macro templates with spell placeholders. Pick a template, fill in your own spells from a picker, create the macro. Turn any existing macro into a template.
+## Notes-zhTW: 巨集模板：選模板、從法術選擇器填入自己的技能、建立巨集。任何現有巨集都能一鍵存成模板。
+## Author: Venser
+## Version: 1.2.8
+## SavedVariables: MacroMasterDB
+## IconTexture: Interface\Icons\INV_Misc_Note_06
+## Category: venMOD
+## X-License: MIT
+## X-Curse-Project-ID: 1690683
+
+Locales.lua
+Templates.lua
+SpellPicker.lua
+Suggestions.lua
+Panels.lua
+UI.lua
+Core.lua

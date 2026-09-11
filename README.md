@@ -1,0 +1,78 @@
+# MacroMaster
+
+Macro templates with spell placeholders. Pick a template, fill in **your own** spells from a picker (or drag them from the spell book), choose account or character scope, create the macro. Any existing macro can be turned into a template with one click.
+
+MacroMaster never guesses which spell your class should use — it suggests structure, you supply the spell. That is why it needs no per-class tables and keeps working across patches.
+
+## Workflow
+
+1. **Template** — choose one from the left list (or *New*, or *Import* an existing macro).
+2. **Fill placeholders** — every `{NAME}` in the template gets a row: type a spell, drag one from your spell book onto the box, or click *Pick* for a searchable icon grid. Fixed-choice placeholders (e.g. `arena1/2/3`) show quick buttons instead. Your choices are remembered per character, so your kick stays filled when you switch templates.
+3. **Create** — name it (≤16 chars), choose *Account* or *Character*, click *Create*. The macro lands on your cursor so you can drop it on an action bar. If a macro with that name already exists you are asked before it is overwritten.
+
+`ESC` closes the window; `/macromaster` or `/mmac` opens it. Blizzard's macro window gets two extra buttons: **MacroMaster** (open) and **Save as template** (turn the selected macro into a template — spell names become placeholders automatically).
+
+## Built-in templates
+
+| Template | Body |
+|---|---|
+| Interrupt: focus, else target | `/stopcasting` · `/cast [@focus,harm,nodead][] {INTERRUPT}` |
+| Arena: cast on arena1/2/3 | `/cast [@{ARENA}] {CC}` |
+| Ground spell @cursor | `/cast [@cursor] {GROUND}` |
+| Heal: mouseover > target > self | `/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}` |
+| Damage: mouseover > target | `/cast [@mouseover,harm,nodead][] {HARM}` |
+| Stopcasting + cast | `/stopcasting` · `/cast {SPELL}` |
+| Trinket + spell | `/use 13` · `/cast {CD}` |
+| Set focus: mouseover > target | `/focus [@mouseover,exists][]` |
+
+All built-ins are editable and deletable; *Restore built-ins* brings back any you removed without touching your edits.
+
+## Variables and the spell table
+
+*Variables* (bottom-left) lists every built-in placeholder and its meaning. Placeholders whose name matches a category — `INTERRUPT`, `CC`, `DEFENSIVE`, `BURST` (alias `CD`), `MOVEMENT`, `GROUND`, `HEAL` — get that category's spells suggested at the top of the picker.
+
+*Spell table* edits those suggestions for the current class. Entries are spell IDs resolved when the window opens: a spell this character cannot cast is greyed out, a spell removed from the game disappears, and templates are never affected. Add from the picker, remove with ✕, or reset a category to the shipped list.
+
+## Writing templates
+
+A placeholder is anything in braces: `{INTERRUPT}`, `{地板技能}`. Edit the body freely — the placeholder rows follow the text. Templates are account-wide (`MacroMasterDB`).
+
+## Limits (Blizzard)
+
+Macro name 16 characters, body 255 characters, 120 account macros, 30 character macros (12.1). Macros cannot be created or edited in combat.
+
+---
+
+# MacroMaster（繁體中文）
+
+巨集模板 + 法術佔位符。選模板 → 用選擇器（或從法術書拖曳）填入**你自己的**技能 → 選共用或角色專屬 → 建立。任何現有巨集都能一鍵存成模板。
+
+MacroMaster 不會替你猜職業該用哪個技能，它只提供結構，技能由你決定——所以不需要維護職業對照表，改版也不會壞。
+
+## 流程
+
+1. **模板**：左邊清單選一個（或「新增」、「匯入」現有巨集）。
+2. **填入技能**：模板裡每個 `{名稱}` 一列：打字、從法術書拖到框裡、或按「選擇」開圖示格搜尋。固定選項的佔位符（如 arena1/2/3）直接給按鈕。填過的值按角色記住，換模板時斷法技能不用重填。
+3. **建立**：取名（≤16 字）、選「共用」或「角色專屬」、按「建立」。巨集會放到游標上，直接丟到動作列。同名巨集會先問你要不要覆蓋。
+
+`/macromaster` 或 `/mmac` 開視窗，`ESC` 關閉。暴雪巨集視窗右側多兩顆按鈕：**MacroMaster**（開啟）與**存成模板**（把選取的巨集轉成模板，法術名自動變佔位符）。
+
+## 開發
+
+```
+MacroMaster/
+├── MacroMaster.toc
+├── Locales.lua      -- enUS 預設 + zhTW
+├── Templates.lua    -- 內建模板、DB、佔位符解析/替換、巨集→模板
+├── SpellPicker.lua  -- 法術書掃描、圖示選擇器
+├── UI.lua           -- 主視窗、建立流程
+├── Core.lua         -- 事件、slash、暴雪巨集視窗按鈕
+├── .pkgmeta         -- CurseForge packager
+└── deploy.bat       -- 複製到 AddOns 做本機測試
+```
+
+本機測試：執行 `deploy.bat` → 遊戲內 `/reload`。發佈：`git tag v1.0.1 && git push --tags`。
+
+## License
+
+MIT

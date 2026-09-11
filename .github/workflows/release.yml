@@ -1,0 +1,24 @@
+# Packages the addon and uploads it to CurseForge (and a GitHub release)
+# every time a tag is pushed:  git tag v1.2.9 && git push --tags
+name: Release AddOn
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # lets the packager attach the zip to a GitHub release
+
+env:
+  CF_API_KEY: ${{ secrets.CF_API_KEY }}
+  GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # full history so the packager can read tags
+      - uses: BigWigsMods/packager@v2

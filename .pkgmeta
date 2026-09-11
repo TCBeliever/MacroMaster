@@ -1,0 +1,15 @@
+package-as: MacroMaster
+
+enable-nolib-creation: no
+
+ignore:
+  - README.md
+  - CHANGELOG.md
+  - deploy.bat
+  - .gitignore
+  - .pkgmeta
+  - .github
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
