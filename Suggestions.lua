@@ -21,6 +21,7 @@ ns.categories = { "INTERRUPT", "CC", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND",
 ns.categoryAliases = {
 	KICK = "INTERRUPT", CD = "BURST", DEF = "DEFENSIVE", MOVE = "MOVEMENT", AOE = "GROUND",
 	CLEANSE = "DISPEL", DECURSE = "DISPEL", OFFDISPEL = "PURGE", EXT = "EXTERNAL", SAVE = "EXTERNAL",
+	AURA = "DEFENSIVE", CANCEL = "DEFENSIVE",   -- something to /cancelaura: usually an immunity
 }
 
 ns.shippedSuggestions = {

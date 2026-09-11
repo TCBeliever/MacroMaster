@@ -97,6 +97,7 @@
 - **Export / Import**: all templates as plain text in a box (copy it out to back up or share; paste and import to merge — same id replaces, the rest are added).
 - Importing a macro (*Save as template* / *Import*) maps spells and items to the variables the addon knows — `{INTERRUPT}`, `{CC}`, `{HEAL}`, `{SELFHEAL}`, `{POTION}`, `{HEALTHSTONE}`... (current class first, then every class's table) — instead of a key made from the spell name; unknown ones become `{SPELL}` / `{ITEM}` (`_2`, `_3` for repeats), and `spell:1234` / `item:1234` are resolved to names. `{ITEM}` is a new generic item placeholder (bag picker, no suggestions).
 - **Set focus** announces "Focus {rt2}" by default — message first, marker after, no enemy name. A character still holding the old default message ("Focus: %f") is switched to the new one; an edited message is kept.
+- Importing a macro also converts `/cancelaura` lines: the aura becomes `{AURA}` (`{AURA_2}`...) regardless of its category. `{AURA}` and `{CANCEL}` get the defensive suggestions in the picker.
 - *Import from macro* no longer opens empty the first time (the list is filled on a frame that was never hidden); reopening it while open re-reads the macro list.
 - Shorter descriptions on every built-in template (a copy you never edited picks up the new text).
 - Self-heal suggestions only list active heals now (Evoker: Verdant Embrace, Emerald Blossom, Living Flame; Death Knight: Death Strike; Paladin adds Holy Shock; Shaman adds Riptide and Healing Wave; Warlock: Drain Life...).

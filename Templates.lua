@@ -509,6 +509,9 @@ end
 -- ---------------------------------------------------------------------------
 
 local CAST_CMDS = { cast = true, use = true, castsequence = true, castrandom = true, showtooltip = true }
+-- commands whose argument plays a fixed role: the key is that role, not the
+-- spell's category ("/cancelaura Ice Block" -> {AURA}, not {DEFENSIVE})
+local ROLE_CMDS = { cancelaura = "AURA" }
 
 local function UniqueKey(base, used)
 	local key, n = base, 2
@@ -554,7 +557,8 @@ function ns.MakeTemplateFromMacro(body)
 
 	for line in (body .. "\n"):gmatch("([^\n]*)\n") do
 		local cmd, rest = line:match("^%s*[/#](%a+)%s*(.*)$")
-		if cmd and CAST_CMDS[cmd:lower()] then
+		local role = cmd and ROLE_CMDS[cmd:lower()]
+		if cmd and (CAST_CMDS[cmd:lower()] or role) then
 			-- drop [conditionals] and a leading "!" toggle marker per token
 			rest = rest:gsub("%[[^%]]*%]", "")
 			rest = rest:gsub("^%s*reset=%S+%s*", "")   -- castsequence reset clause
@@ -562,7 +566,7 @@ function ns.MakeTemplateFromMacro(body)
 				tok = strtrim(tok):gsub("^!", "")
 				if not IsSkippableToken(tok) and not names[tok] then
 					local name, kind = ResolveToken(tok)
-					names[tok] = UniqueKey(KeyBaseFor(name, kind), used)
+					names[tok] = UniqueKey(role or KeyBaseFor(name, kind), used)
 					order[#order + 1] = { key = names[tok], name = name, token = tok }
 				end
 			end

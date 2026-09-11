@@ -66,6 +66,7 @@ local function VariableDocs()
 		{ "FSENEMY",   L["P_FSENEMY_H"],   nil, L["VAR_FSENEMY_D"] },
 		{ "MARK",      L["P_MARK_H"],      nil, L["VAR_MARK_D"] },
 		{ "MSG",       L["P_MSG_H"],       nil },
+		{ "AURA",      L["P_AURA_H"],      "DEFENSIVE" },
 		{ "CANCEL",    L["P_CANCEL_H"],    "DEFENSIVE" },
 		{ "SELFHEAL",  L["P_SELFHEAL_H"],  "SELFHEAL" },
 		{ "HEALTHSTONE", L["P_HEALTHSTONE_H"], nil, nil, "HEALTHSTONE" },
