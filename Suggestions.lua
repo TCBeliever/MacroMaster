@@ -196,7 +196,8 @@ end
 -- satisfies the macro.
 -- ---------------------------------------------------------------------------
 
-ns.itemCategoryAliases = { HEALTHSTONE = "HEALTHSTONE", POTION = "HEALPOT", HEALPOT = "HEALPOT" }
+-- ITEM: any item, bag picker without suggestions
+ns.itemCategoryAliases = { HEALTHSTONE = "HEALTHSTONE", POTION = "HEALPOT", HEALPOT = "HEALPOT", ITEM = "ITEM" }
 
 ns.shippedItemSuggestions = {
 	HEALTHSTONE = { 224464, 5512 },   -- Demonic Healthstone, Healthstone
@@ -245,6 +246,58 @@ end
 function ns.BestItemForCategory(category)
 	local list = ns.ResolveItemSuggestions(category)
 	return list[1] and list[1].name
+end
+
+-- ---------------------------------------------------------------------------
+-- Macro import: which placeholder fits a spell or item name. Used by
+-- ns.MakeTemplateFromMacro so "Kick" becomes {INTERRUPT}, a healing potion
+-- {POTION}, and an unknown spell {SPELL}.
+-- ---------------------------------------------------------------------------
+
+-- A spell in several lists (Ironbark: DEFENSIVE and EXTERNAL) gets the
+-- earlier category here.
+local IMPORT_PRIORITY = { "INTERRUPT", "CC", "DISPEL", "PURGE", "HEAL", "SELFHEAL", "EXTERNAL", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND" }
+
+local function CategoryInLists(name, lists)
+	for _, cat in ipairs(IMPORT_PRIORITY) do
+		for _, id in ipairs(lists[cat] or {}) do
+			local n = C_Spell.GetSpellName(id)
+			if n and n:lower() == name then return cat end
+		end
+	end
+end
+
+-- Category whose suggestion list contains this spell name: the current
+-- class (with the user's edits) first, then every other class.
+function ns.CategoryForSpellName(name)
+	name = (name or ""):lower()
+	if name == "" then return nil end
+	local mine = {}
+	for _, cat in ipairs(IMPORT_PRIORITY) do mine[cat] = ns.GetSuggestionIDs(cat) end
+	local cat = CategoryInLists(name, mine)
+	if cat then return cat end
+	local _, class = UnitClass("player")
+	for cls, lists in pairs(ns.shippedSuggestions) do
+		if cls ~= class then
+			cat = CategoryInLists(name, lists)
+			if cat then return cat end
+		end
+	end
+end
+
+-- Placeholder key for an item name: HEALTHSTONE / POTION when the item is in
+-- a suggestion list, ITEM for any other item the client knows, else nil.
+function ns.ItemKeyForName(name)
+	local orig = name or ""
+	name = orig:lower()
+	if name == "" then return nil end
+	for cat, ids in pairs(ns.shippedItemSuggestions) do
+		for _, id in ipairs(ids) do
+			local n = C_Item.GetItemNameByID(id)
+			if n and n:lower() == name then return cat == "HEALPOT" and "POTION" or cat end
+		end
+	end
+	if C_Item.GetItemInfoInstant(orig) then return "ITEM" end
 end
 
 -- value is "item:1234" or a name; true when at least one is in the bags.

@@ -10,7 +10,7 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 2. **Fill placeholders** — every `{NAME}` in the template gets a row: type a spell, drag one from your spell book onto the box, or click *Pick* for a searchable icon grid. Fixed-choice placeholders (e.g. `arena1/2/3`) show quick buttons instead. Your choices are remembered per character, so your kick stays filled when you switch templates.
 3. **Create** — name it (≤16 chars), choose *Account* or *Character*, click *Create*. The macro lands on your cursor so you can drop it on an action bar. If a macro with that name already exists you are asked before it is overwritten.
 
-`ESC` closes the window; `/macromaster` or `/mmac` opens it. Blizzard's macro window gets two extra buttons: **MacroMaster** (open) and **Save as template** (turn the selected macro into a template — spell names become placeholders automatically).
+`ESC` closes the window; `/macromaster` or `/mmac` opens it. Blizzard's macro window gets two extra buttons: **MacroMaster** (open) and **Save as template** (turn the selected macro into a template). Spells and items in the macro become placeholders automatically: one the spell table knows becomes its variable (`{INTERRUPT}`, `{CC}`, `{HEAL}`, `{POTION}`, `{HEALTHSTONE}`...), anything else `{SPELL}` or `{ITEM}`, a second of the same kind `{SPELL_2}`; `spell:1234` / `item:1234` are resolved to names.
 
 ## Built-in templates
 

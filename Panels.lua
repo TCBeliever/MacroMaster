@@ -70,6 +70,7 @@ local function VariableDocs()
 		{ "SELFHEAL",  L["P_SELFHEAL_H"],  "SELFHEAL" },
 		{ "HEALTHSTONE", L["P_HEALTHSTONE_H"], nil, nil, "HEALTHSTONE" },
 		{ "POTION",    L["P_POTION_H"],    nil, nil, "HEALPOT" },
+		{ "ITEM",      L["VAR_ITEM_D"],    nil, nil, "ITEM" },
 	}
 end
 

@@ -492,24 +492,44 @@ end
 
 -- ---------------------------------------------------------------------------
 -- Macro -> template: find spell/item names in cast-like lines and replace
--- them with {PLACEHOLDER}. Returns new body, ordered list of {key, original}.
+-- them with {PLACEHOLDER}. A name the suggestion tables know becomes the
+-- matching variable ({INTERRUPT}, {HEAL}, {POTION}...), anything else
+-- {SPELL} / {ITEM}; a second of the same kind gets _2, _3... "spell:1234"
+-- and "item:1234" are resolved to names first.
+-- Returns new body, ordered list of { key, name (value), token (as written) }.
 -- ---------------------------------------------------------------------------
 
 local CAST_CMDS = { cast = true, use = true, castsequence = true, castrandom = true, showtooltip = true }
 
-local function KeyFromName(name, used)
-	local key = name:upper():gsub("[^%w]+", "_"):gsub("^_+", ""):gsub("_+$", "")
-	-- non-ASCII names (zhTW client) survive as-is, spaces -> underscores
-	if key == "" then key = name:gsub("%s+", "_"):gsub("[{}]", "") end
-	if key == "" then key = "SPELL" end
-	if #key > 24 then key = key:sub(1, 24):gsub("_+$", "") end
-	local base, n = key, 2
+local function UniqueKey(base, used)
+	local key, n = base, 2
 	while used[key] do
 		key = base .. "_" .. n
 		n = n + 1
 	end
 	used[key] = true
 	return key
+end
+
+-- "spell:1234" / "item:1234" -> name and kind; a bare name stays as-is.
+local function ResolveToken(tok)
+	local sid = tok:match("^spell:(%d+)$")
+	if sid then return C_Spell.GetSpellName(tonumber(sid)) or tok, "spell" end
+	local iid = tok:match("^item:(%d+)$")
+	if iid then return C_Item.GetItemNameByID(tonumber(iid)) or tok, "item" end
+	return tok, nil
+end
+
+local function KeyBaseFor(name, kind)
+	if kind ~= "item" and ns.CategoryForSpellName then
+		local cat = ns.CategoryForSpellName(name)
+		if cat then return cat end
+	end
+	if kind ~= "spell" and ns.ItemKeyForName then
+		local key = ns.ItemKeyForName(name)
+		if key then return key end
+	end
+	return kind == "item" and "ITEM" or "SPELL"
 end
 
 local function IsSkippableToken(tok)
@@ -532,23 +552,24 @@ function ns.MakeTemplateFromMacro(body)
 			for tok in rest:gmatch("[^;,]+") do
 				tok = strtrim(tok):gsub("^!", "")
 				if not IsSkippableToken(tok) and not names[tok] then
-					names[tok] = KeyFromName(tok, used)
-					order[#order + 1] = { key = names[tok], name = tok }
+					local name, kind = ResolveToken(tok)
+					names[tok] = UniqueKey(KeyBaseFor(name, kind), used)
+					order[#order + 1] = { key = names[tok], name = name, token = tok }
 				end
 			end
 		end
 	end
 
-	-- longest names first so "Fire Blast" is replaced before "Fire"
-	table.sort(order, function(a, b) return #a.name > #b.name end)
+	-- longest tokens first so "Fire Blast" is replaced before "Fire"
+	table.sort(order, function(a, b) return #a.token > #b.token end)
 
 	local out = body
 	for _, e in ipairs(order) do
-		local escaped = e.name:gsub("(%W)", "%%%1")
+		local escaped = e.token:gsub("(%W)", "%%%1")
 		out = out:gsub(escaped, "{" .. e.key .. "}")
 	end
 
 	-- restore original discovery order for display
-	table.sort(order, function(a, b) return body:find(a.name, 1, true) < body:find(b.name, 1, true) end)
+	table.sort(order, function(a, b) return body:find(a.token, 1, true) < body:find(b.token, 1, true) end)
 	return out, order
 end
