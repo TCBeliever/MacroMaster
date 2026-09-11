@@ -8,3 +8,6 @@ Thumbs.db
 # packager output
 .release/
 *.zip
+
+# Claude Code local settings
+.claude/
