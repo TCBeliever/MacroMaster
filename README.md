@@ -16,7 +16,7 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 
 | Template | Body |
 |---|---|
-| Interrupt: focus, else target | `/stopcasting` · `/cast [@focus,harm,nodead][] {INTERRUPT}` |
+| Interrupt: focus, else target | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}` |
 | Arena: cast on arena1/2/3 | `/cast [@{ARENA}] {CC}` |
 | Ground spell @cursor | `/cast [@cursor] {GROUND}` |
 | Heal: mouseover > target > self | `/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}` |

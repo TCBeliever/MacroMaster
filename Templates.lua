@@ -78,17 +78,29 @@ end
 local FRAMESORT_FRIENDLY = { "Healer", "OtherDps", "Tank", "DPS", "Frame1", "Frame2", "Frame3", "Frame4", "Frame5" }
 
 ns.builtinTemplates = {
+	-- {CANCEL} (optional, dropped with its line when empty) lets the press go
+	-- through an immunity or a channel: Deep Breath, Ice Block, Turtle...
 	B("focus_interrupt", "T_FOCUS_INTERRUPT", "T_FOCUS_INTERRUPT_D",
-		"#showtooltip\n/stopcasting\n/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}",
-		{ INTERRUPT = P("P_INTERRUPT", "P_INTERRUPT_H") }),
+		"#showtooltip {INTERRUPT}\n/stopcasting\n/cancelaura {CANCEL}\n/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}",
+		{
+			INTERRUPT = P("P_INTERRUPT", "P_INTERRUPT_H"),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
+		}),
 
 	B("arena_cc", "T_ARENA_CC", "T_ARENA_CC_D",
-		"#showtooltip {CC}\n/cast [@{ARENA}] {CC}",
-		{ CC = P("P_CC", "P_CC_H"), ARENA = P("P_ARENA", "P_ARENA_H", { "arena1", "arena2", "arena3" }, true, { "1", "2", "3" }) }),
+		"#showtooltip {CC}\n/cancelaura {CANCEL}\n/cast [@{ARENA}] {CC}",
+		{
+			CC        = P("P_CC", "P_CC_H"),
+			ARENA     = P("P_ARENA", "P_ARENA_H", { "arena1", "arena2", "arena3" }, true, { "1", "2", "3" }),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
+		}),
 
 	B("cursor", "T_CURSOR", "T_CURSOR_D",
-		"#showtooltip\n/cast [@cursor] {GROUND}",
-		{ GROUND = P("P_GROUND", "P_GROUND_H") }),
+		"#showtooltip {GROUND}\n/cancelaura {CANCEL}\n/cast [@cursor] {GROUND}",
+		{
+			GROUND    = P("P_GROUND", "P_GROUND_H"),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
+		}),
 
 	B("mouseover_help", "T_MOUSEOVER_HELP", "T_MOUSEOVER_HELP_D",
 		"#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}",
@@ -111,8 +123,11 @@ ns.builtinTemplates = {
 		{ EXTERNAL = P("P_EXTERNAL", "P_EXTERNAL_H") }),
 
 	B("stopcast", "T_STOPCAST", "T_STOPCAST_D",
-		"#showtooltip\n/stopcasting\n/cast {SPELL}",
-		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
+		"#showtooltip {SPELL}\n/stopcasting\n/cancelaura {CANCEL}\n/cast {SPELL}",
+		{
+			SPELL     = P("P_SPELL", "P_SPELL_H"),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
+		}),
 
 	B("trinket_spell", "T_TRINKET_SPELL", "T_TRINKET_SPELL_D",
 		"#showtooltip {CD}\n/use {TRINKET}\n/cast {CD}",
@@ -186,8 +201,11 @@ ns.builtinTemplates = {
 		{ EXTERNAL = P("P_EXTERNAL", "P_EXTERNAL_H") }),
 
 	B("mouseover_altfocus", "T_MOUSEOVER_ALTFOCUS", "T_MOUSEOVER_ALTFOCUS_D",
-		"#showtooltip\n/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}",
-		{ HARM = P("P_HARM", "P_HARM_H") }),
+		"#showtooltip {HARM}\n/cancelaura {CANCEL}\n/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}",
+		{
+			HARM      = P("P_HARM", "P_HARM_H"),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
+		}),
 
 	B("combat_switch", "T_COMBAT_SWITCH", "T_COMBAT_SWITCH_D",
 		"#showtooltip\n/cast [combat] {INCOMBAT}; {SPELL}",
@@ -476,7 +494,12 @@ local LEGACY_BODIES = {
 	focus_interrupt = {
 		"#showtooltip\n/stopcasting\n/cast [@focus,harm,nodead][] {INTERRUPT}",   -- 1.0.0
 		"#showtooltip\n/cast [@focus,harm,nodead][] {INTERRUPT}",                  -- 1.0.1 – 1.2.1
+		"#showtooltip\n/stopcasting\n/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}",  -- 1.2.2 – 1.3.0
 	},
+	arena_cc = { "#showtooltip {CC}\n/cast [@{ARENA}] {CC}" },                                                      -- up to 1.3.0
+	cursor   = { "#showtooltip\n/cast [@cursor] {GROUND}" },                                                        -- up to 1.3.0
+	stopcast = { "#showtooltip\n/stopcasting\n/cast {SPELL}" },                                                     -- up to 1.3.0
+	mouseover_altfocus = { "#showtooltip\n/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}" },   -- 1.3.0 dev
 }
 
 -- Names shipped by earlier releases (any locale); a template still carrying
