@@ -21,7 +21,7 @@ local L = ns.L
 local PH_PATTERN = "{([^{}%%s]+)}"
 ns.PH_PATTERN = PH_PATTERN
 
-local DB_VERSION = 2
+local DB_VERSION = 3
 
 local function B(id, name, desc, body, meta)
 	return { id = id, name = L[name], desc = L[desc], body = body, meta = meta, builtin = true }
@@ -95,10 +95,10 @@ ns.builtinTemplates = {
 		{ CD = P("P_CD", "P_CD_H") }),
 
 	B("set_focus", "T_SET_FOCUS", "T_SET_FOCUS_D",
-		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {rt{MARK}} {MSG}",
+		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {MSG} {rt{MARK}}",
 		{
 			MARK = PX("P_MARK", "P_MARK_H", { options = MARK_OPTIONS, icons = MARK_ICONS, labels = MARK_LABELS, default = "2" }),
-			MSG  = PX("P_MSG", "P_MSG_H", { text = true, optional = true, default = "Focus: %f" }),
+			MSG  = PX("P_MSG", "P_MSG_H", { text = true, optional = true, default = L["MSG_FOCUS_DEFAULT"] }),
 		}),
 
 	-- Requires the FrameSort addon: "#FrameSort X <selector>" rewrites the
@@ -216,6 +216,14 @@ function ns.InitDB()
 		end
 		db.version = 2
 	end
+	-- 1.3.0: the set-focus announcement no longer names the enemy; a stored
+	-- old default gives way to the new one (an edited message is kept)
+	if db.version < 3 then
+		for _, values in pairs(db.charValues or {}) do
+			if values.MSG == "Focus: %f" then values.MSG = nil end
+		end
+		db.version = 3
+	end
 end
 
 function ns.GetTemplates() return ns.db.templates end
@@ -253,6 +261,7 @@ local LEGACY_BODIES = {
 	set_focus = {
 		"/focus [@mouseover,exists][]",                                        -- up to 1.2.3
 		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/p {MSG}",        -- 1.2.4 – 1.2.6
+		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {rt{MARK}} {MSG}",  -- 1.2.7 – 1.2.8
 	},
 	framesort_kick = { "#showtooltip {INTERRUPT}\n#FrameSort X {FS}\n/cancelaura {CANCEL}\n/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}" },  -- 1.2.0 – 1.2.4
 	framesort_external = { "#showtooltip {EXTERNAL}\n#FrameSort X {FST}\n/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}" },      -- 1.2.3 – 1.2.4
