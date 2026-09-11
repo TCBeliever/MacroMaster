@@ -782,7 +782,7 @@ local function CreateMain()
 
 	local listBox = Box(f)
 	listBox:SetPoint("TOPLEFT", 16, -62)
-	listBox:SetSize(LEFT_W, H - 62 - 126)
+	listBox:SetSize(LEFT_W, H - 62 - 100)
 
 	f.list = CreateFrame("ScrollFrame", nil, listBox, "UIPanelScrollFrameTemplate")
 	f.list:SetPoint("TOPLEFT", 6, -6)
@@ -807,14 +807,11 @@ local function CreateMain()
 		if t then StaticPopup_Show("MACROMASTER_DELETE_TEMPLATE", t.name, nil, t.id) end
 	end)
 	bDel:SetPoint("LEFT", bImp, "RIGHT", 4, 0)
+	-- second row, set apart: the library (defaults catalogue, export/import)
 	local bDefaults = Button(f, L["Defaults"], (LEFT_W - 4) / 2, 22, function() ns.ShowDefaultsPanel(f) end)
-	bDefaults:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -4)
+	bDefaults:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -10)
 	local bExport = Button(f, L["Export / Import"], (LEFT_W - 4) / 2, 22, function() ns.ShowExportPanel(f) end)
 	bExport:SetPoint("LEFT", bDefaults, "RIGHT", 4, 0)
-	local bVars = Button(f, L["Variables"], (LEFT_W - 4) / 2, 22, function() ns.ShowVariablesPanel(f) end)
-	bVars:SetPoint("TOPLEFT", bDefaults, "BOTTOMLEFT", 0, -4)
-	local bTable = Button(f, L["Spell table"], (LEFT_W - 4) / 2, 22, function() ns.ShowSpellTablePanel(f) end)
-	bTable:SetPoint("LEFT", bVars, "RIGHT", 4, 0)
 
 	-- ===== right: template editor =======================================
 	local rx = 16 + LEFT_W + 14
@@ -853,12 +850,18 @@ local function CreateMain()
 	-- below keeps the full width
 	local bSave = Button(f, L["Save template"], 100, 22, SaveTemplate)
 	bSave:SetPoint("BOTTOMRIGHT", f.body, "TOPRIGHT", 0, 8)
+	-- the variables reference sits next to the editor it documents
+	local bVars = Button(f, L["Variables"], 90, 22, function() ns.ShowVariablesPanel(f) end)
+	bVars:SetPoint("RIGHT", bSave, "LEFT", -6, 0)
 	f.saveHint = Label(f, "", "GameFontNormalSmall")
-	f.saveHint:SetPoint("RIGHT", bSave, "LEFT", -6, 0)
+	f.saveHint:SetPoint("RIGHT", bVars, "LEFT", -6, 0)
 
 	-- ===== fill placeholders ============================================
 	local fl = Label(f, L["Fill placeholders"])
 	fl:SetPoint("TOPLEFT", rx, -322)
+	-- the spell table feeds the picker's suggestions: it belongs on this row
+	local bTable = Button(f, L["Spell table"], 90, 22, function() ns.ShowSpellTablePanel(f) end)
+	bTable:SetPoint("TOPRIGHT", rx + rw, -318)
 	f.fill = CreateFrame("Frame", nil, f)
 	f.fill:SetPoint("TOPLEFT", rx, -340)
 	f.fill:SetSize(rw, 27)

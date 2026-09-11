@@ -23,7 +23,7 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 | Damage: mouseover > target | `/cast [@mouseover,harm,nodead][] {HARM}` |
 | Stopcasting + cast | `/stopcasting` · `/cast {SPELL}` |
 | Trinket + spell | `/use 13` · `/cast {CD}` |
-| Set focus: mouseover > target | `/focus [@mouseover,exists][]` |
+| Set focus | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 | Self-heal combo | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
 
 The self-heal combo is a plain `/castsequence`: a step whose spell is on cooldown or whose item you no longer carry stalls the sequence until it resets after combat, so leave slots you do not use empty.

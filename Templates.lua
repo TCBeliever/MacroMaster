@@ -95,7 +95,7 @@ ns.builtinTemplates = {
 		{ CD = P("P_CD", "P_CD_H") }),
 
 	B("set_focus", "T_SET_FOCUS", "T_SET_FOCUS_D",
-		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {MSG} {rt{MARK}}",
+		"/focus\n/tm [@focus] ~{MARK}\n/mmfocus {MSG} {rt{MARK}}",
 		{
 			MARK = PX("P_MARK", "P_MARK_H", { options = MARK_OPTIONS, icons = MARK_ICONS, labels = MARK_LABELS, default = "2" }),
 			MSG  = PX("P_MSG", "P_MSG_H", { text = true, optional = true, default = L["MSG_FOCUS_DEFAULT"] }),
@@ -263,6 +263,7 @@ local LEGACY_BODIES = {
 		"/focus [@mouseover,exists][]",                                        -- up to 1.2.3
 		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/p {MSG}",        -- 1.2.4 – 1.2.6
 		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {rt{MARK}} {MSG}",  -- 1.2.7 – 1.2.8
+		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {MSG} {rt{MARK}}",  -- 1.3.0 dev
 	},
 	framesort_kick = { "#showtooltip {INTERRUPT}\n#FrameSort X {FS}\n/cancelaura {CANCEL}\n/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}" },  -- 1.2.0 – 1.2.4
 	framesort_external = { "#showtooltip {EXTERNAL}\n#FrameSort X {FST}\n/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}" },      -- 1.2.3 – 1.2.4
