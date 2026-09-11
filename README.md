@@ -24,12 +24,15 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 | Stopcasting + cast | `/stopcasting` · `/cast {SPELL}` |
 | Trinket + spell | `/use 13` · `/cast {CD}` |
 | Set focus: mouseover > target | `/focus [@mouseover,exists][]` |
+| Self-heal combo | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
 
 All built-ins are editable and deletable; *Restore built-ins* brings back any you removed without touching your edits.
 
 ## Variables and the spell table
 
 *Variables* (bottom-left) lists every built-in placeholder and its meaning. Placeholders whose name matches a category — `INTERRUPT`, `CC`, `DEFENSIVE`, `BURST` (alias `CD`), `MOVEMENT`, `GROUND`, `HEAL` — get that category's spells suggested at the top of the picker.
+
+`{HEALTHSTONE}` and `{POTION}` (alias `HEALPOT`) are *item* placeholders: *Pick* opens your bags instead of the spell book (suggested items first, then every usable item), you can drag an item from a bag onto the box, and a Healthstone / the strongest healing potion you carry is pre-filled. Values are item names, so any rank works. In a comma list such as a `/castsequence`, an empty item slot simply disappears together with its comma.
 
 *Spell table* edits those suggestions for the current class. Entries are spell IDs resolved when the window opens: a spell this character cannot cast is greyed out, a spell removed from the game disappears, and templates are never affected. Add from the picker, remove with ✕, or reset a category to the shipped list.
 

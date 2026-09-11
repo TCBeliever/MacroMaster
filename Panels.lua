@@ -46,7 +46,7 @@ end
 -- Variables reference
 -- ---------------------------------------------------------------------------
 
--- { key, meaning, category|nil, fixed choices text|nil }
+-- { key, meaning, spell category|nil, fixed choices text|nil, item category|nil }
 local function VariableDocs()
 	return {
 		{ "INTERRUPT", L["P_INTERRUPT_H"], "INTERRUPT" },
@@ -67,6 +67,9 @@ local function VariableDocs()
 		{ "MARK",      L["P_MARK_H"],      nil, L["VAR_MARK_D"] },
 		{ "MSG",       L["P_MSG_H"],       nil },
 		{ "CANCEL",    L["P_CANCEL_H"],    "DEFENSIVE" },
+		{ "SELFHEAL",  L["P_SELFHEAL_H"],  "SELFHEAL" },
+		{ "HEALTHSTONE", L["P_HEALTHSTONE_H"], nil, nil, "HEALTHSTONE" },
+		{ "POTION",    L["P_POTION_H"],    nil, nil, "HEALPOT" },
 	}
 end
 
@@ -101,9 +104,10 @@ function ns.ShowVariablesPanel(parent)
 		f:SetScript("OnShow", function(self)
 			local lines = {}
 			for _, d in ipairs(VariableDocs()) do
-				local key, meaning, cat, choices = d[1], d[2], d[3], d[4]
+				local key, meaning, cat, choices, itemCat = d[1], d[2], d[3], d[4], d[5]
 				local line = "|cffffd100{" .. key .. "}|r  " .. meaning
 				if cat then line = line .. "\n      |cff66ccff" .. L["VAR_SUGGEST"] .. ":|r " .. L["CAT_" .. cat] end
+				if itemCat then line = line .. "\n      |cff66ccff" .. L["VAR_ITEM"] .. ":|r " .. L["CAT_" .. itemCat] end
 				if choices then line = line .. "\n      |cff66ccff" .. L["VAR_OPTIONS"] .. ":|r " .. choices end
 				lines[#lines + 1] = line
 			end
@@ -123,26 +127,26 @@ end
 local tablePanel
 function ns.ShowSpellTablePanel(parent)
 	if not tablePanel then
-		local f = Popup("MacroMasterSpellTable", 560, 480, "")
+		local f = Popup("MacroMasterSpellTable", 620, 480, "")
 		f.category = ns.categories[1]
 
 		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 		f.intro:SetPoint("TOPLEFT", 16, -36)
-		f.intro:SetWidth(528)
+		f.intro:SetWidth(588)
 		f.intro:SetJustifyH("LEFT")
 		f.intro:SetText(L["TABLE_INTRO"])
 
 		-- category tabs
 		f.tabs = {}
 		local prev
-		local PER_ROW = 5
+		local PER_ROW = 6
 		for i, cat in ipairs(ns.categories) do
 			local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-			b:SetSize(102, 22)
+			b:SetSize(96, 22)
 			b:SetText(L["CAT_" .. cat])
 			b.category = cat
 			local row, col = math.floor((i - 1) / PER_ROW), (i - 1) % PER_ROW
-			b:SetPoint("TOPLEFT", 14 + col * 106, -100 - row * 26)
+			b:SetPoint("TOPLEFT", 14 + col * 100, -100 - row * 26)
 			b:SetScript("OnClick", function(self) f.category = self.category; f:Refresh() end)
 			f.tabs[i] = b
 			prev = b
@@ -167,7 +171,7 @@ function ns.ShowSpellTablePanel(parent)
 		f.scroll:SetPoint("TOPLEFT", 6, -6)
 		f.scroll:SetPoint("BOTTOMRIGHT", -26, 6)
 		f.content = CreateFrame("Frame", nil, f.scroll)
-		f.content:SetSize(490, 10)
+		f.content:SetSize(550, 10)
 		f.scroll:SetScrollChild(f.content)
 		f.rows = {}
 
@@ -207,13 +211,13 @@ function ns.ShowSpellTablePanel(parent)
 				local r = self.rows[i]
 				if not r then
 					r = CreateFrame("Frame", nil, self.content)
-					r:SetSize(480, 24)
+					r:SetSize(540, 24)
 					r.icon = r:CreateTexture(nil, "ARTWORK")
 					r.icon:SetSize(20, 20)
 					r.icon:SetPoint("LEFT", 2, 0)
 					r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 					r.name:SetPoint("LEFT", r.icon, "RIGHT", 8, 0)
-					r.name:SetWidth(360)
+					r.name:SetWidth(420)
 					r.name:SetJustifyH("LEFT")
 					r.remove = CreateFrame("Button", nil, r, "UIPanelCloseButton")
 					r.remove:SetSize(22, 22)

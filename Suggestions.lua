@@ -15,7 +15,7 @@ local L = ns.L
 -- replace the shipped list for that class+category only.
 -- ---------------------------------------------------------------------------
 
-ns.categories = { "INTERRUPT", "CC", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND", "HEAL", "DISPEL", "PURGE", "EXTERNAL" }
+ns.categories = { "INTERRUPT", "CC", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND", "HEAL", "DISPEL", "PURGE", "EXTERNAL", "SELFHEAL" }
 
 -- placeholder key -> category (keys equal to a category map to themselves)
 ns.categoryAliases = {
@@ -34,6 +34,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 355913, 364343, 361469, 366155 },          -- Emerald Blossom, Echo, Living Flame, Reversion
 		DISPEL    = { 360823, 365585, 374251 },                  -- Naturalize, Expunge, Cauterizing Flame
 		EXTERNAL  = { 370665, 357170, 360827, 374227 },          -- Rescue, Time Dilation, Blistering Scales, Zephyr
+		SELFHEAL  = { 374348, 370960 },                                  -- Renewing Blaze, Emerald Communion
 	},
 	DEATHKNIGHT = {
 		INTERRUPT = { 47528 },                                   -- Mind Freeze
@@ -43,6 +44,7 @@ ns.shippedSuggestions = {
 		MOVEMENT  = { 48265, 212552 },                           -- Death's Advance, Wraith Walk
 		GROUND    = { 43265, 152280 },                           -- Death and Decay, Defile
 		EXTERNAL  = { 51052 },                                   -- Anti-Magic Zone
+		SELFHEAL  = { 48743, 55233, 59545 },                             -- Death Pact, Vampiric Blood, Gift of the Naaru
 	},
 	DEMONHUNTER = {
 		INTERRUPT = { 183752 },                                  -- Disrupt
@@ -65,6 +67,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 88423, 2782 },                             -- Nature's Cure, Remove Corruption
 		PURGE     = { 2908 },                                    -- Soothe
 		EXTERNAL  = { 102342, 29166, 106898 },                   -- Ironbark, Innervate, Stampeding Roar
+		SELFHEAL  = { 108238, 22842, 8936 },                             -- Renewal, Frenzied Regeneration, Regrowth
 	},
 	PRIEST = {
 		INTERRUPT = { 15487 },                                   -- Silence
@@ -77,6 +80,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 527, 213634, 32375 },                      -- Purify, Purify Disease, Mass Dispel
 		PURGE     = { 528, 32375 },                              -- Dispel Magic, Mass Dispel
 		EXTERNAL  = { 33206, 47788, 17, 10060, 73325, 121536 },  -- Pain Suppression, Guardian Spirit, PW:Shield, Power Infusion, Leap of Faith, Angelic Feather
+		SELFHEAL  = { 19236, 17, 2061, 59544 },                          -- Desperate Prayer, Power Word: Shield, Flash Heal, Gift of the Naaru
 	},
 	ROGUE = {
 		INTERRUPT = { 1766 },                                    -- Kick
@@ -86,6 +90,7 @@ ns.shippedSuggestions = {
 		MOVEMENT  = { 2983, 36554, 195457 },                     -- Sprint, Shadowstep, Grappling Hook
 		GROUND    = { 195457, 1725, 212182 },                    -- Grappling Hook, Distract, Smoke Bomb
 		EXTERNAL  = { 57934, 114018 },                           -- Tricks of the Trade, Shroud of Concealment
+		SELFHEAL  = { 185311, 370626 },                                  -- Crimson Vial, Gift of the Naaru
 	},
 	PALADIN = {
 		INTERRUPT = { 96231 },                                   -- Rebuke
@@ -96,6 +101,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 19750, 82326, 20473, 85673, 53563 },       -- Flash of Light, Holy Light, Holy Shock, Word of Glory, Beacon of Light
 		DISPEL    = { 4987, 213644 },                            -- Cleanse, Cleanse Toxins
 		EXTERNAL  = { 1022, 6940, 1044, 204018, 633, 53563 },    -- Blessing of Protection, Sacrifice, Freedom, Spellwarding, Lay on Hands, Beacon of Light
+		SELFHEAL  = { 85673, 633, 19750, 59542 },                        -- Word of Glory, Lay on Hands, Flash of Light, Gift of the Naaru
 	},
 	WARRIOR = {
 		INTERRUPT = { 6552 },                                    -- Pummel
@@ -105,6 +111,7 @@ ns.shippedSuggestions = {
 		MOVEMENT  = { 100, 6544, 3411 },                         -- Charge, Heroic Leap, Intervene
 		GROUND    = { 6544, 228920, 376079 },                    -- Heroic Leap, Ravager, Champion's Spear
 		EXTERNAL  = { 3411, 97462 },                             -- Intervene, Rallying Cry
+		SELFHEAL  = { 383762, 184364, 202168, 28880 },                   -- Bitter Immunity, Enraged Regeneration, Impending Victory, Gift of the Naaru
 	},
 	MAGE = {
 		INTERRUPT = { 2139 },                                    -- Counterspell
@@ -116,6 +123,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 475 },                                     -- Remove Curse
 		PURGE     = { 30449 },                                   -- Spellsteal
 		EXTERNAL  = { 414660 },                                  -- Mass Barrier
+		SELFHEAL  = { 59548 },                                           -- Gift of the Naaru
 	},
 	WARLOCK = {
 		INTERRUPT = { 19647, 119910, 89766 },                    -- Spell Lock, Command Demon, Axe Toss
@@ -127,6 +135,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 119905, 89808 },                           -- Command Demon, Singe Magic (imp)
 		PURGE     = { 19505 },                                   -- Devour Magic (felhunter)
 		EXTERNAL  = { 20707, 111771 },                           -- Soulstone, Demonic Gateway
+		SELFHEAL  = { 108416, 416250 },                                  -- Dark Pact, Gift of the Naaru
 	},
 	HUNTER = {
 		INTERRUPT = { 147362, 187707 },                          -- Counter Shot, Muzzle
@@ -138,6 +147,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 136, 109304 },                             -- Mend Pet, Exhilaration
 		PURGE     = { 19801 },                                   -- Tranquilizing Shot
 		EXTERNAL  = { 34477, 53480 },                            -- Misdirection, Roar of Sacrifice
+		SELFHEAL  = { 109304, 59543 },                                   -- Exhilaration, Gift of the Naaru
 	},
 	SHAMAN = {
 		INTERRUPT = { 57994 },                                   -- Wind Shear
@@ -150,6 +160,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 77130, 51886, 383013 },                    -- Purify Spirit, Cleanse Spirit, Poison Cleansing Totem
 		PURGE     = { 370, 378773 },                             -- Purge, Greater Purge
 		EXTERNAL  = { 98008, 198838, 108281, 192077 },           -- Spirit Link Totem, Earthen Wall Totem, Ancestral Guidance, Wind Rush Totem
+		SELFHEAL  = { 8004, 59547 },                                     -- Healing Surge, Gift of the Naaru
 	},
 	MONK = {
 		INTERRUPT = { 116705 },                                  -- Spear Hand Strike
@@ -161,6 +172,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 116670, 124682, 115151, 115175, 116849, 115310, 322101 }, -- Vivify, Enveloping Mist, Renewing Mist, Soothing Mist, Life Cocoon, Revival, Expel Harm
 		DISPEL    = { 115450, 218164 },                          -- Detox (Mistweaver), Detox
 		EXTERNAL  = { 116849, 116841 },                          -- Life Cocoon, Tiger's Lust
+		SELFHEAL  = { 322101, 122281, 116670, 121093 },                  -- Expel Harm, Healing Elixir, Vivify, Gift of the Naaru
 	},
 }
 
@@ -172,6 +184,75 @@ function ns.CategoryForKey(key, meta)
 		if c == up then return c end
 	end
 	return nil
+end
+
+-- ---------------------------------------------------------------------------
+-- Item placeholders
+--
+-- {HEALTHSTONE} and {POTION} (alias HEALPOT) are filled from the bags, not
+-- the spell book. The lists below only rank what to suggest first: the picker
+-- also shows every usable item in the bags, and an ID the client no longer
+-- knows simply never shows up. Values are item names, so any rank of a potion
+-- satisfies the macro.
+-- ---------------------------------------------------------------------------
+
+ns.itemCategoryAliases = { HEALTHSTONE = "HEALTHSTONE", POTION = "HEALPOT", HEALPOT = "HEALPOT" }
+
+ns.shippedItemSuggestions = {
+	HEALTHSTONE = { 224464, 5512 },   -- Demonic Healthstone, Healthstone
+	HEALPOT = {                       -- strongest first; ranks share a name and collapse into one entry
+		271884, 271883,               -- Concentrated Silvermoon Health Potion (Midnight)
+		241304, 241305,               -- Silvermoon Health Potion
+		245918, 245919,               -- Fleeting Silvermoon Health Potion
+		258138,                       -- Potent Healing Potion
+		244839, 244838, 244835,       -- Invigorating Healing Potion (The War Within)
+		211880, 211879, 211878,       -- Algari Healing Potion
+		244849, 244848, 244847,       -- Fleeting Invigorating Healing Potion
+		212944, 212943, 212942,       -- Fleeting Algari Healing Potion
+		241306, 241307,               -- Refreshing Serum (heal + secondary effect)
+		212244, 212243, 212242,       -- Cavedweller's Delight
+	},
+}
+
+-- Item category for a placeholder key, or nil when it is a spell/text key.
+function ns.ItemCategoryForKey(key, meta)
+	if meta and meta.item then return meta.category or "ITEM" end
+	return ns.itemCategoryAliases[key:upper()]
+end
+
+local function ItemEntry(id)
+	local name = C_Item.GetItemNameByID(id)
+	if not name then return nil end
+	return { id = id, name = name, icon = C_Item.GetItemIconByID(id), item = true }
+end
+
+-- Suggested items of `category` that are in the bags right now, best first,
+-- one entry per name.
+function ns.ResolveItemSuggestions(category)
+	local out, seen = {}, {}
+	for _, id in ipairs(ns.shippedItemSuggestions[category] or {}) do
+		if (C_Item.GetItemCount(id) or 0) > 0 then
+			local e = ItemEntry(id)
+			if e and not seen[e.name] then
+				seen[e.name] = true
+				out[#out + 1] = e
+			end
+		end
+	end
+	return out
+end
+
+function ns.BestItemForCategory(category)
+	local list = ns.ResolveItemSuggestions(category)
+	return list[1] and list[1].name
+end
+
+-- value is "item:1234" or a name; true when at least one is in the bags.
+function ns.IsItemInBags(value)
+	if not value or value == "" then return false end
+	local id = value:match("^item:(%d+)$")
+	local count = C_Item.GetItemCount(id and tonumber(id) or value)
+	return (count or 0) > 0
 end
 
 local function PlayerClass()

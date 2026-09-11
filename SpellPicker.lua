@@ -48,7 +48,37 @@ function ns.IsSpellKnownByName(name)
 end
 
 -- ---------------------------------------------------------------------------
+-- Bag scan: every usable item (one with an on-use spell) in the bags,
+-- de-duplicated by name, sorted alphabetically.
+-- ---------------------------------------------------------------------------
+
+local bagItems = {}
+
+function ns.ScanBags()
+	wipe(bagItems)
+	local seen = {}
+	local last = NUM_TOTAL_EQUIPPED_BAG_SLOTS or NUM_BAG_SLOTS or 4
+	for bag = 0, last do
+		for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
+			local info = C_Container.GetContainerItemInfo(bag, slot)
+			local id = info and info.itemID
+			if id and C_Item.GetItemSpell(id) then
+				local name = C_Item.GetItemNameByID(id)
+				if name and not seen[name] then
+					seen[name] = true
+					bagItems[#bagItems + 1] = { id = id, name = name, icon = info.iconFileID or C_Item.GetItemIconByID(id), item = true }
+				end
+			end
+		end
+	end
+	table.sort(bagItems, function(a, b) return a.name < b.name end)
+	return bagItems
+end
+
+-- ---------------------------------------------------------------------------
 -- Picker frame: search box + icon grid. ns.ShowSpellPicker(anchor, callback)
+-- and ns.ShowItemPicker(anchor, callback) share it; entries are
+-- { id, name, icon, item=true|nil } and the callback gets (name, spellID, itemID).
 -- ---------------------------------------------------------------------------
 
 local COLS, CELL, PAD = 8, 36, 4
@@ -117,12 +147,15 @@ local function CreatePicker()
 		b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
 		b:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetSpellByID(self.spellID)
+			if self.isItem then GameTooltip:SetItemByID(self.entryID) else GameTooltip:SetSpellByID(self.entryID) end
 			GameTooltip:Show()
 		end)
 		b:SetScript("OnLeave", GameTooltip_Hide)
 		b:SetScript("OnClick", function(self)
-			if f.callback then f.callback(self.spellName, self.spellID) end
+			if f.callback then
+				if self.isItem then f.callback(self.entryName, nil, self.entryID)
+				else f.callback(self.entryName, self.entryID) end
+			end
 			f:Hide()
 		end)
 		self.buttons[i] = b
@@ -147,7 +180,7 @@ local function CreatePicker()
 		for i, s in ipairs(shown) do
 			n = n + 1
 			local b = self:GetButton(n)
-			b.spellID, b.spellName = s.id, s.name
+			b.entryID, b.entryName, b.isItem = s.id, s.name, s.item and true or false
 			b.icon:SetTexture(s.icon)
 			local col, row = (i - 1) % COLS, math.floor((i - 1) / COLS)
 			b:ClearAllPoints()
@@ -164,14 +197,19 @@ local function CreatePicker()
 		if self.suggestions and #self.suggestions > 0 then
 			n, y = LayoutSection(self, 1, self.suggestionTitle, self.suggestions, filter, n, y)
 		end
-		n, y = LayoutSection(self, 2, L["Class spells"], classSpells, filter, n, y)
-		n, y = LayoutSection(self, 3, L["General spells"], generalSpells, filter, n, y)
+		if self.itemMode then
+			n, y = LayoutSection(self, 2, L["Bag items"], bagItems, filter, n, y)
+		else
+			n, y = LayoutSection(self, 2, L["Class spells"], classSpells, filter, n, y)
+			n, y = LayoutSection(self, 3, L["General spells"], generalSpells, filter, n, y)
+		end
 		for i = n + 1, #self.buttons do self.buttons[i]:Hide() end
 		self.content:SetHeight(math.max(10, -y))
 	end
 
 	f:SetScript("OnShow", function(self)
-		ns.ScanSpellBook()
+		if self.itemMode then ns.ScanBags() else ns.ScanSpellBook() end
+		self.title:SetText(self.itemMode and L["Item picker"] or L["Spell picker"])
 		self.search:SetText("")
 		self:Refresh()
 		self.search:SetFocus()
@@ -182,23 +220,45 @@ local function CreatePicker()
 	return f
 end
 
--- category (optional): show that category's suggestions for this character
--- above the full spell list.
-function ns.ShowSpellPicker(anchor, callback, category)
-	picker = picker or CreatePicker()
-	picker.callback = callback
-	picker.suggestions = nil
-	if category and ns.ResolveSuggestions then
-		picker.suggestions = ns.ResolveSuggestions(category, true)
-		picker.suggestionTitle = string.format(L["Suggested: %s"], L["CAT_" .. category])
-	end
+local function OpenPicker(anchor)
 	picker:ClearAllPoints()
 	if anchor then
 		picker:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 8, 0)
 	else
 		picker:SetPoint("CENTER")
 	end
+	-- OnShow (rescan + refresh) only fires on a hidden frame; an open picker
+	-- switching row or mode has to go through it again
+	if picker:IsShown() then picker:Hide() end
 	picker:Show()
+end
+
+-- category (optional): show that category's suggestions for this character
+-- above the full spell list.
+function ns.ShowSpellPicker(anchor, callback, category)
+	picker = picker or CreatePicker()
+	picker.callback = callback
+	picker.itemMode = false
+	picker.suggestions = nil
+	if category and ns.ResolveSuggestions then
+		picker.suggestions = ns.ResolveSuggestions(category, true)
+		picker.suggestionTitle = string.format(L["Suggested: %s"], L["CAT_" .. category])
+	end
+	OpenPicker(anchor)
+end
+
+-- Same grid fed from the bags: the item category's suggestions that are in
+-- the bags first, then every usable item. callback(name, nil, itemID).
+function ns.ShowItemPicker(anchor, callback, category)
+	picker = picker or CreatePicker()
+	picker.callback = callback
+	picker.itemMode = true
+	picker.suggestions = nil
+	if category and ns.ResolveItemSuggestions then
+		picker.suggestions = ns.ResolveItemSuggestions(category)
+		picker.suggestionTitle = string.format(L["Suggested: %s"], L["CAT_" .. category])
+	end
+	OpenPicker(anchor)
 end
 
 function ns.HideSpellPicker()

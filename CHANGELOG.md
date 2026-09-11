@@ -85,3 +85,11 @@
 
 - `/mmfocus` no longer errors when the client hands it a secret GUID/name (12.x secret values in PvP): comparison is skipped and a 5-second throttle prevents spam instead; secret names are left as `%f` for the chat system.
 - Macro name default skips text placeholders (no more `Focus: %f` as a macro name).
+
+## 1.3.0 (2026-09-11)
+
+- New built-in **Self-heal combo**: `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` — one button that steps through a self-heal, a Healthstone and a healing potion (the structure the Auto Potion addon generates, without an addon rewriting the macro behind your back).
+- Item placeholders: `{HEALTHSTONE}` and `{POTION}` (alias `HEALPOT`) are filled from your bags. *Pick* opens a bag picker (suggested items first, then every usable item), items can be dragged from the bags onto the box, and a Healthstone / the strongest healing potion you carry is pre-filled. Values are item names, so any rank of a potion works.
+- Placeholders in a comma list can be left empty: the unfilled one disappears together with its comma instead of blocking the macro (`token` placeholders).
+- New spell category **Self-heal** with per-class suggestions (Renewal, Exhilaration, Desperate Prayer, Crimson Vial, Word of Glory, Expel Harm, Bitter Immunity, Gift of the Naaru...). The spell table window is a little wider to fit the eleventh tab.
+- Creating a macro warns when an item placeholder names something not in your bags; text placeholders no longer trigger the "not in your spell book" warning.

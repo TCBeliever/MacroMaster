@@ -124,6 +124,17 @@ ns.builtinTemplates = {
 			DISPEL = P("P_DISPEL", "P_DISPEL_H"),
 			FS     = PX("P_FS", "P_FS_H", { options = FRAMESORT_FRIENDLY, default = "Healer" }),
 		}),
+
+	-- Every press does the next step; the sequence restarts when combat ends.
+	-- Items go in by name so any rank works. An empty slot vanishes with its
+	-- comma (token); SELFHEAL does not name the macro (noname).
+	B("selfheal", "T_SELFHEAL", "T_SELFHEAL_D",
+		"#showtooltip\n/stopcasting\n/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}",
+		{
+			SELFHEAL    = PX("P_SELFHEAL", "P_SELFHEAL_H", { optional = true, token = true, noname = true }),
+			HEALTHSTONE = PX("P_HEALTHSTONE", "P_HEALTHSTONE_H", { optional = true, token = true }),
+			POTION      = PX("P_POTION", "P_POTION_H", { optional = true, token = true }),
+		}),
 }
 
 -- ---------------------------------------------------------------------------
@@ -317,6 +328,8 @@ end
 
 -- Replace every {KEY} with values[KEY]; unfilled keys are left as-is,
 -- except optional ones (meta[key].optional), whose whole line is dropped.
+-- An unfilled list token (meta[key].token) leaves together with its comma
+-- instead: "{A}, {B}, {C}" with B empty becomes "{A}, {C}".
 -- Returns body, list of unfilled (non-optional) keys.
 function ns.Substitute(body, values, meta)
 	meta = meta or {}
@@ -324,6 +337,13 @@ function ns.Substitute(body, values, meta)
 	local lines = {}
 	for line in ((body or "") .. "\n"):gmatch("([^\n]*)\n") do
 		local drop = false
+		for key, m in pairs(meta) do
+			if m.token and not (values[key] and values[key] ~= "") then
+				local esc = ("{" .. key .. "}"):gsub("%W", "%%%0")
+				line = line:gsub(",%s*" .. esc, "")
+				line = line:gsub(esc .. "%s*,%s*", "")
+			end
+		end
 		local function resolve(key)
 			local v = values[key]
 			if v and v ~= "" then return v end

@@ -171,16 +171,21 @@ local function CurrentBody()
 	return main.body.EditBox:GetText()
 end
 
+-- A spell dragged from the spell book or an item dragged from the bags; both
+-- go in by name.
 local function ReceiveCursorSpell(editbox)
-	local kind, _, _, spellID = GetCursorInfo()
+	local kind, a, b, spellID = GetCursorInfo()
+	local name
 	if kind == "spell" and spellID then
-		local name = C_Spell.GetSpellName(spellID)
-		if name then
-			editbox:SetText(name)
-			editbox:ClearFocus()
-			ClearCursor()
-			return true
-		end
+		name = C_Spell.GetSpellName(spellID)
+	elseif kind == "item" and a then
+		name = C_Item.GetItemNameByID(a) or (type(b) == "string" and b:match("%[(.-)%]"))
+	end
+	if name then
+		editbox:SetText(name)
+		editbox:ClearFocus()
+		ClearCursor()
+		return true
 	end
 end
 
@@ -300,7 +305,7 @@ local function UpdateMacroNameDefault()
 		local v = state.values[k]
 		-- only spell-type placeholders make a sensible macro name
 		local m = meta[k]
-		local skip = m and (m.options or m.text)
+		local skip = (m and (m.options or m.text or m.noname)) or ns.ItemCategoryForKey(k, m)
 		if v and v ~= "" and not skip then candidate = v; break end
 	end
 	candidate = candidate or (t and t.name) or ""
@@ -382,18 +387,24 @@ local function RefreshRows()
 			end)
 			r.edit:SetScript("OnEnter", function(self)
 				GameTooltip:SetOwner(self, "ANCHOR_TOP")
-				GameTooltip:SetText(self.hint or L["Drag a spell here or click Pick"], 1, 1, 1, 1, true)
+				GameTooltip:SetText(self.hint or (self.isItem and L["Drag an item here or click Pick"]) or L["Drag a spell here or click Pick"], 1, 1, 1, 1, true)
 				GameTooltip:Show()
 			end)
 			r.edit:SetScript("OnLeave", GameTooltip_Hide)
 			r.pick = Button(r, L["Pick"], 60, 22, function(self)
 				local row = self:GetParent()
-				local category = ns.CategoryForKey(row.edit.key, CurrentMeta()[row.edit.key])
-				ns.ShowSpellPicker(main, function(name)
+				local key, m = row.edit.key, CurrentMeta()[row.edit.key]
+				local function set(name)
 					row.edit:SetText(name)
-					state.values[row.edit.key] = name
+					state.values[key] = name
 					UpdatePreview()
-				end, category)
+				end
+				local itemCat = ns.ItemCategoryForKey(key, m)
+				if itemCat then
+					ns.ShowItemPicker(main, set, itemCat)
+				else
+					ns.ShowSpellPicker(main, set, ns.CategoryForKey(key, m))
+				end
 			end)
 			r.pick:SetPoint("LEFT", r.edit, "RIGHT", 6, 0)
 			r.list = Button(r, L["Options"] .. " |cffaaaaaa▼|r", 80, 22, function(self)
@@ -431,9 +442,13 @@ local function RefreshRows()
 		r.edit.hint = m and m.hint
 		-- "one macro per option" placeholders default to All
 		-- defaults apply only to a never-set value; clearing a box keeps it empty
+		local itemCat = ns.ItemCategoryForKey(key, m)
+		r.edit.isItem = itemCat and true or false
 		if state.values[key] == nil then
 			if m and m.multi then state.values[key] = ALL
-			elseif m and m.default then state.values[key] = m.default end
+			elseif m and m.default then state.values[key] = m.default
+			-- item placeholders start with the best suggested item in the bags
+			elseif itemCat then state.values[key] = ns.BestItemForCategory(itemCat) end
 		end
 		r.edit:SetText(state.values[key] or "")
 		-- placeholders with fixed options get a dropdown instead of the spell picker
@@ -658,8 +673,14 @@ local function CreateMacroFromState()
 	local meta = CurrentMeta()
 	for _, key in ipairs(ns.GetPlaceholders(CurrentBody())) do
 		local v = state.values[key]
-		local isSpell = not (meta[key] and meta[key].options)
-		if isSpell and v and not ns.IsSpellKnownByName(v) then Msg(L["MSG_UNKNOWN_SPELL"], v) end
+		local m = meta[key]
+		if v and v ~= "" then
+			if ns.ItemCategoryForKey(key, m) then
+				if not ns.IsItemInBags(v) then Msg(L["MSG_UNKNOWN_ITEM"], v) end
+			elseif not (m and (m.options or m.text)) and not ns.IsSpellKnownByName(v) then
+				Msg(L["MSG_UNKNOWN_SPELL"], v)
+			end
+		end
 	end
 
 	local perChar = ns.db.settings.scope == "character"
