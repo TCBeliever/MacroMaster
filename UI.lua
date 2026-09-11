@@ -608,10 +608,13 @@ local function ShowMacroPicker()
 		end
 		f:SetScript("OnShow", f.Refresh)
 		tinsert(UISpecialFrames, f:GetName())
+		f:Hide()   -- frames start shown; OnShow (the list fill) needs a real hidden -> shown edge
 		macroPicker = f
 	end
 	macroPicker:ClearAllPoints()
 	macroPicker:SetPoint("TOPLEFT", main, "TOPRIGHT", 8, 0)
+	-- re-clicking Import while it is open re-reads the macro list
+	if macroPicker:IsShown() then macroPicker:Hide() end
 	macroPicker:Show()
 end
 
