@@ -11,6 +11,9 @@ ignore:
   - .pkgmeta
   - .github
 
+# CHANGELOG_LATEST.md is written by the release workflow (newest section of
+# CHANGELOG.md). No trailing comment on the filename line: the packager's
+# YAML reader keeps it as part of the name.
 manual-changelog:
-  filename: CHANGELOG_LATEST.md   # written by the release workflow from CHANGELOG.md
+  filename: CHANGELOG_LATEST.md
   markup-type: markdown
