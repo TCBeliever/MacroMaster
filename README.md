@@ -28,7 +28,7 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 
 The self-heal combo is a plain `/castsequence`: a step whose spell is on cooldown or whose item you no longer carry stalls the sequence until it resets after combat, so leave slots you do not use empty.
 
-Your list starts as a copy of these and is entirely yours: edit, delete, add. *Settings* holds the language switch (auto / English / 繁體中文, applied after a UI reload) and two doors: *Default templates*, the read-only catalogue of shipped templates — add one back (or overwrite your copy with the default), or reset the whole list — and *Export / Import*, which turns all your templates into plain text you can copy out as a backup or share, and imports such text back (same id replaces, new ids are added).
+Your list starts as a copy of these and is entirely yours: edit, delete, add. The *Settings* tab (bottom of the window) holds the language switch (auto / English / 繁體中文, applied after a UI reload) and two doors: *Default templates*, the read-only catalogue of shipped templates — add one back (or overwrite your copy with the default), or reset the whole list — and *Export / Import*, which turns all your templates into plain text you can copy out as a backup or share, and imports such text back (same id replaces, new ids are added).
 
 ## Variables and the spell table
 

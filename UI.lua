@@ -48,10 +48,16 @@ local function Label(parent, text, template)
 	return fs
 end
 
+-- w is a minimum: a label longer than that (other language) widens the button
 local function Button(parent, text, w, h, onClick)
 	local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	b:SetSize(w, h or 22)
 	b:SetText(text)
+	local fs = b:GetFontString()
+	if fs then
+		local need = fs:GetStringWidth() + 20
+		if need > w then b:SetWidth(need) end
+	end
 	b:SetScript("OnClick", onClick)
 	return b
 end
@@ -323,6 +329,9 @@ local function UpdateIconButton()
 end
 
 local function UpdatePreview()
+	-- the default macro name follows the template: settle it before the
+	-- variant headers below use it, or a switch shows the previous template's name
+	UpdateMacroNameDefault()
 	local variants = ExpandVariants()
 	local base = strtrim(main.macroName:GetText())
 	local parts, longest, missingAll = {}, 0, {}
@@ -352,7 +361,6 @@ local function UpdatePreview()
 		local t = main.pickup.Text or main.pickup.text
 		if t then t:SetTextColor(single and 1 or 0.5, single and 0.82 or 0.5, single and 0 or 0.5) end
 	end
-	UpdateMacroNameDefault()
 	UpdateIconButton()
 end
 
@@ -773,10 +781,16 @@ local function CreateMain()
 	f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
 	f.close:SetPoint("TOPRIGHT", -6, -6)
 
+	-- page 1: the editor. Its widgets are children of `page` so a tab switch
+	-- hides them together; they keep anchoring to `f`.
+	local page = CreateFrame("Frame", nil, f)
+	page:SetAllPoints()
+	f.pages = { page }
+
 	-- ===== left: template list ==========================================
-	local lh = Label(f, L["Templates"])
+	local lh = Label(page, L["Templates"])
 	lh:SetPoint("TOPLEFT", 20, -44)
-	f.sortBtn = Button(f, "", 96, 18, function()
+	f.sortBtn = Button(page, "", 96, 18, function()
 		ns.db.settings.sort = (ns.db.settings.sort == "name") and "created" or "name"
 		RefreshList()
 	end)
@@ -788,9 +802,9 @@ local function CreateMain()
 	end)
 	f.sortBtn:SetScript("OnLeave", GameTooltip_Hide)
 
-	local listBox = Box(f)
+	local listBox = Box(page)
 	listBox:SetPoint("TOPLEFT", 16, -62)
-	listBox:SetSize(LEFT_W, H - 62 - 100)
+	listBox:SetSize(LEFT_W, H - 62 - 74)
 
 	f.list = CreateFrame("ScrollFrame", nil, listBox, "UIPanelScrollFrameTemplate")
 	f.list:SetPoint("TOPLEFT", 6, -6)
@@ -800,9 +814,9 @@ local function CreateMain()
 	f.list:SetScrollChild(f.list.content)
 	f.list.buttons = {}
 
-	local bNew = Button(f, L["New"], 68, 22, NewTemplate)
+	local bNew = Button(page, L["New"], 68, 22, NewTemplate)
 	bNew:SetPoint("TOPLEFT", listBox, "BOTTOMLEFT", 0, -6)
-	local bImp = Button(f, L["Import"], 68, 22, ShowMacroPicker)
+	local bImp = Button(page, L["Import"], 68, 22, ShowMacroPicker)
 	bImp:SetPoint("LEFT", bNew, "RIGHT", 4, 0)
 	bImp:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
@@ -810,35 +824,32 @@ local function CreateMain()
 		GameTooltip:Show()
 	end)
 	bImp:SetScript("OnLeave", GameTooltip_Hide)
-	local bDel = Button(f, L["Delete"], 68, 22, function()
+	local bDel = Button(page, L["Delete"], 68, 22, function()
 		local t = CurrentTemplate()
 		if t then StaticPopup_Show("MACROMASTER_DELETE_TEMPLATE", t.name, nil, t.id) end
 	end)
 	bDel:SetPoint("LEFT", bImp, "RIGHT", 4, 0)
-	-- second row, set apart: settings (language, defaults catalogue, export/import)
-	local bSettings = Button(f, L["Settings"], LEFT_W, 22, function() ns.ShowSettingsPanel(f) end)
-	bSettings:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -10)
 
 	-- ===== right: template editor =======================================
 	local rx = 16 + LEFT_W + 14
 	local rw = W - rx - 20
 
-	local nl = Label(f, L["Template name"], "GameFontNormalSmall")
+	local nl = Label(page, L["Template name"], "GameFontNormalSmall")
 	nl:SetPoint("TOPLEFT", rx, -46)
-	f.tname = EditBox(f, 200, 40)
+	f.tname = EditBox(page, 200, 40)
 	f.tname:SetPoint("TOPLEFT", rx + 6, -60)
 
 	-- description: three lines, full width
-	local dl = Label(f, L["Description"], "GameFontNormalSmall")
+	local dl = Label(page, L["Description"], "GameFontNormalSmall")
 	dl:SetPoint("TOPLEFT", rx, -90)
-	f.tdescBox = MultiLine(f, rw, 46, 300)
+	f.tdescBox = MultiLine(page, rw, 46, 300)
 	f.tdescBox:SetPoint("TOPLEFT", rx, -108)
 	f.tdesc = f.tdescBox.EditBox
 	f.tdesc:HookScript("OnTextChanged", function(_, userInput) if userInput then f.saveHint:SetText("") end end)
 
-	local bl = Label(f, L["Template body"], "GameFontNormalSmall")
+	local bl = Label(page, L["Template body"], "GameFontNormalSmall")
 	bl:SetPoint("TOPLEFT", rx, -168)
-	f.body = MultiLine(f, rw, 96, 600)
+	f.body = MultiLine(page, rw, 96, 600)
 	f.body:SetPoint("TOPLEFT", rx, -192)
 	f.body.EditBox:HookScript("OnTextChanged", function(self, userInput)
 		if userInput then
@@ -847,28 +858,28 @@ local function CreateMain()
 		end
 	end)
 
-	local hint = Label(f, L["Placeholders use {NAME}. Edit the text freely; placeholder rows update as you type."], "GameFontDisableSmall")
+	local hint = Label(page, L["Placeholders use {NAME}. Edit the text freely; placeholder rows update as you type."], "GameFontDisableSmall")
 	hint:SetPoint("TOPLEFT", rx, -298)
 	hint:SetWidth(rw)
 	hint:SetJustifyH("LEFT")
 	hint:SetMaxLines(1)
 	-- "Update template" lives on the label row above the editor so the hint
 	-- below keeps the full width
-	local bSave = Button(f, L["Save template"], 100, 22, SaveTemplate)
+	local bSave = Button(page, L["Save template"], 100, 22, SaveTemplate)
 	bSave:SetPoint("BOTTOMRIGHT", f.body, "TOPRIGHT", 0, 8)
 	-- the variables reference sits next to the editor it documents
-	local bVars = Button(f, L["Variables"], 90, 22, function() ns.ShowVariablesPanel(f) end)
+	local bVars = Button(page, L["Variables"], 90, 22, function() ns.ShowVariablesPanel(f) end)
 	bVars:SetPoint("RIGHT", bSave, "LEFT", -6, 0)
-	f.saveHint = Label(f, "", "GameFontNormalSmall")
+	f.saveHint = Label(page, "", "GameFontNormalSmall")
 	f.saveHint:SetPoint("RIGHT", bVars, "LEFT", -6, 0)
 
 	-- ===== fill placeholders ============================================
-	local fl = Label(f, L["Fill placeholders"])
+	local fl = Label(page, L["Fill placeholders"])
 	fl:SetPoint("TOPLEFT", rx, -322)
 	-- the spell table feeds the picker's suggestions: it belongs on this row
-	local bTable = Button(f, L["Spell table"], 90, 22, function() ns.ShowSpellTablePanel(f) end)
+	local bTable = Button(page, L["Spell table"], 90, 22, function() ns.ShowSpellTablePanel(f) end)
 	bTable:SetPoint("TOPRIGHT", rx + rw, -318)
-	f.fill = CreateFrame("Frame", nil, f)
+	f.fill = CreateFrame("Frame", nil, page)
 	f.fill:SetPoint("TOPLEFT", rx, -340)
 	f.fill:SetSize(rw, 27)
 	f.fill.empty = Label(f.fill, L["No placeholders in this template."], "GameFontDisableSmall")
@@ -878,9 +889,9 @@ local function CreateMain()
 	f.rows = {}
 
 	-- ===== preview ======================================================
-	local pl = Label(f, L["Preview"])
+	local pl = Label(page, L["Preview"])
 	pl:SetPoint("TOPLEFT", f.fill, "BOTTOMLEFT", 0, -8)
-	f.preview = Box(f)
+	f.preview = Box(page)
 	f.preview:SetPoint("TOPLEFT", pl, "BOTTOMLEFT", 0, -4)
 	f.preview:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -20, 96)
 	f.preview.text = Label(f.preview, "", "ChatFontNormal")
@@ -888,15 +899,15 @@ local function CreateMain()
 	f.preview.text:SetPoint("BOTTOMRIGHT", -8, 6)
 	f.preview.text:SetJustifyH("LEFT")
 	f.preview.text:SetJustifyV("TOP")
-	f.preview.count = Label(f, "", "GameFontNormalSmall")
+	f.preview.count = Label(page, "", "GameFontNormalSmall")
 	f.preview.count:SetPoint("BOTTOMRIGHT", f.preview, "TOPRIGHT", -2, 2)
 
 	-- ===== create =======================================================
-	local cl = Label(f, L["Macro name"], "GameFontNormalSmall")
+	local cl = Label(page, L["Macro name"], "GameFontNormalSmall")
 	cl:SetPoint("TOPLEFT", rx, -(H - 80))
 	-- macro icon: left-click picks one of the icons your macros already use,
 	-- right-click goes back to the default question mark
-	f.iconBtn = CreateFrame("Button", nil, f)
+	f.iconBtn = CreateFrame("Button", nil, page)
 	f.iconBtn:SetSize(26, 26)
 	f.iconBtn:SetPoint("TOPLEFT", rx, -(H - 68))
 	f.iconBtn.icon = f.iconBtn:CreateTexture(nil, "ARTWORK")
@@ -923,7 +934,7 @@ local function CreateMain()
 		GameTooltip:Show()
 	end)
 	f.iconBtn:SetScript("OnLeave", GameTooltip_Hide)
-	f.macroName = EditBox(f, 150, MACRO_NAME_MAX)
+	f.macroName = EditBox(page, 150, MACRO_NAME_MAX)
 	f.macroName:SetPoint("TOPLEFT", rx + 6 + 30, -(H - 66))
 	f.macroName:SetScript("OnTextChanged", function(self, userInput)
 		if userInput then
@@ -933,7 +944,7 @@ local function CreateMain()
 	end)
 
 	-- scope radios
-	local scope = CreateFrame("Frame", nil, f)
+	local scope = CreateFrame("Frame", nil, page)
 	scope:SetSize(260, 44)
 	scope:SetPoint("LEFT", f.macroName, "RIGHT", 16, 8)
 	scope.account = CreateFrame("CheckButton", "MacroMasterScopeAccount", scope, "UIRadioButtonTemplate")
@@ -952,7 +963,7 @@ local function CreateMain()
 	scope.character:SetScript("OnClick", function() ns.db.settings.scope = "character"; scope:Refresh() end)
 	f.scope = scope
 
-	f.pickup = CreateFrame("CheckButton", "MacroMasterPickup", f, "UICheckButtonTemplate")
+	f.pickup = CreateFrame("CheckButton", "MacroMasterPickup", page, "UICheckButtonTemplate")
 	f.pickup:SetSize(24, 24)
 	f.pickup:SetPoint("TOPLEFT", f.iconBtn, "BOTTOMLEFT", -4, -4)
 	radioText(f.pickup):SetText(L["Pick up after creating"])
@@ -964,10 +975,43 @@ local function CreateMain()
 	end)
 	f.pickup:SetScript("OnLeave", GameTooltip_Hide)
 
-	local bCreate = Button(f, L["Create"], 110, 26, CreateMacroFromState)
+	local bCreate = Button(page, L["Create"], 110, 26, CreateMacroFromState)
 	bCreate:SetPoint("BOTTOMRIGHT", -20, 12)
-	local bOpen = Button(f, L["Open Macros"], 110, 22, OpenMacroFrame)
+	local bOpen = Button(page, L["Open Macros"], 110, 22, OpenMacroFrame)
 	bOpen:SetPoint("RIGHT", bCreate, "LEFT", -6, 0)
+
+	-- page 2: settings
+	local settings = CreateFrame("Frame", nil, f)
+	settings:SetAllPoints()
+	settings:Hide()
+	ns.BuildSettingsPage(settings, f)
+	f.pages[2] = settings
+
+	-- bottom tabs, Blizzard style
+	local function ShowPage(i)
+		ns.HideSpellPicker()
+		HideOptionList()
+		for j, p in ipairs(f.pages) do p:SetShown(j == i) end
+		PanelTemplates_SetTab(f, i)
+	end
+	local TAB_TEMPLATE = (C_XMLUtil and C_XMLUtil.GetTemplateInfo and C_XMLUtil.GetTemplateInfo("PanelTabButtonTemplate"))
+		and "PanelTabButtonTemplate" or "CharacterFrameTabButtonTemplate"
+	f.tabs = {}
+	for i, text in ipairs({ L["TAB_EDITOR"], L["Settings"] }) do
+		local t = CreateFrame("Button", "MacroMasterFrameTab" .. i, f, TAB_TEMPLATE)
+		t:SetID(i)
+		t:SetText(text)
+		if i == 1 then
+			t:SetPoint("TOPLEFT", f, "BOTTOMLEFT", 12, 2)
+		else
+			t:SetPoint("LEFT", f.tabs[i - 1], "RIGHT", -16, 0)
+		end
+		t:SetScript("OnClick", function(self) ShowPage(self:GetID()) end)
+		PanelTemplates_TabResize(t, 0)
+		f.tabs[i] = t
+	end
+	PanelTemplates_SetNumTabs(f, 2)
+	ShowPage(1)
 
 	f:SetScript("OnShow", function(self)
 		LoadValues()

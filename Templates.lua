@@ -53,17 +53,22 @@ function ns.RelocalizeBuiltins()
 		for _, m in pairs(b.meta or {}) do
 			if m.labelKey then m.label, m.hint = L[m.labelKey], L[m.hintKey] end
 			if m.defaultKey then m.default = L[m.defaultKey] end
+			if m.labelKeys then
+				m.labels = {}
+				for i, k in ipairs(m.labelKeys) do m.labels[i] = L[k] end
+			end
 		end
 	end
 end
 
 local FRAMESORT_ENEMY = { "EnemyHealer", "EnemyTank", "EnemyDPS", "EnemyFrame1", "EnemyFrame2", "EnemyFrame3" }
--- raid target markers 1-8 (star ... skull): value, icon, Blizzard's localized name
-local MARK_OPTIONS, MARK_ICONS, MARK_LABELS = {}, {}, {}
+-- raid target markers 1-8 (star ... skull): value, icon, name in the addon's language
+local MARK_OPTIONS, MARK_ICONS, MARK_LABELS, MARK_LABEL_KEYS = {}, {}, {}, {}
 for i = 1, 8 do
-	MARK_OPTIONS[i] = tostring(i)
-	MARK_ICONS[i]   = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
-	MARK_LABELS[i]  = _G["RAID_TARGET_" .. i] or tostring(i)
+	MARK_OPTIONS[i]    = tostring(i)
+	MARK_ICONS[i]      = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i
+	MARK_LABEL_KEYS[i] = "MARK_" .. i
+	MARK_LABELS[i]     = L[MARK_LABEL_KEYS[i]]
 end
 
 local FRAMESORT_FRIENDLY = { "Healer", "OtherDps", "Tank", "DPS", "Frame1", "Frame2", "Frame3", "Frame4", "Frame5" }
@@ -112,7 +117,7 @@ ns.builtinTemplates = {
 	B("set_focus", "T_SET_FOCUS", "T_SET_FOCUS_D",
 		"/focus\n/tm [@focus] ~{MARK}\n/mmfocus {MSG} {rt{MARK}}",
 		{
-			MARK = PX("P_MARK", "P_MARK_H", { options = MARK_OPTIONS, icons = MARK_ICONS, labels = MARK_LABELS, default = "2" }),
+			MARK = PX("P_MARK", "P_MARK_H", { options = MARK_OPTIONS, icons = MARK_ICONS, labels = MARK_LABELS, labelKeys = MARK_LABEL_KEYS, default = "2" }),
 			MSG  = PX("P_MSG", "P_MSG_H", { text = true, optional = true, defaultKey = "MSG_FOCUS_DEFAULT" }),
 		}),
 
@@ -183,6 +188,16 @@ local function CopyTemplate(t)
 	return c
 end
 
+-- True when `value` is what key `key` reads in any shipped language, i.e.
+-- text the user never changed.
+local function IsShippedText(key, value)
+	if value == key then return true end
+	for _, tbl in pairs(ns.locales or {}) do
+		if tbl[key] == value then return true end
+	end
+	return false
+end
+
 function ns.InitDB()
 	if type(MacroMasterDB) ~= "table" then MacroMasterDB = {} end
 	local db = MacroMasterDB
@@ -195,6 +210,18 @@ function ns.InitDB()
 	if db.settings.locale then ns.ApplyLocale(db.settings.locale) end
 	ns.RelocalizeBuiltins()
 	for _, fn in ipairs(ns.onLocale or {}) do fn() end
+	-- a remembered value that is still a shipped default (in any language)
+	-- gives way to the current language's default
+	for _, b in ipairs(ns.builtinTemplates) do
+		for key, m in pairs(b.meta or {}) do
+			if m.defaultKey then
+				for _, values in pairs(db.charValues or {}) do
+					local v = values[key]
+					if v and v ~= m.default and IsShippedText(m.defaultKey, v) then values[key] = nil end
+				end
+			end
+		end
+	end
 	if not db.seeded then
 		for _, t in ipairs(ns.builtinTemplates) do
 			db.templates[#db.templates + 1] = CopyTemplate(t)
@@ -305,16 +332,6 @@ local LEGACY_NAMES = {
 	trinket_spell   = { "飾品 + 技能" },
 	set_focus       = { "Set focus: mouseover > target", "設定焦點：滑鼠指向 > 目標" },
 }
-
--- True when `value` is what key `key` reads in any shipped language, i.e.
--- text the user never changed.
-local function IsShippedText(key, value)
-	if value == key then return true end
-	for _, tbl in pairs(ns.locales or {}) do
-		if tbl[key] == value then return true end
-	end
-	return false
-end
 
 function ns.RefreshUneditedBuiltins()
 	for _, b in ipairs(ns.builtinTemplates) do

@@ -33,6 +33,14 @@ local function Popup(name, w, h, title)
 	return f
 end
 
+-- widen a button whose label (other language) is longer than its width
+local function Fit(b)
+	local fs = b:GetFontString()
+	if not fs then return end
+	local need = fs:GetStringWidth() + 20
+	if need > b:GetWidth() then b:SetWidth(need) end
+end
+
 local function Anchor(f, parent)
 	f:ClearAllPoints()
 	if parent and parent:IsShown() then
@@ -228,6 +236,7 @@ function ns.ShowDefaultsPanel(parent)
 		f.add:SetSize(180, 22)
 		f.add:SetPoint("BOTTOMLEFT", listBox, "BOTTOMRIGHT", 12, 0)
 		f.add:SetText(L["Add to my templates"])
+		Fit(f.add)
 		f.add:SetScript("OnClick", function()
 			local id = f.selected
 			if not id then return end
@@ -246,6 +255,7 @@ function ns.ShowDefaultsPanel(parent)
 		f.reset:SetSize(180, 22)
 		f.reset:SetPoint("BOTTOMRIGHT", -14, 14)
 		f.reset:SetText(L["Reset all to defaults"])
+		Fit(f.reset)
 		f.reset:SetScript("OnClick", function() StaticPopup_Show("MACROMASTER_RESET_ALL") end)
 
 		function f:Refresh()
@@ -350,6 +360,7 @@ function ns.ShowExportPanel(parent)
 		f.export:SetSize(120, 22)
 		f.export:SetPoint("BOTTOMLEFT", 14, 14)
 		f.export:SetText(L["Export"])
+		Fit(f.export)
 		f.export:SetScript("OnClick", function()
 			f.edit:SetText(ns.ExportTemplates())
 			f.edit:SetFocus()
@@ -360,6 +371,7 @@ function ns.ShowExportPanel(parent)
 		f.import:SetSize(120, 22)
 		f.import:SetPoint("LEFT", f.export, "RIGHT", 6, 0)
 		f.import:SetText(L["Import"])
+		Fit(f.import)
 		f.import:SetScript("OnClick", function()
 			local list, err = ns.ParseTemplates(f.edit:GetText())
 			if not list then ns.Msg(err); return end
@@ -372,6 +384,7 @@ function ns.ShowExportPanel(parent)
 		f.clear:SetSize(80, 22)
 		f.clear:SetPoint("BOTTOMRIGHT", -14, 14)
 		f.clear:SetText(L["Clear"])
+		Fit(f.clear)
 		f.clear:SetScript("OnClick", function() f.edit:SetText("") end)
 
 		exportPanel = f
@@ -439,6 +452,7 @@ function ns.ShowSpellTablePanel(parent)
 		f.add:SetSize(90, 22)
 		f.add:SetPoint("BOTTOMLEFT", 14, 14)
 		f.add:SetText(L["Add"])
+		Fit(f.add)
 		f.add:SetScript("OnClick", function()
 			ns.ShowSpellPicker(f, function(name, spellID)
 				if spellID then
@@ -452,6 +466,7 @@ function ns.ShowSpellTablePanel(parent)
 		f.reset:SetSize(110, 22)
 		f.reset:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
 		f.reset:SetText(L["Reset to shipped"])
+		Fit(f.reset)
 		f.reset:SetScript("OnClick", function()
 			ns.ResetSuggestions(f.category)
 			f:Refresh()
@@ -515,7 +530,8 @@ function ns.ShowSpellTablePanel(parent)
 end
 
 -- ---------------------------------------------------------------------------
--- Settings: language, and the doors to the defaults catalogue and export/import
+-- Settings page (second tab of the main window): language, and the doors to
+-- the defaults catalogue and export/import. `main` anchors those panels.
 -- ---------------------------------------------------------------------------
 
 local LANGUAGES = {
@@ -524,69 +540,63 @@ local LANGUAGES = {
 	{ code = "zhTW", label = "繁體中文" },
 }
 
-local settingsPanel
-function ns.ShowSettingsPanel(parent)
-	if not settingsPanel then
-		local f = Popup("MacroMasterSettings", 380, 300, L["Settings"])
+function ns.BuildSettingsPage(f, main)
+	StaticPopupDialogs["MACROMASTER_RELOAD"] = {
+		text = L["RELOAD_CONFIRM"],
+		button1 = L["Reload"], button2 = CANCEL,
+		OnAccept = function() ReloadUI() end,
+		timeout = 0, whileDead = true, hideOnEscape = true,
+	}
 
-		StaticPopupDialogs["MACROMASTER_RELOAD"] = {
-			text = L["RELOAD_CONFIRM"],
-			button1 = L["Reload"], button2 = CANCEL,
-			OnAccept = function() ReloadUI() end,
-			timeout = 0, whileDead = true, hideOnEscape = true,
-		}
+	local x, y = 24, -64
+	local lang = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	lang:SetPoint("TOPLEFT", x, y)
+	lang:SetText(L["Language"])
+	local note = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	note:SetPoint("LEFT", lang, "RIGHT", 8, 0)
+	note:SetText(L["LANG_NOTE"])
 
-		local lang = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		lang:SetPoint("TOPLEFT", 20, -44)
-		lang:SetText(L["Language"])
-		local note = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-		note:SetPoint("LEFT", lang, "RIGHT", 8, 0)
-		note:SetText(L["LANG_NOTE"])
-
-		f.radios = {}
-		for i, entry in ipairs(LANGUAGES) do
-			local r = CreateFrame("CheckButton", "MacroMasterLang" .. i, f, "UIRadioButtonTemplate")
-			r:SetPoint("TOPLEFT", 24, -66 - (i - 1) * 22)
-			local text = r.Text or r.text or _G[r:GetName() .. "Text"]
-			text:SetText(entry.code and entry.label or L["Auto (client language)"])
-			r.code = entry.code
-			r:SetScript("OnClick", function(self)
-				local before = ns.db.settings.locale
-				ns.db.settings.locale = self.code
-				f:Refresh()
-				if before ~= self.code then StaticPopup_Show("MACROMASTER_RELOAD") end
-			end)
-			f.radios[i] = r
-		end
-
-		local lib = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-		lib:SetPoint("TOPLEFT", 20, -150)
-		lib:SetText(L["Templates"])
-
-		f.defaults = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.defaults:SetSize(160, 22)
-		f.defaults:SetPoint("TOPLEFT", 24, -172)
-		f.defaults:SetText(L["Default templates"])
-		f.defaults:SetScript("OnClick", function() ns.ShowDefaultsPanel(f) end)
-
-		f.export = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.export:SetSize(160, 22)
-		f.export:SetPoint("LEFT", f.defaults, "RIGHT", 8, 0)
-		f.export:SetText(L["Export / Import"])
-		f.export:SetScript("OnClick", function() ns.ShowExportPanel(f) end)
-
-		f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-		f.hint:SetPoint("TOPLEFT", 24, -204)
-		f.hint:SetWidth(332)
-		f.hint:SetJustifyH("LEFT")
-		f.hint:SetText(L["SETTINGS_TEMPLATES_HINT"])
-
-		function f:Refresh()
-			for _, r in ipairs(self.radios) do r:SetChecked(r.code == ns.db.settings.locale) end
-		end
-		f:SetScript("OnShow", f.Refresh)
-		settingsPanel = f
+	f.radios = {}
+	for i, entry in ipairs(LANGUAGES) do
+		local r = CreateFrame("CheckButton", "MacroMasterLang" .. i, f, "UIRadioButtonTemplate")
+		r:SetPoint("TOPLEFT", x + 4, y - 22 - (i - 1) * 22)
+		local text = r.Text or r.text or _G[r:GetName() .. "Text"]
+		text:SetText(entry.code and entry.label or L["Auto (client language)"])
+		r.code = entry.code
+		r:SetScript("OnClick", function(self)
+			local before = ns.db.settings.locale
+			ns.db.settings.locale = self.code
+			f:Refresh()
+			if before ~= self.code then StaticPopup_Show("MACROMASTER_RELOAD") end
+		end)
+		f.radios[i] = r
 	end
-	Anchor(settingsPanel, parent)
-	settingsPanel:Show()
+
+	local lib = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	lib:SetPoint("TOPLEFT", x, y - 110)
+	lib:SetText(L["Templates"])
+	f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	f.hint:SetPoint("TOPLEFT", x + 4, y - 132)
+	f.hint:SetWidth(520)
+	f.hint:SetJustifyH("LEFT")
+	f.hint:SetText(L["SETTINGS_TEMPLATES_HINT"])
+
+	f.defaults = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+	f.defaults:SetSize(160, 22)
+	f.defaults:SetPoint("TOPLEFT", f.hint, "BOTTOMLEFT", 0, -10)
+	f.defaults:SetText(L["Default templates"])
+	Fit(f.defaults)
+	f.defaults:SetScript("OnClick", function() ns.ShowDefaultsPanel(main) end)
+
+	f.export = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+	f.export:SetSize(160, 22)
+	f.export:SetPoint("LEFT", f.defaults, "RIGHT", 8, 0)
+	f.export:SetText(L["Export / Import"])
+	Fit(f.export)
+	f.export:SetScript("OnClick", function() ns.ShowExportPanel(main) end)
+
+	function f:Refresh()
+		for _, r in ipairs(self.radios) do r:SetChecked(r.code == ns.db.settings.locale) end
+	end
+	f:SetScript("OnShow", f.Refresh)
 end
