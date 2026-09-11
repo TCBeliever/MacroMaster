@@ -15,13 +15,13 @@ local L = ns.L
 -- replace the shipped list for that class+category only.
 -- ---------------------------------------------------------------------------
 
-ns.categories = { "INTERRUPT", "CC", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND", "HEAL", "DISPEL", "PURGE", "EXTERNAL", "SELFHEAL" }
+ns.categories = { "INTERRUPT", "CC", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND", "HEAL", "DISPEL", "PURGE", "EXTERNAL", "SELFHEAL", "CANCELAURA" }
 
 -- placeholder key -> category (keys equal to a category map to themselves)
 ns.categoryAliases = {
 	KICK = "INTERRUPT", CD = "BURST", DEF = "DEFENSIVE", MOVE = "MOVEMENT", AOE = "GROUND",
 	CLEANSE = "DISPEL", DECURSE = "DISPEL", OFFDISPEL = "PURGE", EXT = "EXTERNAL", SAVE = "EXTERNAL",
-	AURA = "DEFENSIVE", CANCEL = "DEFENSIVE",   -- something to /cancelaura: usually an immunity
+	AURA = "CANCELAURA", CANCEL = "CANCELAURA",
 }
 
 ns.shippedSuggestions = {
@@ -36,6 +36,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 360823, 365585, 374251 },                  -- Naturalize, Expunge, Cauterizing Flame
 		EXTERNAL  = { 370665, 357170, 360827, 374227 },          -- Rescue, Time Dilation, Blistering Scales, Zephyr
 		SELFHEAL  = { 360995, 355913, 361469 },                          -- Verdant Embrace, Emerald Blossom, Living Flame
+		CANCELAURA = { 357210 },                                          -- Deep Breath
 	},
 	DEATHKNIGHT = {
 		INTERRUPT = { 47528 },                                   -- Mind Freeze
@@ -56,6 +57,7 @@ ns.shippedSuggestions = {
 		GROUND    = { 204596, 202137, 207684, 202138, 189110, 191427 }, -- Sigil of Flame, Silence, Misery, Chains, Infernal Strike, Metamorphosis
 		PURGE     = { 278326 },                                  -- Consume Magic
 		EXTERNAL  = { 196718 },                                  -- Darkness
+		CANCELAURA = { 196555 },                                          -- Netherwalk
 	},
 	DRUID = {
 		INTERRUPT = { 106839, 78675 },                           -- Skull Bash, Solar Beam
@@ -82,6 +84,7 @@ ns.shippedSuggestions = {
 		PURGE     = { 528, 32375 },                              -- Dispel Magic, Mass Dispel
 		EXTERNAL  = { 33206, 47788, 17, 10060, 73325, 121536 },  -- Pain Suppression, Guardian Spirit, PW:Shield, Power Infusion, Leap of Faith, Angelic Feather
 		SELFHEAL  = { 19236, 2061, 139, 17, 59544 },                     -- Desperate Prayer, Flash Heal, Renew, Power Word: Shield, Gift of the Naaru
+		CANCELAURA = { 47585 },                                           -- Dispersion
 	},
 	ROGUE = {
 		INTERRUPT = { 1766 },                                    -- Kick
@@ -103,6 +106,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 4987, 213644 },                            -- Cleanse, Cleanse Toxins
 		EXTERNAL  = { 1022, 6940, 1044, 204018, 633, 53563 },    -- Blessing of Protection, Sacrifice, Freedom, Spellwarding, Lay on Hands, Beacon of Light
 		SELFHEAL  = { 85673, 19750, 20473, 633, 59542 },                 -- Word of Glory, Flash of Light, Holy Shock, Lay on Hands, Gift of the Naaru
+		CANCELAURA = { 642, 1022 },                                       -- Divine Shield, Blessing of Protection
 	},
 	WARRIOR = {
 		INTERRUPT = { 6552 },                                    -- Pummel
@@ -113,6 +117,7 @@ ns.shippedSuggestions = {
 		GROUND    = { 6544, 228920, 376079 },                    -- Heroic Leap, Ravager, Champion's Spear
 		EXTERNAL  = { 3411, 97462 },                             -- Intervene, Rallying Cry
 		SELFHEAL  = { 383762, 184364, 202168, 34428, 28880 },            -- Bitter Immunity, Enraged Regeneration, Impending Victory, Victory Rush, Gift of the Naaru
+		CANCELAURA = { 227847, 46924 },                                   -- Bladestorm (Arms), Bladestorm (Fury)
 	},
 	MAGE = {
 		INTERRUPT = { 2139 },                                    -- Counterspell
@@ -125,6 +130,7 @@ ns.shippedSuggestions = {
 		PURGE     = { 30449 },                                   -- Spellsteal
 		EXTERNAL  = { 414660 },                                  -- Mass Barrier
 		SELFHEAL  = { 59548 },                                           -- Gift of the Naaru
+		CANCELAURA = { 45438, 414659 },                                   -- Ice Block, Ice Cold
 	},
 	WARLOCK = {
 		INTERRUPT = { 19647, 119910, 89766 },                    -- Spell Lock, Command Demon, Axe Toss
@@ -149,6 +155,7 @@ ns.shippedSuggestions = {
 		PURGE     = { 19801 },                                   -- Tranquilizing Shot
 		EXTERNAL  = { 34477, 53480 },                            -- Misdirection, Roar of Sacrifice
 		SELFHEAL  = { 109304, 59543 },                                   -- Exhilaration, Gift of the Naaru
+		CANCELAURA = { 186265, 5384 },                                    -- Aspect of the Turtle, Feign Death
 	},
 	SHAMAN = {
 		INTERRUPT = { 57994 },                                   -- Wind Shear
@@ -162,6 +169,7 @@ ns.shippedSuggestions = {
 		PURGE     = { 370, 378773 },                             -- Purge, Greater Purge
 		EXTERNAL  = { 98008, 198838, 108281, 192077 },           -- Spirit Link Totem, Earthen Wall Totem, Ancestral Guidance, Wind Rush Totem
 		SELFHEAL  = { 8004, 61295, 77472, 59547 },                       -- Healing Surge, Riptide, Healing Wave, Gift of the Naaru
+		CANCELAURA = { 2645 },                                            -- Ghost Wolf
 	},
 	MONK = {
 		INTERRUPT = { 116705 },                                  -- Spear Hand Strike
@@ -174,6 +182,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 115450, 218164 },                          -- Detox (Mistweaver), Detox
 		EXTERNAL  = { 116849, 116841 },                          -- Life Cocoon, Tiger's Lust
 		SELFHEAL  = { 322101, 116670, 122281, 121093 },                  -- Expel Harm, Vivify, Healing Elixir, Gift of the Naaru
+		CANCELAURA = { 115176 },                                          -- Zen Meditation
 	},
 }
 
@@ -256,7 +265,8 @@ end
 -- ---------------------------------------------------------------------------
 
 -- A spell in several lists (Ironbark: DEFENSIVE and EXTERNAL) gets the
--- earlier category here.
+-- earlier category here. CANCELAURA is not a way to cast a spell, so it is
+-- never chosen for a /cast token (a /cancelaura token is forced to AURA).
 local IMPORT_PRIORITY = { "INTERRUPT", "CC", "DISPEL", "PURGE", "HEAL", "SELFHEAL", "EXTERNAL", "DEFENSIVE", "BURST", "MOVEMENT", "GROUND" }
 
 local function CategoryInLists(name, lists)

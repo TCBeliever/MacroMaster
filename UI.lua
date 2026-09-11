@@ -467,8 +467,9 @@ local function RefreshRows()
 			elseif m and m.default then state.values[key] = m.default
 			-- item placeholders start with the best suggested item in the bags
 			elseif itemCat then state.values[key] = ns.BestItemForCategory(itemCat)
-			-- categorised spell placeholders with the first suggestion this character knows
-			elseif not (m and (m.options or m.text)) then
+			-- categorised, required spell placeholders with the first suggestion
+			-- this character knows; an optional slot stays empty until you fill it
+			elseif not (m and (m.options or m.text or m.optional)) then
 				local cat = ns.CategoryForKey(key, m)
 				local first = cat and ns.ResolveSuggestions(cat, true)[1]
 				if first then state.values[key] = first.name end

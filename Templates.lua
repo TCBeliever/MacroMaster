@@ -135,7 +135,7 @@ ns.builtinTemplates = {
 		{
 			INTERRUPT = P("P_INTERRUPT", "P_INTERRUPT_H"),
 			FSENEMY   = PX("P_FSENEMY", "P_FSENEMY_H", { options = FRAMESORT_ENEMY, default = "EnemyHealer" }),
-			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true, category = "DEFENSIVE" }),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
 		}),
 
 	B("framesort_external", "T_FRAMESORT_EXTERNAL", "T_FRAMESORT_EXTERNAL_D",
@@ -283,7 +283,7 @@ function ns.TemplateFitsClass(b)
 	if only and not only[class] then return false end
 	for _, key in ipairs(ns.GetPlaceholders(b.body)) do
 		local m = b.meta and b.meta[key]
-		if not (m and (m.options or m.text)) and not ns.ItemCategoryForKey(key, m) then
+		if not (m and (m.options or m.text or m.optional)) and not ns.ItemCategoryForKey(key, m) then
 			local cat = ns.CategoryForKey(key, m)
 			if cat and #ns.GetSuggestionIDs(cat) == 0 then return false end
 		end
