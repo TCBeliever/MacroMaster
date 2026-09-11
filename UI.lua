@@ -679,6 +679,14 @@ StaticPopupDialogs["MACROMASTER_OVERWRITE"] = {
 	timeout = 0, whileDead = true, hideOnEscape = true,
 }
 
+-- popup texts were read at load; re-read them once the saved language is applied
+ns.onLocale = ns.onLocale or {}
+table.insert(ns.onLocale, function()
+	StaticPopupDialogs["MACROMASTER_DELETE_TEMPLATE"].text = L["Delete template '%s'?"]
+	StaticPopupDialogs["MACROMASTER_DELETE_TEMPLATE"].button1 = L["Delete"]
+	StaticPopupDialogs["MACROMASTER_OVERWRITE"].button1 = L["Overwrite"]
+end)
+
 local function CreateMacroFromState()
 	if InCombatLockdown() then Msg(L["MSG_COMBAT"]); return end
 
@@ -807,11 +815,9 @@ local function CreateMain()
 		if t then StaticPopup_Show("MACROMASTER_DELETE_TEMPLATE", t.name, nil, t.id) end
 	end)
 	bDel:SetPoint("LEFT", bImp, "RIGHT", 4, 0)
-	-- second row, set apart: the library (defaults catalogue, export/import)
-	local bDefaults = Button(f, L["Defaults"], (LEFT_W - 4) / 2, 22, function() ns.ShowDefaultsPanel(f) end)
-	bDefaults:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -10)
-	local bExport = Button(f, L["Export / Import"], (LEFT_W - 4) / 2, 22, function() ns.ShowExportPanel(f) end)
-	bExport:SetPoint("LEFT", bDefaults, "RIGHT", 4, 0)
+	-- second row, set apart: settings (language, defaults catalogue, export/import)
+	local bSettings = Button(f, L["Settings"], LEFT_W, 22, function() ns.ShowSettingsPanel(f) end)
+	bSettings:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -10)
 
 	-- ===== right: template editor =======================================
 	local rx = 16 + LEFT_W + 14

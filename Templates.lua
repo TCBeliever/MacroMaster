@@ -23,23 +23,38 @@ ns.PH_PATTERN = PH_PATTERN
 
 local DB_VERSION = 3
 
+-- Names, descriptions, labels and hints are locale keys resolved through L;
+-- the keys are kept so ns.RelocalizeBuiltins can resolve them again after
+-- the saved language is applied.
 local function B(id, name, desc, body, meta)
-	return { id = id, name = L[name], desc = L[desc], body = body, meta = meta, builtin = true }
+	return { id = id, nameKey = name, descKey = desc, name = L[name], desc = L[desc], body = body, meta = meta, builtin = true }
 end
 
 local function P(label, hint, options, multi, suffixes)
 	-- options : fixed choices shown in a dropdown instead of the spell picker
 	-- multi   : the dropdown also offers "All" -> one macro per option
 	-- suffixes: appended to the macro name per option (defaults to the option)
-	return { label = L[label], hint = L[hint], options = options, multi = multi, suffixes = suffixes }
+	return { labelKey = label, hintKey = hint, label = L[label], hint = L[hint], options = options, multi = multi, suffixes = suffixes }
 end
 
 -- Same, with extra fields: optional (unfilled -> its line is dropped),
--- default (pre-filled value), category (suggestion list to show).
+-- default (pre-filled value) or defaultKey (localized default),
+-- category (suggestion list to show).
 local function PX(label, hint, extra)
 	local m = P(label, hint, extra.options)
 	for k, v in pairs(extra) do m[k] = v end
+	if m.defaultKey then m.default = L[m.defaultKey] end
 	return m
+end
+
+function ns.RelocalizeBuiltins()
+	for _, b in ipairs(ns.builtinTemplates) do
+		b.name, b.desc = L[b.nameKey], L[b.descKey]
+		for _, m in pairs(b.meta or {}) do
+			if m.labelKey then m.label, m.hint = L[m.labelKey], L[m.hintKey] end
+			if m.defaultKey then m.default = L[m.defaultKey] end
+		end
+	end
 end
 
 local FRAMESORT_ENEMY = { "EnemyHealer", "EnemyTank", "EnemyDPS", "EnemyFrame1", "EnemyFrame2", "EnemyFrame3" }
@@ -98,7 +113,7 @@ ns.builtinTemplates = {
 		"/focus\n/tm [@focus] ~{MARK}\n/mmfocus {MSG} {rt{MARK}}",
 		{
 			MARK = PX("P_MARK", "P_MARK_H", { options = MARK_OPTIONS, icons = MARK_ICONS, labels = MARK_LABELS, default = "2" }),
-			MSG  = PX("P_MSG", "P_MSG_H", { text = true, optional = true, default = L["MSG_FOCUS_DEFAULT"] }),
+			MSG  = PX("P_MSG", "P_MSG_H", { text = true, optional = true, defaultKey = "MSG_FOCUS_DEFAULT" }),
 		}),
 
 	-- Requires the FrameSort addon: "#FrameSort X <selector>" rewrites the
@@ -176,6 +191,10 @@ function ns.InitDB()
 	db.settings  = db.settings or { pickup = true, scope = "account" }
 	db.settings.sort = db.settings.sort or "created"
 	db.icons = db.icons or {}          -- template id -> macro icon fileID chosen by the user
+	-- language: settings.locale ("enUS" / "zhTW") overrides the client's; nil = follow the client
+	if db.settings.locale then ns.ApplyLocale(db.settings.locale) end
+	ns.RelocalizeBuiltins()
+	for _, fn in ipairs(ns.onLocale or {}) do fn() end
 	if not db.seeded then
 		for _, t in ipairs(ns.builtinTemplates) do
 			db.templates[#db.templates + 1] = CopyTemplate(t)
@@ -287,6 +306,16 @@ local LEGACY_NAMES = {
 	set_focus       = { "Set focus: mouseover > target", "設定焦點：滑鼠指向 > 目標" },
 }
 
+-- True when `value` is what key `key` reads in any shipped language, i.e.
+-- text the user never changed.
+local function IsShippedText(key, value)
+	if value == key then return true end
+	for _, tbl in pairs(ns.locales or {}) do
+		if tbl[key] == value then return true end
+	end
+	return false
+end
+
 function ns.RefreshUneditedBuiltins()
 	for _, b in ipairs(ns.builtinTemplates) do
 		local t = ns.FindTemplate(b.id)
@@ -294,6 +323,9 @@ function ns.RefreshUneditedBuiltins()
 			for _, old in ipairs(LEGACY_NAMES[b.id] or {}) do
 				if t.name == old then t.name = b.name end
 			end
+			-- a name / description the user left as shipped follows the language
+			if t.name ~= b.name and IsShippedText(b.nameKey, t.name) then t.name = b.name end
+			if t.desc ~= b.desc and IsShippedText(b.descKey, t.desc) then t.desc = b.desc end
 			-- meta (labels, dropdown options, batch flags) is not user-editable,
 			-- so always take the shipped version
 			if b.meta then t.meta = CopyMeta(b.meta) end
