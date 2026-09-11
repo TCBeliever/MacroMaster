@@ -234,7 +234,7 @@ function ns.ShowDefaultsPanel(parent)
 		f.pdesc:SetJustifyV("TOP")
 		local bodyBox = InsetBox(f)
 		bodyBox:SetPoint("TOPLEFT", f.pdesc, "BOTTOMLEFT", -6, -6)
-		bodyBox:SetPoint("BOTTOMRIGHT", -14, 96)
+		bodyBox:SetPoint("BOTTOMRIGHT", -14, 118)   -- leaves room for two status lines above the buttons
 		f.bodyScroll = CreateFrame("ScrollFrame", nil, bodyBox, "UIPanelScrollFrameTemplate")
 		f.bodyScroll:SetPoint("TOPLEFT", 8, -8)
 		f.bodyScroll:SetPoint("BOTTOMRIGHT", -26, 8)
@@ -249,7 +249,7 @@ function ns.ShowDefaultsPanel(parent)
 		f.status:SetPoint("TOPLEFT", bodyBox, "BOTTOMLEFT", 2, -6)
 		f.status:SetWidth(W - 240 - 14 - 12 - 14)
 		f.status:SetJustifyH("LEFT")
-		f.status:SetHeight(40)
+		f.status:SetHeight(36)
 		f.status:SetJustifyV("TOP")
 
 		-- actions
