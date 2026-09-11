@@ -21,4 +21,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0     # full history so the packager can read tags
+      # CurseForge shows one changelog per file: send only the newest section
+      # of CHANGELOG.md (the one for this tag), not the whole history.
+      - name: Changelog for this release
+        run: |
+          awk '/^## /{buf=""} {buf=buf $0 "\n"} END{printf "%s", buf}' CHANGELOG.md > CHANGELOG_LATEST.md
+          grep -q "^## ${GITHUB_REF_NAME#v} " CHANGELOG_LATEST.md || {
+            echo "CHANGELOG.md has no '## ${GITHUB_REF_NAME#v}' section at the end"; exit 1; }
+          cat CHANGELOG_LATEST.md
       - uses: BigWigsMods/packager@v2

@@ -5,11 +5,12 @@ enable-nolib-creation: no
 ignore:
   - README.md
   - CHANGELOG.md
+  - CHANGELOG_LATEST.md
   - deploy.bat
   - .gitignore
   - .pkgmeta
   - .github
 
 manual-changelog:
-  filename: CHANGELOG.md
+  filename: CHANGELOG_LATEST.md   # written by the release workflow from CHANGELOG.md
   markup-type: markdown
