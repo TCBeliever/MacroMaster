@@ -93,3 +93,6 @@
 - Placeholders in a comma list can be left empty: the unfilled one disappears together with its comma instead of blocking the macro (`token` placeholders).
 - New spell category **Self-heal** with per-class suggestions (Renewal, Exhilaration, Desperate Prayer, Crimson Vial, Word of Glory, Expel Harm, Bitter Immunity, Gift of the Naaru...). The spell table window is a little wider to fit the eleventh tab.
 - Creating a macro warns when an item placeholder names something not in your bags; text placeholders no longer trigger the "not in your spell book" warning.
+- **Defaults** replaces *Restore built-ins*: a read-only catalogue of the shipped templates with a preview, *Add to my templates* (overwrite confirmation when you already have it) and *Reset all to defaults*.
+- **Export / Import**: all templates as plain text in a box (copy it out to back up or share; paste and import to merge — same id replaces, the rest are added).
+- Self-heal suggestions only list active heals now (Evoker: Verdant Embrace, Emerald Blossom, Living Flame; Death Knight: Death Strike; Paladin adds Holy Shock; Shaman adds Riptide and Healing Wave; Warlock: Drain Life...).

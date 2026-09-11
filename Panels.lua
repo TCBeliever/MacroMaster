@@ -121,6 +121,255 @@ function ns.ShowVariablesPanel(parent)
 end
 
 -- ---------------------------------------------------------------------------
+-- Default templates: read-only catalogue of what ships with the addon
+-- ---------------------------------------------------------------------------
+
+local function InsetBox(parent)
+	local box = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+	box:SetBackdrop({
+		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+		tile = true, tileSize = 16, edgeSize = 12,
+		insets = { left = 3, right = 3, top = 3, bottom = 3 },
+	})
+	box:SetBackdropColor(0, 0, 0, 0.6)
+	box:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+	return box
+end
+
+StaticPopupDialogs["MACROMASTER_OVERWRITE_DEFAULT"] = {
+	text = L["Overwrite your copy of '%s' with the default?"],
+	button1 = L["Overwrite"], button2 = CANCEL,
+	OnAccept = function(self, id)
+		ns.ImportBuiltin(id, true)
+		ns.SelectTemplate(id)
+		local t = ns.FindTemplate(id)
+		ns.Msg(L["MSG_DEFAULT_REPLACED"], t and t.name or id)
+		if ns.RefreshDefaultsPanel then ns.RefreshDefaultsPanel() end
+	end,
+	timeout = 0, whileDead = true, hideOnEscape = true,
+}
+
+StaticPopupDialogs["MACROMASTER_RESET_ALL"] = {
+	text = L["RESET_ALL_CONFIRM"],
+	button1 = L["Reset"], button2 = CANCEL,
+	OnAccept = function()
+		ns.ResetAllTemplates()
+		ns.ReselectTemplate()
+		ns.Msg(L["MSG_RESET_ALL"])
+		if ns.RefreshDefaultsPanel then ns.RefreshDefaultsPanel() end
+	end,
+	timeout = 0, whileDead = true, hideOnEscape = true, showAlert = true,
+}
+
+local defaultsPanel
+function ns.ShowDefaultsPanel(parent)
+	if not defaultsPanel then
+		local f = Popup("MacroMasterDefaults", 660, 500, L["Default templates"])
+		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.intro:SetPoint("TOPLEFT", 16, -36)
+		f.intro:SetWidth(628)
+		f.intro:SetJustifyH("LEFT")
+		f.intro:SetText(L["DEFAULTS_INTRO"])
+
+		-- left: list of shipped templates
+		local listBox = InsetBox(f)
+		listBox:SetPoint("TOPLEFT", 14, -86)
+		listBox:SetSize(210, 500 - 86 - 50)
+		f.scroll = CreateFrame("ScrollFrame", nil, listBox, "UIPanelScrollFrameTemplate")
+		f.scroll:SetPoint("TOPLEFT", 6, -6)
+		f.scroll:SetPoint("BOTTOMRIGHT", -26, 6)
+		f.content = CreateFrame("Frame", nil, f.scroll)
+		f.content:SetSize(170, 10)
+		f.scroll:SetScrollChild(f.content)
+		f.buttons = {}
+
+		-- right: read-only preview
+		f.pname = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		f.pname:SetPoint("TOPLEFT", listBox, "TOPRIGHT", 12, -2)
+		f.pname:SetWidth(400)
+		f.pname:SetJustifyH("LEFT")
+		f.pdesc = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.pdesc:SetPoint("TOPLEFT", f.pname, "BOTTOMLEFT", 0, -4)
+		f.pdesc:SetWidth(400)
+		f.pdesc:SetJustifyH("LEFT")
+		f.pdesc:SetHeight(64)
+		f.pdesc:SetJustifyV("TOP")
+		local bodyBox = InsetBox(f)
+		bodyBox:SetPoint("TOPLEFT", f.pdesc, "BOTTOMLEFT", -6, -6)
+		bodyBox:SetPoint("BOTTOMRIGHT", -14, 72)
+		f.bodyScroll = CreateFrame("ScrollFrame", nil, bodyBox, "UIPanelScrollFrameTemplate")
+		f.bodyScroll:SetPoint("TOPLEFT", 8, -8)
+		f.bodyScroll:SetPoint("BOTTOMRIGHT", -26, 8)
+		f.bodyContent = CreateFrame("Frame", nil, f.bodyScroll)
+		f.bodyContent:SetSize(370, 10)
+		f.bodyScroll:SetScrollChild(f.bodyContent)
+		f.pbody = f.bodyContent:CreateFontString(nil, "OVERLAY", "ChatFontNormal")
+		f.pbody:SetPoint("TOPLEFT")
+		f.pbody:SetWidth(370)
+		f.pbody:SetJustifyH("LEFT")
+		f.status = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+		f.status:SetPoint("TOPLEFT", bodyBox, "BOTTOMLEFT", 2, -6)
+		f.status:SetWidth(400)
+		f.status:SetJustifyH("LEFT")
+
+		f.add = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.add:SetSize(180, 22)
+		f.add:SetPoint("BOTTOMLEFT", listBox, "BOTTOMRIGHT", 12, 0)
+		f.add:SetText(L["Add to my templates"])
+		f.add:SetScript("OnClick", function()
+			local id = f.selected
+			if not id then return end
+			local b = ns.ShippedTemplate(id)
+			local r = ns.ImportBuiltin(id, false)
+			if r == "exists" then
+				StaticPopup_Show("MACROMASTER_OVERWRITE_DEFAULT", b.name, nil, id)
+			elseif r == "added" then
+				ns.SelectTemplate(id)
+				ns.Msg(L["MSG_DEFAULT_ADDED"], b.name)
+				f:Refresh()
+			end
+		end)
+
+		f.reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.reset:SetSize(180, 22)
+		f.reset:SetPoint("BOTTOMRIGHT", -14, 14)
+		f.reset:SetText(L["Reset all to defaults"])
+		f.reset:SetScript("OnClick", function() StaticPopup_Show("MACROMASTER_RESET_ALL") end)
+
+		function f:Refresh()
+			local list = ns.builtinTemplates
+			if not self.selected then self.selected = list[1] and list[1].id end
+			for i, b in ipairs(list) do
+				local btn = self.buttons[i]
+				if not btn then
+					btn = CreateFrame("Button", nil, self.content)
+					btn:SetSize(170, 22)
+					btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+					btn.text:SetPoint("LEFT", 6, 0)
+					btn.text:SetPoint("RIGHT", -4, 0)
+					btn.text:SetJustifyH("LEFT")
+					btn.text:SetWordWrap(false)
+					btn.sel = btn:CreateTexture(nil, "BACKGROUND")
+					btn.sel:SetAllPoints()
+					btn.sel:SetColorTexture(0.3, 0.55, 0.9, 0.35)
+					btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
+					btn:SetScript("OnClick", function(self) f.selected = self.templateID; f:Refresh() end)
+					self.buttons[i] = btn
+				end
+				btn.templateID = b.id
+				local mine = ns.FindTemplate(b.id)
+				btn.text:SetText((mine and "" or "|cffffd100+|r ") .. b.name)
+				btn.sel:SetShown(b.id == self.selected)
+				btn:ClearAllPoints()
+				btn:SetPoint("TOPLEFT", 0, -(i - 1) * 22)
+				btn:Show()
+			end
+			for i = #list + 1, #self.buttons do self.buttons[i]:Hide() end
+			self.content:SetHeight(math.max(10, #list * 22))
+
+			local b = self.selected and ns.ShippedTemplate(self.selected)
+			if b then
+				self.pname:SetText(b.name)
+				self.pdesc:SetText(b.desc or "")
+				self.pbody:SetText(b.body)
+				self.bodyContent:SetHeight(self.pbody:GetStringHeight() + 10)
+				local mine = ns.FindTemplate(b.id)
+				if not mine then
+					self.status:SetText(L["(not in your list)"])
+				elseif mine.body == b.body then
+					self.status:SetText(L["(in your list, unchanged)"])
+				else
+					self.status:SetText(L["(in your list, edited)"])
+				end
+			else
+				self.pname:SetText(""); self.pdesc:SetText(""); self.pbody:SetText(""); self.status:SetText("")
+			end
+		end
+
+		f:SetScript("OnShow", f.Refresh)
+		defaultsPanel = f
+		function ns.RefreshDefaultsPanel() if defaultsPanel:IsShown() then defaultsPanel:Refresh() end end
+	end
+	Anchor(defaultsPanel, parent)
+	defaultsPanel:Show()
+end
+
+-- ---------------------------------------------------------------------------
+-- Export / import all templates as text
+-- ---------------------------------------------------------------------------
+
+StaticPopupDialogs["MACROMASTER_IMPORT_TEXT"] = {
+	text = "%s",
+	button1 = L["Import"], button2 = CANCEL,
+	OnAccept = function(self, list)
+		local added, replaced = ns.ImportTemplates(list)
+		ns.ReselectTemplate()
+		ns.Msg(L["MSG_TEMPLATES_IMPORTED"], added, replaced)
+		if ns.RefreshDefaultsPanel then ns.RefreshDefaultsPanel() end
+	end,
+	timeout = 0, whileDead = true, hideOnEscape = true,
+}
+
+local exportPanel
+function ns.ShowExportPanel(parent)
+	if not exportPanel then
+		local f = Popup("MacroMasterExport", 620, 480, L["Export / Import"])
+		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.intro:SetPoint("TOPLEFT", 16, -36)
+		f.intro:SetWidth(588)
+		f.intro:SetJustifyH("LEFT")
+		f.intro:SetText(L["EXPORT_INTRO"])
+
+		local box = InsetBox(f)
+		box:SetPoint("TOPLEFT", 14, -96)
+		box:SetPoint("BOTTOMRIGHT", -14, 44)
+		local sf = CreateFrame("ScrollFrame", nil, box, "InputScrollFrameTemplate")
+		sf:SetPoint("TOPLEFT", 8, -8)
+		sf:SetPoint("BOTTOMRIGHT", -8, 8)
+		sf.EditBox:SetMaxLetters(0)
+		sf.EditBox:SetWidth(620 - 28 - 16 - 24)
+		sf.EditBox:SetFontObject(ChatFontNormal)
+		sf.EditBox:SetAutoFocus(false)
+		sf.EditBox:SetScript("OnEscapePressed", sf.EditBox.ClearFocus)
+		if sf.CharCount then sf.CharCount:Hide() end
+		f.edit = sf.EditBox
+
+		f.export = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.export:SetSize(120, 22)
+		f.export:SetPoint("BOTTOMLEFT", 14, 14)
+		f.export:SetText(L["Export"])
+		f.export:SetScript("OnClick", function()
+			f.edit:SetText(ns.ExportTemplates())
+			f.edit:SetFocus()
+			f.edit:HighlightText()
+		end)
+
+		f.import = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.import:SetSize(120, 22)
+		f.import:SetPoint("LEFT", f.export, "RIGHT", 6, 0)
+		f.import:SetText(L["Import"])
+		f.import:SetScript("OnClick", function()
+			local list, err = ns.ParseTemplates(f.edit:GetText())
+			if not list then ns.Msg(err); return end
+			if #list == 0 then ns.Msg(L["MSG_IMPORT_EMPTY"]); return end
+			local added, replaced = ns.CountImport(list)
+			StaticPopup_Show("MACROMASTER_IMPORT_TEXT", string.format(L["Import %d new template(s) and replace %d existing?"], added, replaced), nil, list)
+		end)
+
+		f.clear = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.clear:SetSize(80, 22)
+		f.clear:SetPoint("BOTTOMRIGHT", -14, 14)
+		f.clear:SetText(L["Clear"])
+		f.clear:SetScript("OnClick", function() f.edit:SetText("") end)
+
+		exportPanel = f
+	end
+	Anchor(exportPanel, parent)
+	exportPanel:Show()
+end
+
+-- ---------------------------------------------------------------------------
 -- Spell table editor (current class)
 -- ---------------------------------------------------------------------------
 

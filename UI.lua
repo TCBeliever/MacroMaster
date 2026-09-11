@@ -492,6 +492,14 @@ function ns.SelectTemplate(id)
 	RefreshRows()
 end
 
+-- After the list changed under us (import, reset): keep the selection when
+-- it still exists, otherwise fall back to the first template.
+function ns.ReselectTemplate()
+	local t = CurrentTemplate()
+	local first = ns.GetTemplates()[1]
+	ns.SelectTemplate(t and t.id or (first and first.id))
+end
+
 local function SaveTemplate()
 	local t = CurrentTemplate()
 	if not t then return end
@@ -784,13 +792,12 @@ local function CreateMain()
 		if t then StaticPopup_Show("MACROMASTER_DELETE_TEMPLATE", t.name, nil, t.id) end
 	end)
 	bDel:SetPoint("LEFT", bImp, "RIGHT", 4, 0)
-	local bRestore = Button(f, L["Restore built-ins"], LEFT_W, 22, function()
-		ns.RestoreBuiltins()
-		RefreshList()
-	end)
-	bRestore:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -4)
+	local bDefaults = Button(f, L["Defaults"], (LEFT_W - 4) / 2, 22, function() ns.ShowDefaultsPanel(f) end)
+	bDefaults:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -4)
+	local bExport = Button(f, L["Export / Import"], (LEFT_W - 4) / 2, 22, function() ns.ShowExportPanel(f) end)
+	bExport:SetPoint("LEFT", bDefaults, "RIGHT", 4, 0)
 	local bVars = Button(f, L["Variables"], (LEFT_W - 4) / 2, 22, function() ns.ShowVariablesPanel(f) end)
-	bVars:SetPoint("TOPLEFT", bRestore, "BOTTOMLEFT", 0, -4)
+	bVars:SetPoint("TOPLEFT", bDefaults, "BOTTOMLEFT", 0, -4)
 	local bTable = Button(f, L["Spell table"], (LEFT_W - 4) / 2, 22, function() ns.ShowSpellTablePanel(f) end)
 	bTable:SetPoint("LEFT", bVars, "RIGHT", 4, 0)
 

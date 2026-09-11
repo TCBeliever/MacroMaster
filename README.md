@@ -26,7 +26,7 @@ MacroMaster never guesses which spell your class should use — it suggests stru
 | Set focus: mouseover > target | `/focus [@mouseover,exists][]` |
 | Self-heal combo | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
 
-All built-ins are editable and deletable; *Restore built-ins* brings back any you removed without touching your edits.
+Your list starts as a copy of these and is entirely yours: edit, delete, add. *Defaults* opens the read-only catalogue of shipped templates — add one back (or overwrite your copy with the default), or reset the whole list. *Export / Import* turns all your templates into plain text you can copy out as a backup or share, and imports such text back (same id replaces, new ids are added).
 
 ## Variables and the spell table
 

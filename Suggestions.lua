@@ -34,7 +34,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 355913, 364343, 361469, 366155 },          -- Emerald Blossom, Echo, Living Flame, Reversion
 		DISPEL    = { 360823, 365585, 374251 },                  -- Naturalize, Expunge, Cauterizing Flame
 		EXTERNAL  = { 370665, 357170, 360827, 374227 },          -- Rescue, Time Dilation, Blistering Scales, Zephyr
-		SELFHEAL  = { 374348, 370960 },                                  -- Renewing Blaze, Emerald Communion
+		SELFHEAL  = { 360995, 355913, 361469 },                          -- Verdant Embrace, Emerald Blossom, Living Flame
 	},
 	DEATHKNIGHT = {
 		INTERRUPT = { 47528 },                                   -- Mind Freeze
@@ -44,7 +44,7 @@ ns.shippedSuggestions = {
 		MOVEMENT  = { 48265, 212552 },                           -- Death's Advance, Wraith Walk
 		GROUND    = { 43265, 152280 },                           -- Death and Decay, Defile
 		EXTERNAL  = { 51052 },                                   -- Anti-Magic Zone
-		SELFHEAL  = { 48743, 55233, 59545 },                             -- Death Pact, Vampiric Blood, Gift of the Naaru
+		SELFHEAL  = { 49998, 48743, 59545 },                             -- Death Strike, Death Pact, Gift of the Naaru
 	},
 	DEMONHUNTER = {
 		INTERRUPT = { 183752 },                                  -- Disrupt
@@ -67,7 +67,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 88423, 2782 },                             -- Nature's Cure, Remove Corruption
 		PURGE     = { 2908 },                                    -- Soothe
 		EXTERNAL  = { 102342, 29166, 106898 },                   -- Ironbark, Innervate, Stampeding Roar
-		SELFHEAL  = { 108238, 22842, 8936 },                             -- Renewal, Frenzied Regeneration, Regrowth
+		SELFHEAL  = { 108238, 8936, 22842, 774 },                        -- Renewal, Regrowth, Frenzied Regeneration, Rejuvenation
 	},
 	PRIEST = {
 		INTERRUPT = { 15487 },                                   -- Silence
@@ -80,7 +80,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 527, 213634, 32375 },                      -- Purify, Purify Disease, Mass Dispel
 		PURGE     = { 528, 32375 },                              -- Dispel Magic, Mass Dispel
 		EXTERNAL  = { 33206, 47788, 17, 10060, 73325, 121536 },  -- Pain Suppression, Guardian Spirit, PW:Shield, Power Infusion, Leap of Faith, Angelic Feather
-		SELFHEAL  = { 19236, 17, 2061, 59544 },                          -- Desperate Prayer, Power Word: Shield, Flash Heal, Gift of the Naaru
+		SELFHEAL  = { 19236, 2061, 139, 17, 59544 },                     -- Desperate Prayer, Flash Heal, Renew, Power Word: Shield, Gift of the Naaru
 	},
 	ROGUE = {
 		INTERRUPT = { 1766 },                                    -- Kick
@@ -101,7 +101,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 19750, 82326, 20473, 85673, 53563 },       -- Flash of Light, Holy Light, Holy Shock, Word of Glory, Beacon of Light
 		DISPEL    = { 4987, 213644 },                            -- Cleanse, Cleanse Toxins
 		EXTERNAL  = { 1022, 6940, 1044, 204018, 633, 53563 },    -- Blessing of Protection, Sacrifice, Freedom, Spellwarding, Lay on Hands, Beacon of Light
-		SELFHEAL  = { 85673, 633, 19750, 59542 },                        -- Word of Glory, Lay on Hands, Flash of Light, Gift of the Naaru
+		SELFHEAL  = { 85673, 19750, 20473, 633, 59542 },                 -- Word of Glory, Flash of Light, Holy Shock, Lay on Hands, Gift of the Naaru
 	},
 	WARRIOR = {
 		INTERRUPT = { 6552 },                                    -- Pummel
@@ -111,7 +111,7 @@ ns.shippedSuggestions = {
 		MOVEMENT  = { 100, 6544, 3411 },                         -- Charge, Heroic Leap, Intervene
 		GROUND    = { 6544, 228920, 376079 },                    -- Heroic Leap, Ravager, Champion's Spear
 		EXTERNAL  = { 3411, 97462 },                             -- Intervene, Rallying Cry
-		SELFHEAL  = { 383762, 184364, 202168, 28880 },                   -- Bitter Immunity, Enraged Regeneration, Impending Victory, Gift of the Naaru
+		SELFHEAL  = { 383762, 184364, 202168, 34428, 28880 },            -- Bitter Immunity, Enraged Regeneration, Impending Victory, Victory Rush, Gift of the Naaru
 	},
 	MAGE = {
 		INTERRUPT = { 2139 },                                    -- Counterspell
@@ -135,7 +135,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 119905, 89808 },                           -- Command Demon, Singe Magic (imp)
 		PURGE     = { 19505 },                                   -- Devour Magic (felhunter)
 		EXTERNAL  = { 20707, 111771 },                           -- Soulstone, Demonic Gateway
-		SELFHEAL  = { 108416, 416250 },                                  -- Dark Pact, Gift of the Naaru
+		SELFHEAL  = { 234153, 108416, 416250 },                          -- Drain Life, Dark Pact, Gift of the Naaru
 	},
 	HUNTER = {
 		INTERRUPT = { 147362, 187707 },                          -- Counter Shot, Muzzle
@@ -160,7 +160,7 @@ ns.shippedSuggestions = {
 		DISPEL    = { 77130, 51886, 383013 },                    -- Purify Spirit, Cleanse Spirit, Poison Cleansing Totem
 		PURGE     = { 370, 378773 },                             -- Purge, Greater Purge
 		EXTERNAL  = { 98008, 198838, 108281, 192077 },           -- Spirit Link Totem, Earthen Wall Totem, Ancestral Guidance, Wind Rush Totem
-		SELFHEAL  = { 8004, 59547 },                                     -- Healing Surge, Gift of the Naaru
+		SELFHEAL  = { 8004, 61295, 77472, 59547 },                       -- Healing Surge, Riptide, Healing Wave, Gift of the Naaru
 	},
 	MONK = {
 		INTERRUPT = { 116705 },                                  -- Spear Hand Strike
@@ -172,7 +172,7 @@ ns.shippedSuggestions = {
 		HEAL      = { 116670, 124682, 115151, 115175, 116849, 115310, 322101 }, -- Vivify, Enveloping Mist, Renewing Mist, Soothing Mist, Life Cocoon, Revival, Expel Harm
 		DISPEL    = { 115450, 218164 },                          -- Detox (Mistweaver), Detox
 		EXTERNAL  = { 116849, 116841 },                          -- Life Cocoon, Tiger's Lust
-		SELFHEAL  = { 322101, 122281, 116670, 121093 },                  -- Expel Harm, Healing Elixir, Vivify, Gift of the Naaru
+		SELFHEAL  = { 322101, 116670, 122281, 121093 },                  -- Expel Harm, Vivify, Healing Elixir, Gift of the Naaru
 	},
 }
 

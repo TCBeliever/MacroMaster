@@ -226,9 +226,13 @@ function ns.FindTemplate(id)
 	end
 end
 
+local function NewID()
+	return "user_" .. tostring(time()) .. "_" .. tostring(math.random(1000, 9999))
+end
+
 function ns.AddTemplate(name, desc, body, meta)
 	local t = {
-		id   = "user_" .. tostring(time()) .. "_" .. tostring(math.random(1000, 9999)),
+		id   = NewID(),
 		name = name or L["Untitled"],
 		desc = desc or "",
 		body = body or "",
@@ -297,17 +301,137 @@ function ns.RefreshUneditedBuiltins()
 	end
 end
 
--- Re-add any built-in template that has been deleted (never overwrites edits).
-function ns.RestoreBuiltins()
-	local added = 0
-	for _, t in ipairs(ns.builtinTemplates) do
-		if not ns.FindTemplate(t.id) then
-			ns.db.templates[#ns.db.templates + 1] = CopyTemplate(t)
-			ns.db.knownBuiltins[t.id] = true
+-- ---------------------------------------------------------------------------
+-- Defaults catalogue: the shipped templates are a read-only source the user
+-- copies from; the list in the DB is entirely theirs.
+-- ---------------------------------------------------------------------------
+
+local function ShippedTemplate(id)
+	for _, b in ipairs(ns.builtinTemplates) do
+		if b.id == id then return b end
+	end
+end
+ns.ShippedTemplate = ShippedTemplate
+
+-- Copies shipped template `id` into the list. An existing copy is only
+-- overwritten when `overwrite` is set. Returns "added" | "replaced" | "exists".
+function ns.ImportBuiltin(id, overwrite)
+	local b = ShippedTemplate(id)
+	if not b then return nil end
+	local c = CopyTemplate(b)
+	local t = ns.FindTemplate(id)
+	if t then
+		if not overwrite then return "exists" end
+		for k in pairs(t) do t[k] = nil end
+		for k, v in pairs(c) do t[k] = v end
+		return "replaced"
+	end
+	ns.db.templates[#ns.db.templates + 1] = c
+	ns.db.knownBuiltins[id] = true
+	return "added"
+end
+
+-- Throws the whole list away (user templates included) and re-seeds it.
+function ns.ResetAllTemplates()
+	ns.db.templates = {}
+	for _, b in ipairs(ns.builtinTemplates) do
+		ns.db.templates[#ns.db.templates + 1] = CopyTemplate(b)
+		ns.db.knownBuiltins[b.id] = true
+	end
+end
+
+-- ---------------------------------------------------------------------------
+-- Export / import: a plain-text block the user can copy out of and paste
+-- into an edit box. One [template] record per template, one key=value per
+-- line; backslash and newline are escaped so a body stays on one line.
+-- ---------------------------------------------------------------------------
+
+local EXPORT_HEADER = "MacroMaster templates 1"
+
+local function Esc(s)
+	return (tostring(s or ""):gsub("\\", "\\\\"):gsub("\r", ""):gsub("\n", "\\n"))
+end
+
+local function Unesc(s)
+	return (s:gsub("\\(.)", function(c)
+		if c == "n" then return "\n" end
+		return c
+	end))
+end
+
+function ns.ExportTemplates()
+	local out = { EXPORT_HEADER }
+	for _, t in ipairs(ns.db.templates) do
+		out[#out + 1] = ""
+		out[#out + 1] = "[template]"
+		out[#out + 1] = "id=" .. Esc(t.id)
+		out[#out + 1] = "name=" .. Esc(t.name)
+		out[#out + 1] = "desc=" .. Esc(t.desc)
+		out[#out + 1] = "body=" .. Esc(t.body)
+	end
+	return table.concat(out, "\n")
+end
+
+-- Returns list, nil (entries { id, name, desc, body }, id may be nil) or
+-- nil, error message.
+function ns.ParseTemplates(text)
+	text = (text or ""):gsub("\r", "")
+	if not text:match("^%s*MacroMaster templates %d+") then return nil, L["MSG_IMPORT_FORMAT"] end
+	local list, cur = {}, nil
+	for line in (text .. "\n"):gmatch("([^\n]*)\n") do
+		if line == "[template]" then
+			cur = {}
+			list[#list + 1] = cur
+		elseif cur then
+			local k, v = line:match("^(%w+)=(.*)$")
+			if k then cur[k] = Unesc(v) end
+		end
+	end
+	local valid = {}
+	for _, e in ipairs(list) do
+		if e.body and e.body ~= "" then
+			if e.id == "" then e.id = nil end
+			if not e.name or e.name == "" then e.name = L["Untitled"] end
+			e.desc = e.desc or ""
+			valid[#valid + 1] = e
+		end
+	end
+	return valid, nil
+end
+
+-- How ns.ImportTemplates would treat `list`: number added, number replaced.
+function ns.CountImport(list)
+	local added, replaced = 0, 0
+	for _, e in ipairs(list) do
+		if e.id and ns.FindTemplate(e.id) then replaced = replaced + 1 else added = added + 1 end
+	end
+	return added, replaced
+end
+
+-- Same id -> that template's text is replaced; otherwise added. An id that
+-- belongs to a shipped template keeps its built-in bookkeeping (meta, seed).
+function ns.ImportTemplates(list)
+	local added, replaced = 0, 0
+	for _, e in ipairs(list) do
+		local existing = e.id and ns.FindTemplate(e.id)
+		if existing then
+			existing.name, existing.desc, existing.body = e.name, e.desc, e.body
+			replaced = replaced + 1
+		else
+			local shipped = e.id and ShippedTemplate(e.id)
+			local t
+			if shipped then
+				t = CopyTemplate(shipped)
+				t.name, t.desc, t.body = e.name, e.desc, e.body
+				ns.db.knownBuiltins[t.id] = true
+			else
+				t = { id = e.id or NewID(), name = e.name, desc = e.desc, body = e.body }
+			end
+			ns.db.templates[#ns.db.templates + 1] = t
 			added = added + 1
 		end
 	end
-	return added
+	return added, replaced
 end
 
 -- ---------------------------------------------------------------------------
