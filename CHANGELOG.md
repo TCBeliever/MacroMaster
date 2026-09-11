@@ -96,4 +96,5 @@
 - **Defaults** replaces *Restore built-ins*: a read-only catalogue of the shipped templates with a preview, *Add to my templates* (overwrite confirmation when you already have it) and *Reset all to defaults*.
 - **Export / Import**: all templates as plain text in a box (copy it out to back up or share; paste and import to merge — same id replaces, the rest are added).
 - Importing a macro (*Save as template* / *Import*) maps spells and items to the variables the addon knows — `{INTERRUPT}`, `{CC}`, `{HEAL}`, `{SELFHEAL}`, `{POTION}`, `{HEALTHSTONE}`... (current class first, then every class's table) — instead of a key made from the spell name; unknown ones become `{SPELL}` / `{ITEM}` (`_2`, `_3` for repeats), and `spell:1234` / `item:1234` are resolved to names. `{ITEM}` is a new generic item placeholder (bag picker, no suggestions).
+- Shorter descriptions on every built-in template (a copy you never edited picks up the new text).
 - Self-heal suggestions only list active heals now (Evoker: Verdant Embrace, Emerald Blossom, Living Flame; Death Knight: Death Strike; Paladin adds Holy Shock; Shaman adds Riptide and Healing Wave; Warlock: Drain Life...).
