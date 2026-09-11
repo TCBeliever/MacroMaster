@@ -3,7 +3,7 @@
 ## Notes: Macro templates with spell placeholders. Pick a template, fill in your own spells from a picker, create the macro. Turn any existing macro into a template.
 ## Notes-zhTW: 巨集模板：選模板、從法術選擇器填入自己的技能、建立巨集。任何現有巨集都能一鍵存成模板。
 ## Author: Venser
-## Version: 1.3.0
+## Version: 1.4.0
 ## SavedVariables: MacroMasterDB
 ## IconTexture: Interface\Icons\INV_Misc_Note_06
 ## Category: venMOD
