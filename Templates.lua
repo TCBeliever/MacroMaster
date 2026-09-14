@@ -389,6 +389,9 @@ function ns.InitDB()
 	db.templates = db.templates or {}
 	db.settings  = db.settings or { pickup = true, scope = "account" }
 	db.settings.sort = db.settings.sort or "created"
+	-- importMode: what an import does with a template whose id is already in
+	-- the list: "replace" it (restoring a backup) or "add" a copy (a share)
+	db.settings.importMode = db.settings.importMode or "replace"
 	db.icons = db.icons or {}          -- template id -> macro icon fileID chosen by the user
 	-- language: settings.locale ("enUS" / "zhTW") overrides the client's; nil = follow the client
 	if db.settings.locale then ns.ApplyLocale(db.settings.locale) end
@@ -458,7 +461,11 @@ function ns.FindTemplate(id)
 end
 
 local function NewID()
-	return "user_" .. tostring(time()) .. "_" .. tostring(math.random(1000, 9999))
+	local id
+	repeat
+		id = "user_" .. tostring(time()) .. "_" .. tostring(math.random(1000, 9999))
+	until not ns.FindTemplate(id)   -- a batch import can ask several times a second
+	return id
 end
 
 function ns.AddTemplate(name, desc, body, meta)
@@ -608,9 +615,10 @@ local function Unesc(s)
 	end))
 end
 
-function ns.ExportTemplates()
+-- `list` defaults to every template.
+function ns.ExportTemplates(list)
 	local out = { EXPORT_HEADER }
-	for _, t in ipairs(ns.db.templates) do
+	for _, t in ipairs(list or ns.db.templates) do
 		out[#out + 1] = ""
 		out[#out + 1] = "[template]"
 		out[#out + 1] = "id=" .. Esc(t.id)
@@ -621,10 +629,59 @@ function ns.ExportTemplates()
 	return table.concat(out, "\n")
 end
 
--- Returns list, nil (entries { id, name, desc, body }, id may be nil) or
--- nil, error message.
+-- ---------------------------------------------------------------------------
+-- Share string: the plain text above, deflated and written in LibDeflate's
+-- print alphabet (letters, digits, parentheses) behind a "!MM1!" prefix.
+-- One line without whitespace, so it survives Discord, forums and chat.
+-- Import takes either form. The encoding is for transport, not safety:
+-- what protects the user is the parsing below and the code warnings.
+-- ---------------------------------------------------------------------------
+
+local STRING_VERSION = 1
+-- refused before decoding can eat memory: a whole library is a few KB
+local MAX_ENCODED = 200000
+local MAX_DECODED = 1000000
+-- longer than the editor allows; anything above is not a macro template
+local MAX_BODY = 2000
+
+function ns.EncodeTemplates(list)
+	local LD = LibStub("LibDeflate")
+	local packed = LD:CompressDeflate(ns.ExportTemplates(list), { level = 9 })
+	return "!MM" .. STRING_VERSION .. "!" .. LD:EncodeForPrint(packed)
+end
+
+-- "!MM1!..." -> the plain text, or nil, error message. Anything that does
+-- not carry the prefix is handed back unchanged (a plain-text export).
+local function DecodeString(text)
+	local version, payload = text:match("^%s*!MM(%d+)!(.*)$")
+	if not version then
+		if text:match("^%s*!MM") then return nil, L["MSG_IMPORT_CORRUPT"] end
+		return text
+	end
+	if tonumber(version) > STRING_VERSION then return nil, L["MSG_IMPORT_NEWER"] end
+	payload = payload:gsub("%s", "")   -- a forum may have wrapped the line
+	if #payload > MAX_ENCODED then return nil, L["MSG_IMPORT_CORRUPT"] end
+	local LD = LibStub("LibDeflate")
+	local packed = LD:DecodeForPrint(payload)
+	local plain = packed and LD:DecompressDeflate(packed)
+	if not plain or #plain > MAX_DECODED then return nil, L["MSG_IMPORT_CORRUPT"] end
+	return plain
+end
+
+-- Name and description are shown as-is in the list, tooltips and the
+-- catalogue: a "|" from someone else is escaped so it cannot smuggle in a
+-- colour code, a texture or a hyperlink.
+local function CleanText(s)
+	return (tostring(s or ""):gsub("|", "||"))
+end
+
+-- Returns list, nil (entries { id, name, desc, body, code }, id may be nil;
+-- code = true when the body runs Lua) or nil, error message.
 function ns.ParseTemplates(text)
-	text = (text or ""):gsub("\r", "")
+	local err
+	text, err = DecodeString(text or "")
+	if not text then return nil, err end
+	text = text:gsub("\r", "")
 	if not text:match("^%s*MacroMaster templates %d+") then return nil, L["MSG_IMPORT_FORMAT"] end
 	local list, cur = {}, nil
 	for line in (text .. "\n"):gmatch("([^\n]*)\n") do
@@ -638,10 +695,12 @@ function ns.ParseTemplates(text)
 	end
 	local valid = {}
 	for _, e in ipairs(list) do
-		if e.body and e.body ~= "" then
-			if e.id == "" then e.id = nil end
-			if not e.name or e.name == "" then e.name = L["Untitled"] end
-			e.desc = e.desc or ""
+		if e.body and e.body ~= "" and #e.body <= MAX_BODY then
+			if e.id == "" or (e.id and #e.id > 100) then e.id = nil end
+			e.name = CleanText(e.name)
+			if e.name == "" then e.name = L["Untitled"] end
+			e.desc = CleanText(e.desc)
+			e.code = #ns.CodeLines(e.body) > 0
 			valid[#valid + 1] = e
 		end
 	end
@@ -649,20 +708,23 @@ function ns.ParseTemplates(text)
 end
 
 -- How ns.ImportTemplates would treat `list`: number added, number replaced.
-function ns.CountImport(list)
+-- mode: "replace" (default) or "add", see db.settings.importMode.
+function ns.CountImport(list, mode)
 	local added, replaced = 0, 0
 	for _, e in ipairs(list) do
-		if e.id and ns.FindTemplate(e.id) then replaced = replaced + 1 else added = added + 1 end
+		if mode ~= "add" and e.id and ns.FindTemplate(e.id) then replaced = replaced + 1 else added = added + 1 end
 	end
 	return added, replaced
 end
 
--- Same id -> that template's text is replaced; otherwise added. An id that
--- belongs to a shipped template keeps its built-in bookkeeping (meta, seed).
-function ns.ImportTemplates(list)
+-- Same id -> that template's text is replaced ("replace" mode) or a copy
+-- with a fresh id is added ("add" mode); an unknown id is always added. An
+-- id that belongs to a shipped template keeps its placeholder metadata
+-- (labels, dropdowns) either way.
+function ns.ImportTemplates(list, mode)
 	local added, replaced = 0, 0
 	for _, e in ipairs(list) do
-		local existing = e.id and ns.FindTemplate(e.id)
+		local existing = mode ~= "add" and e.id and ns.FindTemplate(e.id)
 		if existing then
 			existing.name, existing.desc, existing.body = e.name, e.desc, e.body
 			replaced = replaced + 1
@@ -676,11 +738,39 @@ function ns.ImportTemplates(list)
 			else
 				t = { id = e.id or NewID(), name = e.name, desc = e.desc, body = e.body }
 			end
+			if ns.FindTemplate(t.id) then
+				-- "add" next to the one already there: a plain user template
+				-- from here on, not the built-in's slot
+				t.id, t.builtin, t.seedBody = NewID(), nil, nil
+			end
 			ns.db.templates[#ns.db.templates + 1] = t
 			added = added + 1
 		end
 	end
 	return added, replaced
+end
+
+-- ---------------------------------------------------------------------------
+-- Code detection. A macro line that runs Lua when pressed can do whatever
+-- an addon can: delete your macros, wipe settings, talk in chat as you.
+-- Harmless in a template you wrote; a real risk in one somebody sent you.
+-- Every place that shows, imports or creates such a template says so in red.
+-- ---------------------------------------------------------------------------
+
+local CODE_CMDS = { run = true, script = true, dump = true, console = true }
+
+function ns.IsCodeLine(line)
+	local cmd = line:match("^%s*/(%a+)")
+	return cmd and CODE_CMDS[cmd:lower()] or false
+end
+
+-- The lines of `body` that run code, trimmed; empty when there are none.
+function ns.CodeLines(body)
+	local out = {}
+	for line in ((body or "") .. "\n"):gmatch("([^\n]*)\n") do
+		if ns.IsCodeLine(line) then out[#out + 1] = strtrim(line) end
+	end
+	return out
 end
 
 -- ---------------------------------------------------------------------------

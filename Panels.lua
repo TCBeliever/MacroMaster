@@ -395,8 +395,8 @@ end
 StaticPopupDialogs["MACROMASTER_IMPORT_TEXT"] = {
 	text = "%s",
 	button1 = L["Import"], button2 = CANCEL,
-	OnAccept = function(self, list)
-		local added, replaced = ns.ImportTemplates(list)
+	OnAccept = function(self, data)
+		local added, replaced = ns.ImportTemplates(data.list, data.mode)
 		ns.ReselectTemplate()
 		ns.Msg(L["MSG_TEMPLATES_IMPORTED"], added, replaced)
 		if ns.RefreshDefaultsPanel then ns.RefreshDefaultsPanel() end
@@ -405,7 +405,8 @@ StaticPopupDialogs["MACROMASTER_IMPORT_TEXT"] = {
 }
 
 local exportPanel
-function ns.ShowExportPanel(parent)
+-- `template` (optional): open with that one template's share string selected
+function ns.ShowExportPanel(parent, template)
 	if not exportPanel then
 		local f = Popup("MacroMasterExport", 620, 480, L["Export / Import"])
 		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -415,7 +416,7 @@ function ns.ShowExportPanel(parent)
 		f.intro:SetText(L["EXPORT_INTRO"])
 
 		local box = InsetBox(f)
-		box:SetPoint("TOPLEFT", 14, -96)
+		box:SetPoint("TOPLEFT", 14, -104)
 		box:SetPoint("BOTTOMRIGHT", -14, 44)
 		local sf = CreateFrame("ScrollFrame", nil, box, "InputScrollFrameTemplate")
 		sf:SetPoint("TOPLEFT", 8, -8)
@@ -434,7 +435,7 @@ function ns.ShowExportPanel(parent)
 		f.export:SetText(L["Export"])
 		Fit(f.export)
 		f.export:SetScript("OnClick", function()
-			f.edit:SetText(ns.ExportTemplates())
+			f.edit:SetText(ns.EncodeTemplates())
 			f.edit:SetFocus()
 			f.edit:HighlightText()
 		end)
@@ -448,9 +449,49 @@ function ns.ShowExportPanel(parent)
 			local list, err = ns.ParseTemplates(f.edit:GetText())
 			if not list then ns.Msg(err); return end
 			if #list == 0 then ns.Msg(L["MSG_IMPORT_EMPTY"]); return end
-			local added, replaced = ns.CountImport(list)
-			StaticPopup_Show("MACROMASTER_IMPORT_TEXT", string.format(L["Import %d new template(s) and replace %d existing?"], added, replaced), nil, list)
+			local mode = ns.db.settings.importMode
+			local added, replaced = ns.CountImport(list, mode)
+			local text = replaced > 0
+				and string.format(L["Import %d new template(s) and replace %d existing?"], added, replaced)
+				or string.format(L["Import %d template(s)?"], added)
+			-- templates that run Lua are called out before anything is added
+			local code = 0
+			for _, e in ipairs(list) do if e.code then code = code + 1 end end
+			if code > 0 then
+				text = text .. "\n\n|cffff4040" .. string.format(L["IMPORT_CODE_WARNING"], code) .. "|r"
+			end
+			StaticPopup_Show("MACROMASTER_IMPORT_TEXT", text, nil, { list = list, mode = mode })
 		end)
+
+		-- what happens to a template whose id is already in the list
+		f.modeLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		f.modeLabel:SetPoint("LEFT", f.import, "RIGHT", 14, 0)
+		f.modeLabel:SetText(L["Same id:"])
+		f.modes = {}
+		local prev = f.modeLabel
+		for i, mode in ipairs({ "replace", "add" }) do
+			local r = CreateFrame("CheckButton", "MacroMasterImportMode" .. i, f, "UIRadioButtonTemplate")
+			r:SetPoint("LEFT", prev, "RIGHT", i == 1 and 6 or 10, 0)
+			local text = r.Text or r.text or _G[r:GetName() .. "Text"]
+			text:SetText(mode == "replace" and L["Replace"] or L["Add new"])
+			r.mode = mode
+			r:SetScript("OnClick", function(self)
+				ns.db.settings.importMode = self.mode
+				f:RefreshMode()
+			end)
+			r:SetScript("OnEnter", function(self)
+				GameTooltip:SetOwner(self, "ANCHOR_TOP")
+				GameTooltip:SetText(self.mode == "replace" and L["MODE_REPLACE_HELP"] or L["MODE_ADD_HELP"], 1, 1, 1, 1, true)
+				GameTooltip:Show()
+			end)
+			r:SetScript("OnLeave", GameTooltip_Hide)
+			f.modes[i] = r
+			prev = text
+		end
+		function f:RefreshMode()
+			for _, r in ipairs(self.modes) do r:SetChecked(r.mode == ns.db.settings.importMode) end
+		end
+		f:SetScript("OnShow", f.RefreshMode)
 
 		f.clear = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
 		f.clear:SetSize(80, 22)
@@ -463,6 +504,11 @@ function ns.ShowExportPanel(parent)
 	end
 	Anchor(exportPanel, parent)
 	exportPanel:Show()
+	if template then
+		exportPanel.edit:SetText(ns.EncodeTemplates({ template }))
+		exportPanel.edit:SetFocus()
+		exportPanel.edit:HighlightText()
+	end
 end
 
 -- ---------------------------------------------------------------------------

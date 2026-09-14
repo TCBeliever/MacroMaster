@@ -328,6 +328,26 @@ local function UpdateIconButton()
 	if main.iconBtn then main.iconBtn.icon:SetTexture(ChosenIcon() or QUESTION_ICON) end
 end
 
+-- Lines that run Lua (/run, /script...) are shown in red: a template from
+-- someone else can hide anything there.
+local RED = "|cffff4040"
+
+local function HighlightCode(body)
+	return (body:gsub("[^\n]+", function(line)
+		if ns.IsCodeLine(line) then return RED .. line .. "|r" end
+	end))
+end
+
+-- The hint under the editor turns into a red warning while the template
+-- body runs code.
+local function UpdateCodeHint()
+	if #ns.CodeLines(CurrentBody()) > 0 then
+		main.bodyHint:SetText(RED .. L["CODE_HINT"] .. "|r")
+	else
+		main.bodyHint:SetText(L["Placeholders use {NAME}. Edit the text freely; placeholder rows update as you type."])
+	end
+end
+
 local function UpdatePreview()
 	-- the default macro name follows the template: settle it before the
 	-- variant headers below use it, or a switch shows the previous template's name
@@ -341,9 +361,9 @@ local function UpdatePreview()
 		for _, k in ipairs(missing) do missingAll[#missingAll + 1] = k end
 		longest = math.max(longest, #body)
 		if #variants > 1 then
-			parts[#parts + 1] = "|cffffd100" .. MacroNameFor(base, v.suffix) .. "|r\n" .. body
+			parts[#parts + 1] = "|cffffd100" .. MacroNameFor(base, v.suffix) .. "|r\n" .. HighlightCode(body)
 		else
-			parts[#parts + 1] = body
+			parts[#parts + 1] = HighlightCode(body)
 		end
 	end
 	main.preview.text:SetText(table.concat(parts, "\n\n"))
@@ -497,6 +517,7 @@ local function RefreshRows()
 	-- shrink the section to the rows in use; the preview box takes the rest
 	local shown = math.max(1, math.min(#keys, MAX_ROWS))
 	main.fill:SetHeight(shown * 27 + (#keys > MAX_ROWS and 14 or 0))
+	UpdateCodeHint()
 	UpdatePreview()
 end
 
@@ -694,12 +715,39 @@ StaticPopupDialogs["MACROMASTER_OVERWRITE"] = {
 	timeout = 0, whileDead = true, hideOnEscape = true,
 }
 
+-- Writes the jobs, after a confirmation when any of the macros exists.
+-- overwrite = names of the macros that would be replaced.
+local function CommitJobs(jobs, perChar, overwrite)
+	if #overwrite > 0 then
+		local text = (#jobs == 1)
+			and string.format(L["Overwrite macro '%s'?"], overwrite[1])
+			or string.format(L["Overwrite %d existing macros (%s)?"], #overwrite, table.concat(overwrite, ", "))
+		StaticPopup_Show("MACROMASTER_OVERWRITE", text, nil, { jobs = jobs, perChar = perChar })
+		return
+	end
+	WriteJobs(jobs, perChar)
+end
+
+-- A macro that runs Lua is confirmed first, with its code lines in red: a
+-- template from someone else can hide anything in a /run line.
+StaticPopupDialogs["MACROMASTER_CODE"] = {
+	text = L["CODE_CONFIRM"],
+	button1 = L["Create anyway"], button2 = CANCEL,
+	OnAccept = function(self, data)
+		if InCombatLockdown() then Msg(L["MSG_COMBAT"]); return end
+		CommitJobs(data.jobs, data.perChar, data.overwrite)
+	end,
+	timeout = 0, whileDead = true, hideOnEscape = true, showAlert = true,
+}
+
 -- popup texts were read at load; re-read them once the saved language is applied
 ns.onLocale = ns.onLocale or {}
 table.insert(ns.onLocale, function()
 	StaticPopupDialogs["MACROMASTER_DELETE_TEMPLATE"].text = L["Delete template '%s'?"]
 	StaticPopupDialogs["MACROMASTER_DELETE_TEMPLATE"].button1 = L["Delete"]
 	StaticPopupDialogs["MACROMASTER_OVERWRITE"].button1 = L["Overwrite"]
+	StaticPopupDialogs["MACROMASTER_CODE"].text = L["CODE_CONFIRM"]
+	StaticPopupDialogs["MACROMASTER_CODE"].button1 = L["Create anyway"]
 end)
 
 local function CreateMacroFromState()
@@ -747,14 +795,22 @@ local function CreateMacroFromState()
 		return
 	end
 
-	if #overwrite > 0 then
-		local text = (#jobs == 1)
-			and string.format(L["Overwrite macro '%s'?"], overwrite[1])
-			or string.format(L["Overwrite %d existing macros (%s)?"], #overwrite, table.concat(overwrite, ", "))
-		StaticPopup_Show("MACROMASTER_OVERWRITE", text, nil, { jobs = jobs, perChar = perChar })
+	-- code lines of every variant, each once, for the red confirmation
+	local code, seen = {}, {}
+	for _, j in ipairs(jobs) do
+		for _, line in ipairs(ns.CodeLines(j.body)) do
+			if not seen[line] then
+				seen[line] = true
+				code[#code + 1] = line
+			end
+		end
+	end
+	if #code > 0 then
+		StaticPopup_Show("MACROMASTER_CODE", RED .. table.concat(code, "\n") .. "|r", nil,
+			{ jobs = jobs, perChar = perChar, overwrite = overwrite })
 		return
 	end
-	WriteJobs(jobs, perChar)
+	CommitJobs(jobs, perChar, overwrite)
 end
 
 -- ---------------------------------------------------------------------------
@@ -865,11 +921,12 @@ local function CreateMain()
 		end
 	end)
 
-	local hint = Label(page, L["Placeholders use {NAME}. Edit the text freely; placeholder rows update as you type."], "GameFontDisableSmall")
-	hint:SetPoint("TOPLEFT", rx, -298)
-	hint:SetWidth(rw)
-	hint:SetJustifyH("LEFT")
-	hint:SetMaxLines(1)
+	-- doubles as the red code warning (UpdateCodeHint)
+	f.bodyHint = Label(page, L["Placeholders use {NAME}. Edit the text freely; placeholder rows update as you type."], "GameFontDisableSmall")
+	f.bodyHint:SetPoint("TOPLEFT", rx, -298)
+	f.bodyHint:SetWidth(rw)
+	f.bodyHint:SetJustifyH("LEFT")
+	f.bodyHint:SetMaxLines(1)
 	-- "Update template" lives on the label row above the editor so the hint
 	-- below keeps the full width
 	local bSave = Button(page, L["Save template"], 100, 22, SaveTemplate)
@@ -877,8 +934,27 @@ local function CreateMain()
 	-- the variables reference sits next to the editor it documents
 	local bVars = Button(page, L["Variables"], 90, 22, function() ns.ShowVariablesPanel(f) end)
 	bVars:SetPoint("RIGHT", bSave, "LEFT", -6, 0)
+	-- share string of what the editor shows right now (saved or not)
+	local bShare = Button(page, L["Share"], 70, 22, function()
+		local t = CurrentTemplate()
+		if not t then return end
+		ns.ShowExportPanel(f, {
+			id   = t.id,
+			name = strtrim(f.tname:GetText()),
+			desc = strtrim(f.tdesc:GetText()),
+			body = CurrentBody(),
+		})
+	end)
+	bShare:SetPoint("RIGHT", bVars, "LEFT", -6, 0)
+	bShare:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L["Share"], 1, 1, 1)
+		GameTooltip:AddLine(L["SHARE_HELP"], nil, nil, nil, true)
+		GameTooltip:Show()
+	end)
+	bShare:SetScript("OnLeave", GameTooltip_Hide)
 	f.saveHint = Label(page, "", "GameFontNormalSmall")
-	f.saveHint:SetPoint("RIGHT", bVars, "LEFT", -6, 0)
+	f.saveHint:SetPoint("RIGHT", bShare, "LEFT", -6, 0)
 
 	-- ===== fill placeholders ============================================
 	local fl = Label(page, L["Fill placeholders"])

@@ -114,3 +114,11 @@
 - **Settings** is the second tab of the window (bottom tabs: Editor / Settings) with a language switch — auto / English / 繁體中文, applied after a UI reload; shipped template names and descriptions you never edited follow the language — and the doors to *Default templates* and *Export / Import*, which moved there from the left pane. Raid marker names and the set-focus default message follow the addon language too, and buttons grow to fit their label.
 - Switching template no longer shows the previous template's name on the preview's per-variant headers (the default macro name is settled before the preview is built).
 - The CurseForge file changelog now carries only that version's notes instead of the whole history.
+
+## 1.5.0 (2026-09-14)
+
+- **Share strings**: *Export* now produces one line (`!MM1!...`: the template text deflated with LibDeflate and written in a chat-safe alphabet) instead of multi-line text, so it survives Discord, forums and websites unchanged. *Import* takes the string or the old plain text. A *Share* button on the editor gives the string for the current template alone.
+- The Export / Import window has a *Same id* choice: *Replace* overwrites your copy of a template you already have (restoring a backup), *Add new* adds it next to yours with a fresh id (keeping your version); the confirmation says which will happen. Fresh ids are checked against the list, so a batch import cannot collide.
+- **Code warnings**: a template whose body runs Lua (`/run`, `/script`, `/dump`, `/console`) is flagged in red under the editor and in the preview, the import confirmation says how many such templates the text contains, and creating such a macro asks for a red confirmation that lists the code lines. Your own `/run` templates work as before; the warning is there for strings that come from someone else.
+- Imported names and descriptions have UI escape sequences neutralised (`|` becomes `||`), oversized strings are refused before decoding, and bodies longer than the editor allows are skipped.
+- Bundles LibStub and LibDeflate (zlib licence) under `Libs/`; `deploy.bat` copies subfolders.

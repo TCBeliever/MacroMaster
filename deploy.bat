@@ -3,7 +3,7 @@ rem Copy this project into the WoW AddOns folder for local testing, then /reload
 set SRC=%~dp0
 set DST=F:\World of Warcraft\_retail_\Interface\AddOns\MacroMaster
 
-robocopy "%SRC%." "%DST%" *.toc *.lua /XD .git /NFL /NDL /NJH /NJS /NP
+robocopy "%SRC%." "%DST%" *.toc *.lua /S /XD .git /NFL /NDL /NJH /NJS /NP
 if %ERRORLEVEL% GEQ 8 (
   echo Copy failed.
   exit /b 1
