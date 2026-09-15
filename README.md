@@ -1,12 +1,12 @@
 # MacroMaster
 
-**Proven macro patterns, your spells.**
+**Macros as easy as picking a spell.**
 
 [繁體中文](README.zhTW.md) · [CurseForge](https://www.curseforge.com/wow/addons/macromaster) · [Report a bug](https://github.com/TCBeliever/MacroMaster/issues) · [Changelog](CHANGELOG.md)
 
 ![CurseForge downloads](https://cf.way2muchnoise.eu/1690683.svg) ![Game version](https://cf.way2muchnoise.eu/versions/1690683.svg) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
-Stop hand-editing macros from guides. Pick a proven template (mouseover heal, focus interrupt, arena target, cancel aura, cast sequence), fill in your own spells, create. Turn any macro into a template and share it as a string.
+Makes writing macros as easy as picking a spell. Choose a proven template (mouseover heal, focus interrupt, arena target, cancel aura, cast sequence), fill in your own spells, create. Turn any macro into a template and share it as a string.
 
 ![MacroMaster main window](https://media.forgecdn.net/attachments/1939/153/screenshot-20260911-222315-png.png)
 

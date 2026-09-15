@@ -1,10 +1,10 @@
 # MacroMaster
 
-**驗證過的巨集結構，填上你的技能。**
+**巨集，像選技能一樣簡單。**
 
 [English](README.md) · [CurseForge](https://www.curseforge.com/wow/addons/macromaster) · [回報問題](https://github.com/TCBeliever/MacroMaster/issues) · [更新記錄](CHANGELOG.md)
 
-不用再從攻略複製巨集慢慢改。選一個驗證過的模板（滑鼠指向治療、焦點斷法、競技場目標、取消光環、施法序列），填入自己的技能，建立。任何巨集都能存成模板，模板可以用一串字分享。
+寫巨集變得像選技能一樣簡單。選一個驗證過的模板（滑鼠指向治療、焦點斷法、競技場目標、取消光環、施法序列），填入自己的技能，建立。任何巨集都能存成模板，模板可以用一串字分享。
 
 ![MacroMaster 主視窗](https://media.forgecdn.net/attachments/1939/153/screenshot-20260911-222315-png.png)
 

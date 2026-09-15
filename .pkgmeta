@@ -4,6 +4,8 @@ enable-nolib-creation: no
 
 ignore:
   - README.md
+  - README.zhTW.md
+  - docs
   - CHANGELOG.md
   - CHANGELOG_LATEST.md
   - deploy.bat
