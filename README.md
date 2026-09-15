@@ -44,7 +44,7 @@ Tips
 
 ## Built-in templates
 
-25 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Default templates*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
+25 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
 Most bodies start with a `#showtooltip` line, omitted below. `·` separates macro lines.
 
@@ -123,8 +123,8 @@ How empty placeholders behave: an *optional* one drops its whole line; one insid
 
 ## Sharing templates
 
-- **Share** on the editor gives the current template as one string, `!MM1!...`. *Settings → Export / Import → Export* gives all your templates as one string, handy as a backup.
-- To import, paste a string (or an older plain-text export) into that window and press *Import*. The **Same id** choice decides what happens to a template you already have: *Replace* overwrites your copy (restoring a backup), *Add new* adds it next to yours (keeping your version).
+- **Share** next to the template name gives the current template as one string, `!MM1!...`, selected and ready for Ctrl+C. *Settings → Export* gives all your templates as one string, handy as a backup.
+- *Settings → Import*: paste a string (or an older plain-text export) and press *Import*. The **Same id** choice decides what happens to a template you already have: *Replace* overwrites your copy (restoring a backup), *Add new* adds it next to yours (keeping your version).
 - **Safety.** A macro line can run Lua (`/run`, `/script`, `/dump`, `/console`), and such a line from a stranger can do anything an addon can. MacroMaster flags such templates in red under the editor and in the preview, the import confirmation counts them, and creating the macro asks for a red confirmation that lists the code lines. Your own `/run` templates work as before. Import only from people you trust.
 
 ## Settings
@@ -132,8 +132,8 @@ How empty placeholders behave: an *optional* one drops its whole line; one insid
 The *Settings* tab (bottom of the window) holds:
 
 - **Language**: auto, English or 繁體中文, applied after a UI reload. Built-in names and descriptions you never edited follow the language.
-- **Default templates**: the read-only catalogue of shipped templates. *Add to my templates*, overwrite your copy with the default, or reset the whole list to your class's recommended set.
-- **Export / Import**: see above.
+- **Add more built-ins**: the catalogue of shipped templates. *Add* puts the selected one in your list, *Add all* takes everything on the current tab you do not have yet, a copy you already have can be overwritten with the default, and *Reset all to defaults* returns to your class's recommended set.
+- **Export** and **Import**: see above.
 
 Macro scope (account or character) and *Pick up after creating* are remembered. Templates, the values you filled in per character, chosen icons and spell-table edits live in `MacroMasterDB` (account-wide SavedVariables).
 

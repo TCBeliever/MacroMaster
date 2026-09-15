@@ -392,6 +392,8 @@ function ns.InitDB()
 	-- importMode: what an import does with a template whose id is already in
 	-- the list: "replace" it (restoring a backup) or "add" a copy (a share)
 	db.settings.importMode = db.settings.importMode or "replace"
+	-- closeAfterCopy: the share window closes itself after Ctrl+C
+	if db.settings.closeAfterCopy == nil then db.settings.closeAfterCopy = true end
 	db.icons = db.icons or {}          -- template id -> macro icon fileID chosen by the user
 	-- language: settings.locale ("enUS" / "zhTW") overrides the client's; nil = follow the client
 	if db.settings.locale then ns.ApplyLocale(db.settings.locale) end
@@ -410,7 +412,7 @@ function ns.InitDB()
 		end
 	end
 	-- a fresh install starts with the set recommended for this class; the
-	-- rest waits in the catalogue (Settings -> Default templates)
+	-- rest waits in the catalogue (Settings -> Add more built-ins)
 	if not db.seeded then
 		SeedTemplates(db)
 		db.seeded = true
@@ -585,15 +587,6 @@ end
 function ns.ResetAllTemplates()
 	ns.db.templates = {}
 	SeedTemplates(ns.db)
-end
-
--- Adds every recommended template that is not in the list yet. Returns the count.
-function ns.AddRecommended()
-	local added = 0
-	for _, id in ipairs(ns.RecommendedTemplates()) do
-		if ns.ImportBuiltin(id, false) == "added" then added = added + 1 end
-	end
-	return added
 end
 
 -- ---------------------------------------------------------------------------

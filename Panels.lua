@@ -5,6 +5,16 @@ local L = ns.L
 -- Shared bits
 -- ---------------------------------------------------------------------------
 
+-- Pop-ups open centred and come back where you last dragged them: the offset
+-- from the screen centre is kept per frame name in db.settings.positions.
+local function SavePosition(f)
+	local x, y = f:GetCenter()
+	local ux, uy = UIParent:GetCenter()
+	if not (x and ux) then return end
+	ns.db.settings.positions = ns.db.settings.positions or {}
+	ns.db.settings.positions[f:GetName()] = { math.floor(x - ux + 0.5), math.floor(y - uy + 0.5) }
+end
+
 local function Popup(name, w, h, title)
 	local f = CreateFrame("Frame", name, UIParent, "BackdropTemplate")
 	f:SetSize(w, h)
@@ -15,7 +25,10 @@ local function Popup(name, w, h, title)
 	f:EnableMouse(true)
 	f:RegisterForDrag("LeftButton")
 	f:SetScript("OnDragStart", f.StartMoving)
-	f:SetScript("OnDragStop", f.StopMovingOrSizing)
+	f:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		SavePosition(self)
+	end)
 	f:SetBackdrop({
 		bgFile = "Interface\\Buttons\\WHITE8x8",
 		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
@@ -41,10 +54,11 @@ local function Fit(b)
 	if need > b:GetWidth() then b:SetWidth(need) end
 end
 
-local function Anchor(f, parent)
+local function Anchor(f)
 	f:ClearAllPoints()
-	if parent and parent:IsShown() then
-		f:SetPoint("TOPLEFT", parent, "TOPRIGHT", 8, 0)
+	local pos = ns.db.settings.positions and ns.db.settings.positions[f:GetName()]
+	if pos then
+		f:SetPoint("CENTER", UIParent, "CENTER", pos[1], pos[2])
 	else
 		f:SetPoint("CENTER")
 	end
@@ -126,12 +140,12 @@ function ns.ShowVariablesPanel(parent)
 		end)
 		varPanel = f
 	end
-	Anchor(varPanel, parent)
+	Anchor(varPanel)
 	varPanel:Show()
 end
 
 -- ---------------------------------------------------------------------------
--- Default templates: read-only catalogue of what ships with the addon
+-- Built-in templates: catalogue of what ships with the addon (Settings -> Add more built-ins)
 -- ---------------------------------------------------------------------------
 
 local function InsetBox(parent)
@@ -185,7 +199,7 @@ local defaultsPanel
 function ns.ShowDefaultsPanel(parent)
 	if not defaultsPanel then
 		local W, H = 720, 540
-		local f = Popup("MacroMasterDefaults", W, H, L["Default templates"])
+		local f = Popup("MacroMasterDefaults", W, H, L["Built-in templates"])
 		f.filter = "REC"
 
 		-- filter row: recommended for this class / all / one category
@@ -252,12 +266,22 @@ function ns.ShowDefaultsPanel(parent)
 		f.status:SetHeight(36)
 		f.status:SetJustifyV("TOP")
 
-		-- actions
+		-- actions: Add = the selected template, Add all = every template on
+		-- this tab that is not in the list yet
+		local function Tip(btn, text)
+			btn:SetScript("OnEnter", function(self)
+				GameTooltip:SetOwner(self, "ANCHOR_TOP")
+				GameTooltip:SetText(text, 1, 1, 1, 1, true)
+				GameTooltip:Show()
+			end)
+			btn:SetScript("OnLeave", GameTooltip_Hide)
+		end
 		f.add = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.add:SetSize(160, 22)
+		f.add:SetSize(100, 22)
 		f.add:SetPoint("BOTTOMLEFT", listBox, "BOTTOMRIGHT", 12, 0)
-		f.add:SetText(L["Add to my templates"])
+		f.add:SetText(L["Add template"])
 		Fit(f.add)
+		Tip(f.add, L["ADD_HELP"])
 		f.add:SetScript("OnClick", function()
 			local id = f.selected
 			if not id then return end
@@ -272,15 +296,19 @@ function ns.ShowDefaultsPanel(parent)
 			end
 		end)
 
-		f.addRec = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.addRec:SetSize(160, 22)
-		f.addRec:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
-		f.addRec:SetText(L["Add all recommended"])
-		Fit(f.addRec)
-		f.addRec:SetScript("OnClick", function()
-			local n = ns.AddRecommended()
+		f.addAll = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.addAll:SetSize(100, 22)
+		f.addAll:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
+		f.addAll:SetText(L["Add all"])
+		Fit(f.addAll)
+		Tip(f.addAll, L["ADD_ALL_HELP"])
+		f.addAll:SetScript("OnClick", function()
+			local n = 0
+			for _, b in ipairs(f.list or {}) do
+				if ns.ImportBuiltin(b.id, false) == "added" then n = n + 1 end
+			end
 			ns.ReselectTemplate()
-			ns.Msg(L["MSG_RECOMMENDED_ADDED"], n)
+			ns.Msg(L["MSG_ALL_ADDED"], n)
 			f:Refresh()
 		end)
 
@@ -322,6 +350,7 @@ function ns.ShowDefaultsPanel(parent)
 					return x.order < y.order
 				end)
 			end
+			self.list = list   -- what Add all works on
 			if not self.selected or not ns.ShippedTemplate(self.selected) then self.selected = list[1] and list[1].id end
 
 			local known = ns.db.knownBuiltins or {}
@@ -374,8 +403,8 @@ function ns.ShowDefaultsPanel(parent)
 				self.pname:SetText(""); self.pdesc:SetText(""); self.pbody:SetText(""); self.status:SetText("")
 			end
 			local missing = 0
-			for _, id in ipairs(rec) do if not ns.FindTemplate(id) then missing = missing + 1 end end
-			self.addRec:SetEnabled(missing > 0)
+			for _, t in ipairs(list) do if not ns.FindTemplate(t.id) then missing = missing + 1 end end
+			self.addAll:SetEnabled(missing > 0)
 		end
 
 		f:SetScript("OnShow", f.Refresh)
@@ -384,12 +413,12 @@ function ns.ShowDefaultsPanel(parent)
 		defaultsPanel = f
 		function ns.RefreshDefaultsPanel() if defaultsPanel:IsShown() then defaultsPanel:Refresh() end end
 	end
-	Anchor(defaultsPanel, parent)
+	Anchor(defaultsPanel)
 	defaultsPanel:Show()
 end
 
 -- ---------------------------------------------------------------------------
--- Export / import all templates as text
+-- Import confirmation (the Import window below hands it the parsed list)
 -- ---------------------------------------------------------------------------
 
 StaticPopupDialogs["MACROMASTER_IMPORT_TEXT"] = {
@@ -397,6 +426,7 @@ StaticPopupDialogs["MACROMASTER_IMPORT_TEXT"] = {
 	button1 = L["Import"], button2 = CANCEL,
 	OnAccept = function(self, data)
 		local added, replaced = ns.ImportTemplates(data.list, data.mode)
+		if ns.HideImportPanel then ns.HideImportPanel() end
 		ns.ReselectTemplate()
 		ns.Msg(L["MSG_TEMPLATES_IMPORTED"], added, replaced)
 		if ns.RefreshDefaultsPanel then ns.RefreshDefaultsPanel() end
@@ -404,68 +434,111 @@ StaticPopupDialogs["MACROMASTER_IMPORT_TEXT"] = {
 	timeout = 0, whileDead = true, hideOnEscape = true,
 }
 
-local exportPanel
--- `template` (optional): open with that one template's share string selected
-function ns.ShowExportPanel(parent, template)
-	if not exportPanel then
-		local f = Popup("MacroMasterExport", 620, 480, L["Export / Import"])
-		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-		f.intro:SetPoint("TOPLEFT", 16, -36)
-		f.intro:SetWidth(588)
-		f.intro:SetJustifyH("LEFT")
-		f.intro:SetText(L["EXPORT_INTRO"])
+-- ---------------------------------------------------------------------------
+-- Copy window (Share, Export): a string, selected and ready for Ctrl+C, a
+-- "close after copy" tick and nothing else.
+-- ---------------------------------------------------------------------------
+
+local copyPanel
+local function ShowCopyPanel(title, text)
+	if not copyPanel then
+		local W, H = 520, 200
+		local f = Popup("MacroMasterCopy", W, H, "")
 
 		local box = InsetBox(f)
-		box:SetPoint("TOPLEFT", 14, -104)
+		box:SetPoint("TOPLEFT", 14, -36)
 		box:SetPoint("BOTTOMRIGHT", -14, 44)
 		local sf = CreateFrame("ScrollFrame", nil, box, "InputScrollFrameTemplate")
 		sf:SetPoint("TOPLEFT", 8, -8)
 		sf:SetPoint("BOTTOMRIGHT", -8, 8)
 		sf.EditBox:SetMaxLetters(0)
-		sf.EditBox:SetWidth(620 - 28 - 16 - 24)
+		sf.EditBox:SetWidth(W - 28 - 16 - 24)
 		sf.EditBox:SetFontObject(ChatFontNormal)
 		sf.EditBox:SetAutoFocus(false)
-		sf.EditBox:SetScript("OnEscapePressed", sf.EditBox.ClearFocus)
+		sf.EditBox:SetScript("OnEscapePressed", function() f:Hide() end)
+		-- meant to be copied, not edited: a click reselects it, typing restores it
+		sf.EditBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+		sf.EditBox:SetScript("OnTextChanged", function(self, userInput)
+			if userInput then
+				self:SetText(f.text or "")
+				self:HighlightText()
+			end
+		end)
+		-- Ctrl+C is the whole point of the window: close right after it
+		sf.EditBox:SetScript("OnKeyDown", function(self, key)
+			if key == "C" and IsControlKeyDown() and ns.db.settings.closeAfterCopy then
+				C_Timer.After(0.1, function() f:Hide() end)
+			end
+		end)
 		if sf.CharCount then sf.CharCount:Hide() end
 		f.edit = sf.EditBox
 
-		f.export = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.export:SetSize(120, 22)
-		f.export:SetPoint("BOTTOMLEFT", 14, 14)
-		f.export:SetText(L["Export"])
-		Fit(f.export)
-		f.export:SetScript("OnClick", function()
-			f.edit:SetText(ns.EncodeTemplates())
-			f.edit:SetFocus()
-			f.edit:HighlightText()
+		f.closeAfter = CreateFrame("CheckButton", "MacroMasterCopyCloseAfter", f, "UICheckButtonTemplate")
+		f.closeAfter:SetSize(24, 24)
+		f.closeAfter:SetPoint("BOTTOMLEFT", 12, 12)
+		local text = f.closeAfter.Text or f.closeAfter.text or _G[f.closeAfter:GetName() .. "Text"]
+		text:SetText(L["Close after copy"])
+		f.closeAfter:SetScript("OnClick", function(self)
+			ns.db.settings.closeAfterCopy = self:GetChecked() and true or false
 		end)
 
-		f.import = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.import:SetSize(120, 22)
-		f.import:SetPoint("LEFT", f.export, "RIGHT", 6, 0)
-		f.import:SetText(L["Import"])
-		Fit(f.import)
-		f.import:SetScript("OnClick", function()
-			local list, err = ns.ParseTemplates(f.edit:GetText())
-			if not list then ns.Msg(err); return end
-			if #list == 0 then ns.Msg(L["MSG_IMPORT_EMPTY"]); return end
-			local mode = ns.db.settings.importMode
-			local added, replaced = ns.CountImport(list, mode)
-			local text = replaced > 0
-				and string.format(L["Import %d new template(s) and replace %d existing?"], added, replaced)
-				or string.format(L["Import %d template(s)?"], added)
-			-- templates that run Lua are called out before anything is added
-			local code = 0
-			for _, e in ipairs(list) do if e.code then code = code + 1 end end
-			if code > 0 then
-				text = text .. "\n\n|cffff4040" .. string.format(L["IMPORT_CODE_WARNING"], code) .. "|r"
-			end
-			StaticPopup_Show("MACROMASTER_IMPORT_TEXT", text, nil, { list = list, mode = mode })
-		end)
+		f.okay = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.okay:SetSize(90, 22)
+		f.okay:SetPoint("BOTTOMRIGHT", -14, 14)
+		f.okay:SetText(OKAY)
+		Fit(f.okay)
+		f.okay:SetScript("OnClick", function() f:Hide() end)
+		copyPanel = f
+	end
+	local f = copyPanel
+	f.title:SetText(title)
+	f.text = text
+	f.closeAfter:SetChecked(ns.db.settings.closeAfterCopy)
+	Anchor(f)
+	f:Show()
+	f.edit:SetText(text)
+	f.edit:SetFocus()
+	f.edit:HighlightText()
+end
+
+-- One template, as the editor shows it right now.
+function ns.ShowSharePanel(template)
+	ShowCopyPanel(string.format(L["Share: %s"], template.name), ns.EncodeTemplates({ template }))
+end
+
+-- The whole list, as a backup.
+function ns.ShowExportPanel()
+	ShowCopyPanel(L["Export"], ns.EncodeTemplates())
+end
+
+-- ---------------------------------------------------------------------------
+-- Import window: paste a string, say what a template you already have does,
+-- press Import. The confirmation popup above does the actual import.
+-- ---------------------------------------------------------------------------
+
+local importPanel
+function ns.ShowImportPanel()
+	if not importPanel then
+		local W, H = 520, 260
+		local f = Popup("MacroMasterImport", W, H, L["Import"])
+
+		local box = InsetBox(f)
+		box:SetPoint("TOPLEFT", 14, -36)
+		box:SetPoint("BOTTOMRIGHT", -14, 44)
+		local sf = CreateFrame("ScrollFrame", nil, box, "InputScrollFrameTemplate")
+		sf:SetPoint("TOPLEFT", 8, -8)
+		sf:SetPoint("BOTTOMRIGHT", -8, 8)
+		sf.EditBox:SetMaxLetters(0)
+		sf.EditBox:SetWidth(W - 28 - 16 - 24)
+		sf.EditBox:SetFontObject(ChatFontNormal)
+		sf.EditBox:SetAutoFocus(false)
+		sf.EditBox:SetScript("OnEscapePressed", function() f:Hide() end)
+		if sf.CharCount then sf.CharCount:Hide() end
+		f.edit = sf.EditBox
 
 		-- what happens to a template whose id is already in the list
 		f.modeLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-		f.modeLabel:SetPoint("LEFT", f.import, "RIGHT", 14, 0)
+		f.modeLabel:SetPoint("BOTTOMLEFT", 16, 19)
 		f.modeLabel:SetText(L["Same id:"])
 		f.modes = {}
 		local prev = f.modeLabel
@@ -491,24 +564,38 @@ function ns.ShowExportPanel(parent, template)
 		function f:RefreshMode()
 			for _, r in ipairs(self.modes) do r:SetChecked(r.mode == ns.db.settings.importMode) end
 		end
-		f:SetScript("OnShow", f.RefreshMode)
 
-		f.clear = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.clear:SetSize(80, 22)
-		f.clear:SetPoint("BOTTOMRIGHT", -14, 14)
-		f.clear:SetText(L["Clear"])
-		Fit(f.clear)
-		f.clear:SetScript("OnClick", function() f.edit:SetText("") end)
-
-		exportPanel = f
+		f.import = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		f.import:SetSize(100, 22)
+		f.import:SetPoint("BOTTOMRIGHT", -14, 14)
+		f.import:SetText(L["Import"])
+		Fit(f.import)
+		f.import:SetScript("OnClick", function()
+			local list, err = ns.ParseTemplates(f.edit:GetText())
+			if not list then ns.Msg(err); return end
+			if #list == 0 then ns.Msg(L["MSG_IMPORT_EMPTY"]); return end
+			local mode = ns.db.settings.importMode
+			local added, replaced = ns.CountImport(list, mode)
+			local text = replaced > 0
+				and string.format(L["Import %d new template(s) and replace %d existing?"], added, replaced)
+				or string.format(L["Import %d template(s)?"], added)
+			-- templates that run Lua are called out before anything is added
+			local code = 0
+			for _, e in ipairs(list) do if e.code then code = code + 1 end end
+			if code > 0 then
+				text = text .. "\n\n|cffff4040" .. string.format(L["IMPORT_CODE_WARNING"], code) .. "|r"
+			end
+			StaticPopup_Show("MACROMASTER_IMPORT_TEXT", text, nil, { list = list, mode = mode })
+		end)
+		function ns.HideImportPanel() f:Hide() end
+		importPanel = f
 	end
-	Anchor(exportPanel, parent)
-	exportPanel:Show()
-	if template then
-		exportPanel.edit:SetText(ns.EncodeTemplates({ template }))
-		exportPanel.edit:SetFocus()
-		exportPanel.edit:HighlightText()
-	end
+	local f = importPanel
+	f:RefreshMode()
+	Anchor(f)
+	f:Show()
+	f.edit:SetText("")
+	f.edit:SetFocus()
 end
 
 -- ---------------------------------------------------------------------------
@@ -643,7 +730,7 @@ function ns.ShowSpellTablePanel(parent)
 		f:SetScript("OnShow", f.Refresh)
 		tablePanel = f
 	end
-	Anchor(tablePanel, parent)
+	Anchor(tablePanel)
 	tablePanel:Show()
 end
 
@@ -697,26 +784,33 @@ function ns.BuildSettingsPage(f, main)
 	f.hint:SetPoint("TOPLEFT", x + 4, y - 132)
 	f.hint:SetWidth(520)
 	f.hint:SetJustifyH("LEFT")
-	f.hint:SetText(L["SETTINGS_TEMPLATES_HINT"])
+	f.hint:SetText(string.format(L["SETTINGS_TEMPLATES_HINT"], #ns.builtinTemplates))
 
 	f.defaults = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
 	f.defaults:SetSize(160, 22)
 	f.defaults:SetPoint("TOPLEFT", f.hint, "BOTTOMLEFT", 0, -10)
-	f.defaults:SetText(L["Default templates"])
+	f.defaults:SetText(L["Add more built-ins"])
 	Fit(f.defaults)
 	f.defaults:SetScript("OnClick", function() ns.ShowDefaultsPanel(main) end)
 
 	f.export = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	f.export:SetSize(160, 22)
+	f.export:SetSize(100, 22)
 	f.export:SetPoint("LEFT", f.defaults, "RIGHT", 8, 0)
-	f.export:SetText(L["Export / Import"])
+	f.export:SetText(L["Export"])
 	Fit(f.export)
-	f.export:SetScript("OnClick", function() ns.ShowExportPanel(main) end)
+	f.export:SetScript("OnClick", ns.ShowExportPanel)
+
+	f.import = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+	f.import:SetSize(100, 22)
+	f.import:SetPoint("LEFT", f.export, "RIGHT", 8, 0)
+	f.import:SetText(L["Import"])
+	Fit(f.import)
+	f.import:SetScript("OnClick", ns.ShowImportPanel)
 
 	function f:Refresh()
 		for _, r in ipairs(self.radios) do r:SetChecked(r.code == ns.db.settings.locale) end
 		local n = ns.NewBuiltinCount()
-		f.defaults:SetText(n > 0 and string.format(L["Default templates (%d new)"], n) or L["Default templates"])
+		f.defaults:SetText(n > 0 and string.format(L["Add more built-ins (%d new)"], n) or L["Add more built-ins"])
 		Fit(f.defaults)
 	end
 	f:SetScript("OnShow", f.Refresh)

@@ -901,6 +901,24 @@ local function CreateMain()
 	nl:SetPoint("TOPLEFT", rx, -46)
 	f.tname = EditBox(page, 200, 40)
 	f.tname:SetPoint("TOPLEFT", rx + 6, -60)
+	-- share string of what the editor shows right now (saved or not)
+	local bShare = Button(page, L["Share"], 70, 22, function()
+		local t = CurrentTemplate()
+		if not t then return end
+		ns.ShowSharePanel({
+			id   = t.id,
+			name = strtrim(f.tname:GetText()),
+			desc = strtrim(f.tdesc:GetText()),
+			body = CurrentBody(),
+		})
+	end)
+	bShare:SetPoint("LEFT", f.tname, "RIGHT", 8, 0)
+	bShare:SetScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(L["SHARE_HELP"], 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	bShare:SetScript("OnLeave", GameTooltip_Hide)
 
 	-- description: three lines, full width
 	local dl = Label(page, L["Description"], "GameFontNormalSmall")
@@ -934,34 +952,17 @@ local function CreateMain()
 	-- the variables reference sits next to the editor it documents
 	local bVars = Button(page, L["Variables"], 90, 22, function() ns.ShowVariablesPanel(f) end)
 	bVars:SetPoint("RIGHT", bSave, "LEFT", -6, 0)
-	-- share string of what the editor shows right now (saved or not)
-	local bShare = Button(page, L["Share"], 70, 22, function()
-		local t = CurrentTemplate()
-		if not t then return end
-		ns.ShowExportPanel(f, {
-			id   = t.id,
-			name = strtrim(f.tname:GetText()),
-			desc = strtrim(f.tdesc:GetText()),
-			body = CurrentBody(),
-		})
-	end)
-	bShare:SetPoint("RIGHT", bVars, "LEFT", -6, 0)
-	bShare:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_TOP")
-		GameTooltip:SetText(L["Share"], 1, 1, 1)
-		GameTooltip:AddLine(L["SHARE_HELP"], nil, nil, nil, true)
-		GameTooltip:Show()
-	end)
-	bShare:SetScript("OnLeave", GameTooltip_Hide)
 	f.saveHint = Label(page, "", "GameFontNormalSmall")
-	f.saveHint:SetPoint("RIGHT", bShare, "LEFT", -6, 0)
+	f.saveHint:SetPoint("RIGHT", bVars, "LEFT", -6, 0)
 
 	-- ===== fill placeholders ============================================
 	local fl = Label(page, L["Fill placeholders"])
 	fl:SetPoint("TOPLEFT", rx, -322)
 	-- the spell table feeds the picker's suggestions: it belongs on this row
 	local bTable = Button(page, L["Spell table"], 90, 22, function() ns.ShowSpellTablePanel(f) end)
-	bTable:SetPoint("TOPRIGHT", rx + rw, -318)
+	-- explicit anchor: the two-number form would measure from the page's
+	-- own TOPRIGHT and put the button far outside the window
+	bTable:SetPoint("TOPRIGHT", page, "TOPLEFT", rx + rw, -318)
 	f.fill = CreateFrame("Frame", nil, page)
 	f.fill:SetPoint("TOPLEFT", rx, -340)
 	f.fill:SetSize(rw, 27)

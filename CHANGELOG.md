@@ -122,3 +122,12 @@
 - **Code warnings**: a template whose body runs Lua (`/run`, `/script`, `/dump`, `/console`) is flagged in red under the editor and in the preview, the import confirmation says how many such templates the text contains, and creating such a macro asks for a red confirmation that lists the code lines. Your own `/run` templates work as before; the warning is there for strings that come from someone else.
 - Imported names and descriptions have UI escape sequences neutralised (`|` becomes `||`), oversized strings are refused before decoding, and bodies longer than the editor allows are skipped.
 - Bundles LibStub and LibDeflate (zlib licence) under `Libs/`; `deploy.bat` copies subfolders.
+
+## 1.5.1 (2026-09-15)
+
+- Pop-up windows (built-in templates, export / import, variables, spell table) open centred on the screen and come back where you last dragged them, instead of hanging off the right edge of the main window.
+- Settings: the *Default templates* button is now *Add more built-ins* and opens a window titled *Built-in templates*. Its buttons are *Add* (the selected template) and *Add all* (everything on the current tab you do not have yet, not only the recommended set), both with tooltips.
+- Shorter, situation-based intro texts on the Settings page and in the built-in templates and export / import windows.
+- The *Spell table* button sat far outside the window (its anchor was measured from the wrong corner); it is back on the *Fill placeholders* row.
+- *Share* moved next to the template name and opens its own small window, SimulationCraft style: the template's string, already selected for Ctrl+C, a *Close after copy* option and nothing else. Its tooltip is one line.
+- *Export / Import* is now two windows: *Export* is the same copy window with the whole list, *Import* is a paste box with the *Same id* choice and an Import button, and it closes itself after a successful import.

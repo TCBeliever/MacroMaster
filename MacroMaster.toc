@@ -3,7 +3,7 @@
 ## Notes: Stop hand-editing macros from guides. Pick a proven template (mouseover heal, focus interrupt, arena target, cancel aura, cast sequence), fill in your own spells, create. Turn any macro into a template and share it as a string.
 ## Notes-zhTW: 不用再從攻略複製巨集慢慢改。選一個驗證過的模板（滑鼠指向治療、焦點斷法、競技場目標、取消光環、施法序列），填入自己的技能，建立。任何巨集都能存成模板，模板可以用一串字分享。
 ## Author: Venser
-## Version: 1.5.0
+## Version: 1.5.1
 ## SavedVariables: MacroMasterDB
 ## IconTexture: Interface\Icons\INV_Misc_Note_06
 ## Category: venMOD
