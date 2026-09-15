@@ -362,6 +362,9 @@ local function IsShippedText(key, value)
 	for _, tbl in pairs(ns.locales or {}) do
 		if tbl[key] == value then return true end
 	end
+	for _, old in ipairs(ns.legacyText and ns.legacyText[key] or {}) do
+		if old == value then return true end
+	end
 	return false
 end
 

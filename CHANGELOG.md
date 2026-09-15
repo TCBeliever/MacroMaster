@@ -131,3 +131,4 @@
 - The *Spell table* button sat far outside the window (its anchor was measured from the wrong corner); it is back on the *Fill placeholders* row.
 - *Share* moved next to the template name and opens its own small window, SimulationCraft style: the template's string, already selected for Ctrl+C, a *Close after copy* option and nothing else. Its tooltip is one line.
 - *Export / Import* is now two windows: *Export* is the same copy window with the whole list, *Import* is a paste box with the *Same id* choice and an Import button, and it closes itself after a successful import.
+- Built-in template names and descriptions rewritten for people who already use macros: names are short, action-first and usable as macro names (no punctuation, no counts, no (PvP) tags); a description says only what the name leaves out, such as the fallback order, a gotcha or a dependency. A copy you never edited picks up the new wording.

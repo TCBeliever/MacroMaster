@@ -51,15 +51,15 @@
 | 模板 | 用途 | 內容 |
 |---|---|---|
 | 斷法 | 打斷目標；按住 Shift 改打斷焦點。施放前先停止施法。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}` |
-| 快速地板技能 | 地板技能直接放在游標位置，不出準星。 | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
+| 游標地板技 | 地板技能直接放在游標位置，不出準星。 | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
 | 滑鼠指向傷害 | 敵對技能：滑鼠指向 > 目標。 | `/cast [@mouseover,harm,nodead][] {HARM}` |
-| 停止施法後施放 | 取消當前讀條後立刻施放。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
-| 飾品+技能 | 一鍵使用飾品（13 或 14 格）並施放爆發。 | `/use {TRINKET}` · `/cast {CD}` |
+| 停讀條施放 | 取消當前讀條後立刻施放。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
+| 飾品加爆發 | 一鍵使用飾品（13 或 14 格）並施放爆發。 | `/use {TRINKET}` · `/cast {CD}` |
 | 自救序列 | 自療 → 治療石 → 藥水，每按一次一步，脫戰後重來。 | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
-| 修飾鍵：2–3 個技能 | 一顆鍵最多三個技能，Ctrl、Shift 各放另一個。 | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
+| 修飾鍵切換 | 一顆鍵最多三個技能，Ctrl、Shift 各放另一個。 | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
 | 自我施放 | 不管選著誰，都放在自己身上。 | `/cast [@player] {SPELL}` |
 | 外援給焦點 | 誤導、嫁禍或祝福給焦點；沒焦點就給目標的目標，再沒有就給目標。 | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
-| 戰鬥中／戰鬥外 | 戰鬥中放一個、戰鬥外放另一個（復生／甦醒）。 | `/cast [combat] {INCOMBAT}; {SPELL}` |
+| 戰鬥內外切換 | 戰鬥中放一個、戰鬥外放另一個（復生／甦醒）。 | `/cast [combat] {INCOMBAT}; {SPELL}` |
 
 ### 治療
 
@@ -68,7 +68,7 @@
 | 滑鼠指向治療 | 友方技能：滑鼠指向 > 目標 > 自己。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}` |
 | 滑鼠指向驅散 | 友方驅散，同樣的順序。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {DISPEL}` |
 | 滑鼠指向外援 | 外援技能，同樣的順序。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {EXTERNAL}` |
-| 目標的目標 | 選著坦克或隊友就能打他正在打的怪，不用換目標。 | `/cast [@targettarget,harm,nodead][] {HARM}` |
+| 打目標的目標 | 選著坦克或隊友就能打他正在打的怪，不用換目標。 | `/cast [@targettarget,harm,nodead][] {HARM}` |
 
 ### PvP
 
@@ -76,20 +76,20 @@
 |---|---|---|
 | 競技場目標 | 不切目標，直接對固定的競技場欄位施放；選「全部」一次做三個。 | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
 | 滑鼠指向進攻驅散 | 進攻驅散：滑鼠指向 > 目標。 | `/cast [@mouseover,harm,nodead][] {PURGE}` |
-| 滑鼠指向，Alt = 焦點 | 敵對技能打滑鼠指向，沒有就打目標；按住 Alt 改打焦點。 | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
-| 取消光環後施放 | 先取消免疫或引導（寒冰屏障、巨龜守護、深層吐息…）再施放。 | `/cancelaura {AURA}` · `/cast {SPELL}` |
+| 滑鼠指向 Alt 焦點 | 敵對技能打滑鼠指向，沒有就打目標；按住 Alt 改打焦點。 | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
+| 取消光環施放 | 先取消免疫或引導（寒冰屏障、巨龜守護、深層吐息…）再施放。 | `/cancelaura {AURA}` · `/cast {SPELL}` |
 | 設定焦點 | 把目標設為焦點，上標記，並在隊伍裡喊話（每次換焦點只喊一次）。 | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 | FrameSort 斷法 | 打斷焦點，沒有就打斷 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 解析的框架（預設敵方補師）。 | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
-| FrameSort 隊友外援 | 外援給滑鼠指向，沒有就給 FrameSort 解析的隊友（預設補師）。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |
-| FrameSort 隊友驅散 | 驅散，同樣的 FrameSort 後備順序。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}` |
+| FrameSort 外援 | 外援給滑鼠指向，沒有就給 FrameSort 解析的隊友（預設補師）。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |
+| FrameSort 驅散 | 驅散，同樣的 FrameSort 後備順序。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}` |
 
 ### 序列與寵物
 
 | 模板 | 用途 | 內容 |
 |---|---|---|
 | 技能序列 | 兩到三個技能照順序放，每按一次一個；可選重置時機。 | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
-| 每個目標一次 | 對同一個目標只放一次，換目標或脫戰後才會再放。 | `/castsequence reset=target/combat {SPELL}, null` |
-| 寵物攻擊 + 技能 | 寵物上去打的同時施放技能。 | `/petattack` · `/cast {SPELL}` |
+| 每目標放一次 | 對同一個目標只放一次，換目標或脫戰後才會再放。 | `/castsequence reset=target/combat {SPELL}, null` |
+| 寵物一起攻擊 | 寵物上去打的同時施放技能。 | `/petattack` · `/cast {SPELL}` |
 
 `/castsequence` 遇到某一步技能在冷卻或物品不在身上，會停在那一步直到重置。自救序列用不到的欄位請留空。
 

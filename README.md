@@ -53,15 +53,15 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Template | What it does | Body |
 |---|---|---|
 | Interrupt | Interrupts your target; hold Shift for your focus. Stops casting first. | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}` |
-| Quick ground spell | Ground-targeted spell at the cursor, no reticle. | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
+| Cast at cursor | Ground-targeted spell at the cursor, no reticle. | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
 | Mouseover damage | Hostile spell on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {HARM}` |
-| Stopcast + cast | Cancels the current cast, then casts. | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
-| Trinket + spell | A trinket (slot 13 or 14) and a cooldown in one press. | `/use {TRINKET}` · `/cast {CD}` |
+| Stopcast and cast | Cancels the current cast, then casts. | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
+| Trinket and burst | A trinket (slot 13 or 14) and a cooldown in one press. | `/use {TRINKET}` · `/cast {CD}` |
 | Self-heal combo | Self-heal, then Healthstone, then potion; one step per press, restarts after combat. | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
-| Modifier: 2-3 spells | One button, up to three spells; Ctrl and Shift each pick another. | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
+| Modifier switch | One button, up to three spells; Ctrl and Shift each pick another. | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
 | Self-cast | Casts on yourself whatever you target. | `/cast [@player] {SPELL}` |
 | External to focus | Misdirection, Tricks or a blessing to your focus, else your target's target, else your target. | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
-| In combat / out of combat | One spell in combat, another out of it (Rebirth / Revive). | `/cast [combat] {INCOMBAT}; {SPELL}` |
+| Combat switch | One spell in combat, another out of it (Rebirth / Revive). | `/cast [combat] {INCOMBAT}; {SPELL}` |
 
 ### Healing
 
@@ -70,7 +70,7 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Mouseover heal | Friendly spell on mouseover, else target, else yourself. | `/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}` |
 | Mouseover dispel | Friendly dispel with the same fallbacks. | `/cast [@mouseover,help,nodead][help,nodead][@player] {DISPEL}` |
 | Mouseover external | External cooldown with the same fallbacks. | `/cast [@mouseover,help,nodead][help,nodead][@player] {EXTERNAL}` |
-| Target's target | Hit what your tank or friend is fighting without retargeting. | `/cast [@targettarget,harm,nodead][] {HARM}` |
+| Hit target's target | Hit what your tank or friend is fighting without retargeting. | `/cast [@targettarget,harm,nodead][] {HARM}` |
 
 ### PvP
 
@@ -78,8 +78,8 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 |---|---|---|
 | Arena target | Casts on a fixed arena slot without changing your target. *All* makes three macros. | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
 | Mouseover purge | Offensive dispel on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {PURGE}` |
-| Mouseover, Alt = focus | Hostile spell on mouseover, else target; hold Alt for your focus. | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
-| Cancel aura + cast | Drops an immunity or a channel (Ice Block, Aspect of the Turtle, Deep Breath...), then casts. | `/cancelaura {AURA}` · `/cast {SPELL}` |
+| Mouseover with Alt focus | Hostile spell on mouseover, else target; hold Alt for your focus. | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
+| Cancel aura and cast | Drops an immunity or a channel (Ice Block, Aspect of the Turtle, Deep Breath...), then casts. | `/cancelaura {AURA}` · `/cast {SPELL}` |
 | Set focus | Focus your target, mark it, announce it to the group once per focus. | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 | FrameSort interrupt | Interrupts your focus, else the frame [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (enemy healer by default). | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
 | FrameSort ally external | External on mouseover, else the ally FrameSort resolves (your healer by default). | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |
@@ -91,7 +91,7 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 |---|---|---|
 | Spell sequence | Two or three spells in order, one per press; you choose when it restarts. | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
 | Once per target | Casts once, then nothing on that target until you switch target or leave combat. | `/castsequence reset=target/combat {SPELL}, null` |
-| Pet attack + spell | Sends the pet in and casts, in one press. | `/petattack` · `/cast {SPELL}` |
+| Pet attack and cast | Sends the pet in and casts, in one press. | `/petattack` · `/cast {SPELL}` |
 
 A `/castsequence` stalls on a step whose spell is on cooldown or whose item you no longer carry, until it resets. In the self-heal combo, leave slots you do not use empty.
 
