@@ -56,6 +56,7 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Cast at cursor | Ground-targeted spell at the cursor, no reticle. | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
 | Mouseover damage | Hostile spell on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {HARM}` |
 | Stopcast and cast | Cancels the current cast, then casts. | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
+| Cancel aura and cast | Drops an immunity or a channel (Ice Block, Aspect of the Turtle, Deep Breath...), then casts. | `/cancelaura {AURA}` · `/cast {SPELL}` |
 | Trinket and burst | A trinket (slot 13 or 14) and a cooldown in one press. | `/use {TRINKET}` · `/cast {CD}` |
 | Self-heal combo | Self-heal, then Healthstone, then potion; one step per press, restarts after combat. | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
 | Modifier switch | One button, up to three spells; Ctrl and Shift each pick another. | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
@@ -79,7 +80,6 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Arena target | Casts on a fixed arena slot without changing your target. *All* makes three macros. | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
 | Mouseover purge | Offensive dispel on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {PURGE}` |
 | Mouseover with Alt focus | Hostile spell on mouseover, else target; hold Alt for your focus. | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
-| Cancel aura and cast | Drops an immunity or a channel (Ice Block, Aspect of the Turtle, Deep Breath...), then casts. | `/cancelaura {AURA}` · `/cast {SPELL}` |
 | Set focus | Focus your target, mark it, announce it to the group once per focus. | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 | FrameSort interrupt | Interrupts your focus, else the frame [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (enemy healer by default). | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
 | FrameSort ally external | External on mouseover, else the ally FrameSort resolves (your healer by default). | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |

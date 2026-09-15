@@ -243,10 +243,10 @@ ns.templateCategories = { "CORE", "HEAL", "PVP", "SEQ", "PET" }
 
 local CATEGORY = {
 	focus_interrupt = "CORE", cursor = "CORE", mouseover_harm = "CORE", stopcast = "CORE", trinket_spell = "CORE",
-	selfheal = "CORE", mod2 = "CORE", selfcast = "CORE", focus_external = "CORE", combat_switch = "CORE",
+	selfheal = "CORE", mod2 = "CORE", selfcast = "CORE", focus_external = "CORE", combat_switch = "CORE", cancel_cast = "CORE",
 	mouseover_help = "HEAL", mouseover_dispel = "HEAL", mouseover_external = "HEAL", targettarget = "HEAL",
 	arena_cc = "PVP", mouseover_purge = "PVP", set_focus = "PVP", framesort_kick = "PVP", framesort_external = "PVP",
-	framesort_dispel = "PVP", cancel_cast = "PVP", mouseover_altfocus = "PVP",
+	framesort_dispel = "PVP", mouseover_altfocus = "PVP",
 	sequence = "SEQ", once_per_target = "SEQ",
 	petattack = "PET",
 }
