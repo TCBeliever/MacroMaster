@@ -1063,8 +1063,9 @@ local function CreateMain()
 	f.pickup:SetScript("OnLeave", GameTooltip_Hide)
 
 	-- the one action the whole window leads to: alone, larger, named
-	local bCreate = Button(page, L["Create macro"], 150, 30, CreateMacroFromState)
+	local bCreate = Button(page, L["Create macro"], 150, 72, CreateMacroFromState)
 	bCreate:SetPoint("BOTTOMRIGHT", -20, 10)
+	bCreate:GetFontString():SetFontObject("GameFontNormalLarge")
 
 	-- page 2: settings
 	local settings = CreateFrame("Frame", nil, f)

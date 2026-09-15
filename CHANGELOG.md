@@ -125,15 +125,8 @@
 
 ## 1.5.1 (2026-09-15)
 
-- Pop-up windows (built-in templates, export / import, variables, spell table) open centred on the screen and come back where you last dragged them, instead of hanging off the right edge of the main window.
-- Settings: the *Default templates* button is now *Add more built-ins* and opens a window titled *Built-in templates*. Its buttons are *Add* (the selected template) and *Add all* (everything on the current tab you do not have yet, not only the recommended set), both with tooltips.
-- Less text: the Settings page keeps one line about the built-ins, the built-in templates window shows a legend for its list markers (+, NEW, grey), and the copy and import windows carry no explanation at all.
-- The *Spell table* button sat far outside the window (its anchor was measured from the wrong corner); it is back on the *Fill placeholders* row.
-- *Share* moved next to the template name and opens its own small window, SimulationCraft style: the template's string, already selected for Ctrl+C, a *Close after copy* option and nothing else. Its tooltip is one line.
-- *Export / Import* is now two windows: *Export* is the same copy window with the whole list, *Import* is a paste box with the *Same id* choice and an Import button, and it closes itself after a successful import.
-- Built-in template names and descriptions rewritten for people who already use macros: names are short, action-first and usable as macro names (no punctuation, no counts, no (PvP) tags); a description says only what the name leaves out, such as the fallback order, a gotcha or a dependency. A copy you never edited picks up the new wording.
-- New built-in **Cast together**: off-GCD cooldowns and a spell in one press (`/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}`, second cooldown optional).
-- *Set focus* moved from PvP to Core (a Mythic+ staple); *Cancel aura and cast* likewise. The Sequence category is 順序施放 in 繁體中文.
-- A fresh install now defaults to character macros; *Pick up after creating* stays on.
-- Editor layout: *Create* is now a single larger *Create macro* button in the corner, and *Open Macros* moved under the template list. The zhTW name of the modifier template is 多技能切換.
-- Settings ends with *Share your templates*: an invitation to post templates of your own on the CurseForge comments, with the address in a box to copy.
+- **Built-in templates rewritten for people who already use macros.** Names are short and action-first, so they work as macro names; a description says only what the name leaves out (fallback order, a gotcha, a dependency). Copies you never edited pick up the new wording. New built-in **Cast together**: off-GCD cooldowns and a spell in one press. *Set focus* and *Cancel aura and cast* moved to Core.
+- **Sharing.** *Share* sits next to the template name and opens a copy window with the string preselected and a *Close after copy* option. *Export* and *Import* are separate windows; Import closes after a successful import. Settings ends with an invitation to post your own templates on the CurseForge comments.
+- **Built-in templates window.** Reached through *Add more built-ins*; *Add* takes the selected template, *Add all* everything on the current tab; a legend explains the list markers.
+- **Layout.** Pop-ups open centred and remember where you dragged them. *Create macro* is a single, larger button; *Open Macros* sits under the template list; the *Spell table* button is back inside the window.
+- **Defaults and text.** A fresh install creates character macros. Explanatory text trimmed throughout Settings and the windows. 繁體中文: the Sequence category is 順序施放, the modifier template is 多技能切換.
