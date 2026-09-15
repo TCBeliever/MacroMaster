@@ -44,7 +44,7 @@ Tips
 
 ## Built-in templates
 
-25 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
+26 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
 Most bodies start with a `#showtooltip` line, omitted below. `·` separates macro lines.
 
@@ -63,6 +63,8 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Self-cast | Casts on yourself whatever you target. | `/cast [@player] {SPELL}` |
 | External to focus | Misdirection, Tricks or a blessing to your focus, else your target's target, else your target. | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
 | Combat switch | One spell in combat, another out of it (Rebirth / Revive). | `/cast [combat] {INCOMBAT}; {SPELL}` |
+| Cast together | Off-GCD cooldowns and a spell in one press. | `/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}` |
+| Set focus | Focus your target, mark it, announce it to the group once per focus. | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 
 ### Healing
 
@@ -80,7 +82,6 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Arena target | Casts on a fixed arena slot without changing your target. *All* makes three macros. | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
 | Mouseover purge | Offensive dispel on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {PURGE}` |
 | Mouseover with Alt focus | Hostile spell on mouseover, else target; hold Alt for your focus. | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
-| Set focus | Focus your target, mark it, announce it to the group once per focus. | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 | FrameSort interrupt | Interrupts your focus, else the frame [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (enemy healer by default). | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
 | FrameSort ally external | External on mouseover, else the ally FrameSort resolves (your healer by default). | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |
 | FrameSort ally dispel | Dispel with the same FrameSort fallback. | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}` |

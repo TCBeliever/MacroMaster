@@ -211,6 +211,16 @@ ns.builtinTemplates = {
 		"#showtooltip\n/cast [combat] {INCOMBAT}; {SPELL}",
 		{ INCOMBAT = PX("P_INCOMBAT", "P_INCOMBAT_H", { noname = true }), SPELL = P("P_SPELL", "P_SPELL_H") }),
 
+	-- Several /cast lines in one press: off-GCD cooldowns all go off, the
+	-- spell on the GCD goes last. A second cooldown slot is optional.
+	B("cast_together", "T_CAST_TOGETHER", "T_CAST_TOGETHER_D",
+		"#showtooltip {SPELL}\n/cast {CD}\n/cast {CD_2}\n/cast {SPELL}",
+		{
+			CD    = PX("P_CD1", "P_CD1_H", { category = "BURST" }),
+			CD_2  = PX("P_CD2", "P_CD1_H", { category = "BURST", optional = true }),
+			SPELL = P("P_SPELL", "P_SPELL_H"),
+		}),
+
 	B("targettarget", "T_TARGETTARGET", "T_TARGETTARGET_D",
 		"#showtooltip\n/cast [@targettarget,harm,nodead][] {HARM}",
 		{ HARM = P("P_HARM", "P_HARM_H") }),
@@ -244,8 +254,9 @@ ns.templateCategories = { "CORE", "HEAL", "PVP", "SEQ", "PET" }
 local CATEGORY = {
 	focus_interrupt = "CORE", cursor = "CORE", mouseover_harm = "CORE", stopcast = "CORE", trinket_spell = "CORE",
 	selfheal = "CORE", mod2 = "CORE", selfcast = "CORE", focus_external = "CORE", combat_switch = "CORE", cancel_cast = "CORE",
+	set_focus = "CORE", cast_together = "CORE",
 	mouseover_help = "HEAL", mouseover_dispel = "HEAL", mouseover_external = "HEAL", targettarget = "HEAL",
-	arena_cc = "PVP", mouseover_purge = "PVP", set_focus = "PVP", framesort_kick = "PVP", framesort_external = "PVP",
+	arena_cc = "PVP", mouseover_purge = "PVP", framesort_kick = "PVP", framesort_external = "PVP",
 	framesort_dispel = "PVP", mouseover_altfocus = "PVP",
 	sequence = "SEQ", once_per_target = "SEQ",
 	petattack = "PET",
@@ -390,7 +401,7 @@ function ns.InitDB()
 	local db = MacroMasterDB
 	db.version   = db.version or DB_VERSION
 	db.templates = db.templates or {}
-	db.settings  = db.settings or { pickup = true, scope = "account" }
+	db.settings  = db.settings or { pickup = true, scope = "character" }   -- fresh install: character macros, picked up after creating
 	db.settings.sort = db.settings.sort or "created"
 	-- importMode: what an import does with a template whose id is already in
 	-- the list: "replace" it (restoring a backup) or "add" a copy (a share)

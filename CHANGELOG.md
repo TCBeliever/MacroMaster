@@ -132,3 +132,6 @@
 - *Share* moved next to the template name and opens its own small window, SimulationCraft style: the template's string, already selected for Ctrl+C, a *Close after copy* option and nothing else. Its tooltip is one line.
 - *Export / Import* is now two windows: *Export* is the same copy window with the whole list, *Import* is a paste box with the *Same id* choice and an Import button, and it closes itself after a successful import.
 - Built-in template names and descriptions rewritten for people who already use macros: names are short, action-first and usable as macro names (no punctuation, no counts, no (PvP) tags); a description says only what the name leaves out, such as the fallback order, a gotcha or a dependency. A copy you never edited picks up the new wording.
+- New built-in **Cast together**: off-GCD cooldowns and a spell in one press (`/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}`, second cooldown optional).
+- *Set focus* moved from PvP to Core (a Mythic+ staple); *Cancel buff and cast* likewise. The Sequence category is 順序施放 in 繁體中文.
+- A fresh install now defaults to character macros; *Pick up after creating* stays on.
