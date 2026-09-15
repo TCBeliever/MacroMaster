@@ -135,3 +135,5 @@
 - New built-in **Cast together**: off-GCD cooldowns and a spell in one press (`/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}`, second cooldown optional).
 - *Set focus* moved from PvP to Core (a Mythic+ staple); *Cancel buff and cast* likewise. The Sequence category is 順序施放 in 繁體中文.
 - A fresh install now defaults to character macros; *Pick up after creating* stays on.
+- Editor layout: *Create* is now a single larger *Create macro* button in the corner, and *Open Macros* moved under the template list. The zhTW name of the modifier template is 多技能切換.
+- Settings ends with *Share your templates*: an invitation to post templates of your own on the CurseForge comments, with the address in a box to copy.

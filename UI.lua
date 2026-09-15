@@ -867,7 +867,7 @@ local function CreateMain()
 
 	local listBox = Box(page)
 	listBox:SetPoint("TOPLEFT", 16, -62)
-	listBox:SetSize(LEFT_W, H - 62 - 74)
+	listBox:SetSize(LEFT_W, H - 62 - 102)   -- two button rows underneath
 
 	f.list = CreateFrame("ScrollFrame", nil, listBox, "UIPanelScrollFrameTemplate")
 	f.list:SetPoint("TOPLEFT", 6, -6)
@@ -892,6 +892,9 @@ local function CreateMain()
 		if t then StaticPopup_Show("MACROMASTER_DELETE_TEMPLATE", t.name, nil, t.id) end
 	end)
 	bDel:SetPoint("LEFT", bImp, "RIGHT", 4, 0)
+	-- Blizzard's macro window, to drag macros out or edit them by hand
+	local bOpen = Button(page, L["Open Macros"], LEFT_W, 22, OpenMacroFrame)
+	bOpen:SetPoint("TOPLEFT", bNew, "BOTTOMLEFT", 0, -6)
 
 	-- ===== right: template editor =======================================
 	local rx = 16 + LEFT_W + 14
@@ -1059,10 +1062,9 @@ local function CreateMain()
 	end)
 	f.pickup:SetScript("OnLeave", GameTooltip_Hide)
 
-	local bCreate = Button(page, L["Create"], 110, 26, CreateMacroFromState)
-	bCreate:SetPoint("BOTTOMRIGHT", -20, 12)
-	local bOpen = Button(page, L["Open Macros"], 110, 22, OpenMacroFrame)
-	bOpen:SetPoint("RIGHT", bCreate, "LEFT", -6, 0)
+	-- the one action the whole window leads to: alone, larger, named
+	local bCreate = Button(page, L["Create macro"], 150, 30, CreateMacroFromState)
+	bCreate:SetPoint("BOTTOMRIGHT", -20, 10)
 
 	-- page 2: settings
 	local settings = CreateFrame("Frame", nil, f)

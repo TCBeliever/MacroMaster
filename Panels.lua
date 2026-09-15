@@ -807,6 +807,32 @@ function ns.BuildSettingsPage(f, main)
 	Fit(f.import)
 	f.import:SetScript("OnClick", ns.ShowImportPanel)
 
+	-- community: templates of your own are welcome on the project's comments.
+	-- The game cannot open a browser, so the address sits in a box to copy.
+	local COMMUNITY_URL = "https://www.curseforge.com/wow/addons/macromaster/comments"
+	local share = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	share:SetPoint("TOPLEFT", x, y - 236)
+	share:SetText(L["Share your templates"])
+	f.shareHint = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	f.shareHint:SetPoint("TOPLEFT", x + 4, y - 258)
+	f.shareHint:SetWidth(520)
+	f.shareHint:SetJustifyH("LEFT")
+	f.shareHint:SetText(L["SHARE_COMMUNITY_HINT"])
+	f.shareURL = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+	f.shareURL:SetSize(420, 22)
+	f.shareURL:SetPoint("TOPLEFT", f.shareHint, "BOTTOMLEFT", 6, -8)
+	f.shareURL:SetAutoFocus(false)
+	f.shareURL:SetText(COMMUNITY_URL)
+	f.shareURL:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	f.shareURL:SetScript("OnTextChanged", function(self, userInput)
+		if userInput then
+			self:SetText(COMMUNITY_URL)
+			self:HighlightText()
+		end
+	end)
+	f.shareURL:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+	f.shareURL:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+
 	function f:Refresh()
 		for _, r in ipairs(self.radios) do r:SetChecked(r.code == ns.db.settings.locale) end
 		local n = ns.NewBuiltinCount()

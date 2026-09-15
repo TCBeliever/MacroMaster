@@ -24,13 +24,13 @@ Stop hand-editing macros from guides. Pick a proven template (mouseover heal, fo
 - **Manual**: download the zip from [Releases](https://github.com/TCBeliever/MacroMaster/releases) or CurseForge and unzip it into `World of Warcraft/_retail_/Interface/AddOns/` so that `AddOns/MacroMaster/MacroMaster.toc` exists.
 - Retail only (Interface 12.1). Not built for Classic.
 
-Open the window with `/mmac`, or with *Open* on the bar under Blizzard's macro window.
+Open the window with `/mmac`, or with *Open* on the bar under Blizzard's macro window. *Open Macros* under the template list opens Blizzard's window the other way round.
 
 ## Quick start
 
 1. **Pick a template** from the list on the left.
 2. **Fill the placeholders.** Every `{NAME}` in the template gets a row: type a spell, drag one from the spell book onto the box, or click *Pick*. Placeholders with fixed choices (arena slot, raid marker, trinket slot) use a dropdown instead.
-3. **Create.** Name the macro (16 characters at most), choose *Account* or *Character*, click *Create*. The macro lands on your cursor: drop it on an action bar.
+3. **Create.** Name the macro (16 characters at most), choose *Account* or *Character*, click *Create macro*. The macro lands on your cursor: drop it on an action bar.
 
 Tips
 

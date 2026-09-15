@@ -28,7 +28,7 @@
 
 1. **選模板**：左邊清單選一個。
 2. **填入技能**：模板裡每個 `{名稱}` 一列。打字、從法術書拖到框裡、或按「選擇」開圖示格搜尋。固定選項的佔位符（競技場欄位、團隊標記、飾品欄位）改用下拉選單。
-3. **建立**：取巨集名稱（最多 16 字）、選「共用」或「角色專屬」、按「建立」。巨集會放到游標上，直接丟到動作列。
+3. **建立**：取巨集名稱（最多 16 字）、選「共用」或「角色專屬」、按「建立巨集」。巨集會放到游標上，直接丟到動作列。
 
 小技巧
 
@@ -57,7 +57,7 @@
 | 取消 buff 後施放 | 先取消免疫或引導（寒冰屏障、巨龜守護、深層吐息…）再施放。 | `/cancelaura {AURA}` · `/cast {SPELL}` |
 | 飾品加爆發 | 一鍵使用飾品（13 或 14 格）並施放爆發。 | `/use {TRINKET}` · `/cast {CD}` |
 | 自救序列 | 自療 → 治療石 → 藥水，每按一次一步，脫戰後重來。 | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
-| 修飾鍵切換 | 一顆鍵最多三個技能，Ctrl、Shift 各放另一個。 | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
+| 多技能切換 | 一顆鍵最多三個技能，Ctrl、Shift 各放另一個。 | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
 | 自我施放 | 不管選著誰，都放在自己身上。 | `/cast [@player] {SPELL}` |
 | 外援給焦點 | 誤導、嫁禍或祝福給焦點；沒焦點就給目標的目標，再沒有就給目標。 | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
 | 戰鬥內外切換 | 戰鬥中放一個、戰鬥外放另一個（復生／甦醒）。 | `/cast [combat] {INCOMBAT}; {SPELL}` |
