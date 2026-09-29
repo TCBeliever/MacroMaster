@@ -42,7 +42,7 @@
 
 ## 內建模板
 
-內附 26 個模板。全新安裝時清單只有你這個職業的推薦組（約八個），其餘在「設定 → 加入其他內建模板」依分類列出，適合你職業的排前面。清單完全是你的：改、刪、加都可以。沒改過的內建模板更新時會自動跟上新版，改過的不動。
+內附 29 個模板。全新安裝時清單只有你這個職業的推薦組（約八個），其餘在「設定 → 加入其他內建模板」依分類列出，適合你職業的排前面。清單完全是你的：改、刪、加都可以。沒改過的內建模板更新時會自動跟上新版，改過的不動。
 
 大多數模板第一行是 `#showtooltip`，下表省略；`·` 分隔巨集的行。
 
@@ -91,6 +91,9 @@
 | 技能序列 | 兩到三個技能照順序放，每按一次一個；可選重置時機。 | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
 | 每目標放一次 | 對同一個目標只放一次，換目標或脫戰後才會再放。 | `/castsequence reset=target/combat {SPELL}, null` |
 | 寵物一起攻擊 | 寵物上去打的同時施放技能。 | `/petattack` · `/cast {SPELL}` |
+| 誤導給焦點或寵物 | 獵人。誤導優先給焦點，其次寵物，再來目標的目標，最後目標。 | `/cast [@focus,help,nodead][@pet,exists,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
+| 照顧寵物 | 獵人。寵物死了復活，不在場就召喚，其他時候治療；三格都已填好。 | `/cast [@pet,dead] {REVIVE}; [nopet] {CALLPET}; {MENDPET}` |
+| 假死加裝死 | 獵人。你和寵物一起脫戰。 | `/cast {FEIGN}` · `/cast {PLAYDEAD}` |
 
 `/castsequence` 遇到某一步技能在冷卻或物品不在身上，會停在那一步直到重置。自救序列用不到的欄位請留空。
 
@@ -113,6 +116,7 @@
 | `{MARK}` `{MSG}` | 團隊標記；喊話文字（`%f` 焦點名、`%t` 目標名） |
 | `{FS}` `{FSENEMY}` | FrameSort 要解析的隊友或敵方框架（Healer、OtherDps、EnemyHealer…） |
 | `{TRINKET}` `{RESET}` `{CTRL}` `{SHIFT}` `{INCOMBAT}` | 飾品 13 或 14 格；`castsequence` 的重置條件；修飾鍵與戰鬥模板裡的技能 |
+| `{REVIVE}` `{CALLPET}` `{MENDPET}` `{FEIGN}` `{PLAYDEAD}` | 獵人模板裡的技能（復活寵物、召喚寵物 1、治療寵物、假死、裝死），已自動填好 |
 
 別名：`KICK` = INTERRUPT、`CD` = BURST、`DEF` = DEFENSIVE、`MOVE` = MOVEMENT、`AOE` = GROUND、`CLEANSE` = DISPEL、`EXT` = EXTERNAL、`AURA`／`CANCEL` = CANCELAURA、`HEALPOT` = POTION。
 

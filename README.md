@@ -44,7 +44,7 @@ Tips
 
 ## Built-in templates
 
-26 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
+29 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
 Most bodies start with a `#showtooltip` line, omitted below. `·` separates macro lines.
 
@@ -93,6 +93,9 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Spell sequence | Two or three spells in order, one per press; you choose when it restarts. | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
 | Once per target | Casts once, then nothing on that target until you switch target or leave combat. | `/castsequence reset=target/combat {SPELL}, null` |
 | Pet attack and cast | Sends the pet in and casts, in one press. | `/petattack` · `/cast {SPELL}` |
+| Misdirect to focus or pet | Hunter. Misdirection to your focus, else your pet, else your target's target, else your target. | `/cast [@focus,help,nodead][@pet,exists,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
+| Pet care | Hunter. Revives a dead pet, calls one when none is out, mends it otherwise. All three slots come pre-filled. | `/cast [@pet,dead] {REVIVE}; [nopet] {CALLPET}; {MENDPET}` |
+| Feign Death and Play Dead | Hunter. You and your pet drop combat together. | `/cast {FEIGN}` · `/cast {PLAYDEAD}` |
 
 A `/castsequence` stalls on a step whose spell is on cooldown or whose item you no longer carry, until it resets. In the self-heal combo, leave slots you do not use empty.
 
@@ -115,6 +118,7 @@ Anything in braces is a placeholder: `{INTERRUPT}`, `{地板技能}`, any name y
 | `{MARK}` `{MSG}` | a raid marker; an announcement text (`%f` focus name, `%t` target name) |
 | `{FS}` `{FSENEMY}` | the ally or enemy frame FrameSort should resolve (Healer, OtherDps, EnemyHealer...) |
 | `{TRINKET}` `{RESET}` `{CTRL}` `{SHIFT}` `{INCOMBAT}` | trinket slot 13 or 14; a `castsequence` reset rule; the spells of the modifier and combat templates |
+| `{REVIVE}` `{CALLPET}` `{MENDPET}` `{FEIGN}` `{PLAYDEAD}` | the hunter templates' spells (Revive Pet, Call Pet 1, Mend Pet, Feign Death, Play Dead), pre-filled |
 
 Aliases: `KICK` = INTERRUPT, `CD` = BURST, `DEF` = DEFENSIVE, `MOVE` = MOVEMENT, `AOE` = GROUND, `CLEANSE` = DISPEL, `EXT` = EXTERNAL, `AURA` / `CANCEL` = CANCELAURA, `HEALPOT` = POTION.
 

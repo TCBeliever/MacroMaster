@@ -39,6 +39,7 @@ end
 
 -- Same, with extra fields: optional (unfilled -> its line is dropped),
 -- default (pre-filled value) or defaultKey (localized default),
+-- spell (spell ID whose name pre-fills the slot, in the client's language),
 -- category (suggestion list to show).
 local function PX(label, hint, extra)
 	local m = P(label, hint, extra.options)
@@ -229,6 +230,32 @@ ns.builtinTemplates = {
 		"#showtooltip {SPELL}\n/petattack\n/cast {SPELL}",
 		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
 
+	-- Hunter: Misdirection to the focus, else the pet (solo), else whoever
+	-- the target is fighting, else the target.
+	B("misdirect_pet", "T_MISDIRECT_PET", "T_MISDIRECT_PET_D",
+		"#showtooltip\n/cast [@focus,help,nodead][@pet,exists,nodead][@targettarget,help,nodead][] {EXTERNAL}",
+		{ EXTERNAL = P("P_EXTERNAL", "P_EXTERNAL_H") }),
+
+	-- Hunter: one button looks after the pet. `spell` pre-fills the slot with
+	-- that spell's name (resolved in the client's language when the row is
+	-- built, UI.lua); noname keeps the macro named after the template.
+	B("pet_care", "T_PET_CARE", "T_PET_CARE_D",
+		"#showtooltip\n/cast [@pet,dead] {REVIVE}; [nopet] {CALLPET}; {MENDPET}",
+		{
+			REVIVE  = PX("P_REVIVE", "P_REVIVE_H", { spell = 982, noname = true }),
+			CALLPET = PX("P_CALLPET", "P_CALLPET_H", { spell = 883, noname = true }),
+			MENDPET = PX("P_MENDPET", "P_MENDPET_H", { spell = 136, noname = true, category = "HEAL" }),
+		}),
+
+	-- Hunter: Feign Death and the pet's Play Dead, both off the GCD, so the
+	-- order does not matter and each still fires while the other cools down.
+	B("feign_playdead", "T_FEIGN_PLAYDEAD", "T_FEIGN_PLAYDEAD_D",
+		"#showtooltip {FEIGN}\n/cast {FEIGN}\n/cast {PLAYDEAD}",
+		{
+			FEIGN    = PX("P_FEIGN", "P_FEIGN_H", { spell = 5384, category = "DEFENSIVE" }),
+			PLAYDEAD = PX("P_PLAYDEAD", "P_PLAYDEAD_H", { spell = 209997 }),
+		}),
+
 	B("sequence", "T_SEQUENCE", "T_SEQUENCE_D",
 		"#showtooltip\n/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}",
 		{
@@ -259,12 +286,13 @@ local CATEGORY = {
 	arena_cc = "PVP", mouseover_purge = "PVP", framesort_kick = "PVP", framesort_external = "PVP",
 	framesort_dispel = "PVP", mouseover_altfocus = "PVP",
 	sequence = "SEQ", once_per_target = "SEQ",
-	petattack = "PET",
+	petattack = "PET", misdirect_pet = "PET", pet_care = "PET", feign_playdead = "PET",
 }
 for _, b in ipairs(ns.builtinTemplates) do b.cat = CATEGORY[b.id] or "CORE" end
 
 ns.builtinClasses = {
 	petattack = { HUNTER = true, WARLOCK = true, DEATHKNIGHT = true, MAGE = true },
+	misdirect_pet = { HUNTER = true }, pet_care = { HUNTER = true }, feign_playdead = { HUNTER = true },
 }
 
 ns.classRecommended = {
@@ -272,7 +300,7 @@ ns.classRecommended = {
 	DEMONHUNTER = { "focus_interrupt", "mouseover_harm", "cursor", "mod2", "cancel_cast", "selfheal", "set_focus" },
 	DRUID       = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "combat_switch", "cursor", "mod2", "selfheal" },
 	EVOKER      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cursor", "cancel_cast", "selfheal", "set_focus" },
-	HUNTER      = { "focus_interrupt", "petattack", "focus_external", "mouseover_harm", "cursor", "cancel_cast", "selfheal", "set_focus" },
+	HUNTER      = { "focus_interrupt", "petattack", "misdirect_pet", "pet_care", "feign_playdead", "mouseover_harm", "cursor", "cancel_cast", "selfheal", "set_focus" },
 	MAGE        = { "focus_interrupt", "mouseover_harm", "cursor", "mouseover_purge", "cancel_cast", "mod2", "selfheal", "set_focus" },
 	MONK        = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cursor", "mod2", "selfheal", "set_focus" },
 	PALADIN     = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cancel_cast", "mod2", "selfheal", "set_focus" },

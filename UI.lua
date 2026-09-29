@@ -485,6 +485,8 @@ local function RefreshRows()
 		if state.values[key] == nil then
 			if m and m.multi then state.values[key] = ALL
 			elseif m and m.default then state.values[key] = m.default
+			-- a slot tied to one spell (pet care, Feign Death) starts with its name
+			elseif m and m.spell then state.values[key] = C_Spell.GetSpellName(m.spell)
 			-- item placeholders start with the best suggested item in the bags
 			elseif itemCat then state.values[key] = ns.BestItemForCategory(itemCat)
 			-- categorised, required spell placeholders with the first suggestion

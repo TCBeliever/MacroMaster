@@ -130,3 +130,8 @@
 - **Built-in templates window.** Reached through *Add more built-ins*; *Add* takes the selected template, *Add all* everything on the current tab; a legend explains the list markers.
 - **Layout.** Pop-ups open centred and remember where you dragged them. *Create macro* is a single, larger button; *Open Macros* sits under the template list; the *Spell table* button is back inside the window.
 - **Defaults and text.** A fresh install creates character macros. Explanatory text trimmed throughout Settings and the windows. 繁體中文: the Sequence category is 順序施放, the modifier template is 多技能切換.
+
+## 1.6.0 (2026-09-30)
+
+- **Three hunter templates** under Pet: *Misdirect to focus or pet* (focus, then your pet, then your target's target, then your target), *Pet care* (one button revives a dead pet, calls one when none is out, mends it otherwise) and *Feign Death and Play Dead* (you and your pet drop combat together). A fresh hunter install starts with them in place of *External to focus*.
+- A placeholder can be tied to one spell and opens filled with that spell's name in the client's language; the two pet templates use it, so they are ready to create as they open.

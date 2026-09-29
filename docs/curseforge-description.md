@@ -20,7 +20,7 @@
 
 ## What's inside
 
-26 templates. A fresh install starts with the eight or so recommended for your class; the rest sit in *Settings → Add more built-ins*, grouped as below.
+29 templates. A fresh install starts with the eight or so recommended for your class; the rest sit in *Settings → Add more built-ins*, grouped as below.
 
 **Core**
 
@@ -61,6 +61,9 @@ The three FrameSort templates need the [FrameSort](https://www.curseforge.com/wo
 - **Spell sequence**: two or three spells in order, one per press; you choose when it restarts.
 - **Once per target**: fires again only after a target switch or leaving combat.
 - **Pet attack and cast**: the pet attacks your target while you cast.
+- **Misdirect to focus or pet** (hunter): focus first, then your pet, then your target's target, then your target.
+- **Pet care** (hunter): revives a dead pet, calls one when none is out, mends it otherwise. Comes filled in.
+- **Feign Death and Play Dead** (hunter): you and your pet drop combat together.
 
 Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
