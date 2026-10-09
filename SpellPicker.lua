@@ -1,5 +1,6 @@
 local ADDON, ns = ...
 local L = ns.L
+local Skin = ns.Skin
 
 -- ---------------------------------------------------------------------------
 -- Spell book scan: every active, non-passive spell the character knows,
@@ -116,45 +117,17 @@ local COLS, CELL, PAD = 8, 36, 4
 local picker
 
 local function CreatePicker()
-	local f = CreateFrame("Frame", "MacroMasterSpellPicker", UIParent, "BackdropTemplate")
-	f:SetSize(COLS * (CELL + PAD) + 40, 420)
-	f:SetFrameStrata("DIALOG")
-	f:SetToplevel(true)
-	f:SetClampedToScreen(true)
-	f:SetBackdrop({
-		bgFile = "Interface\\Buttons\\WHITE8x8",
-		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-		tile = true, tileSize = 32, edgeSize = 24,
-		insets = { left = 6, right = 6, top = 6, bottom = 6 },
-	})
-	f:SetBackdropColor(0.05, 0.05, 0.07, 0.96)
-	f:EnableMouse(true)
-	f:SetMovable(true)
-	f:RegisterForDrag("LeftButton")
-	f:SetScript("OnDragStart", f.StartMoving)
-	f:SetScript("OnDragStop", f.StopMovingOrSizing)
+	local f = Skin.Window("MacroMasterSpellPicker", COLS * (CELL + PAD) + 40, 420, L["Spell picker"])
 
-	f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	f.title:SetPoint("TOP", 0, -14)
-	f.title:SetText(L["Spell picker"])
-
-	f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-	f.close:SetPoint("TOPRIGHT", -4, -4)
-
-	f.search = CreateFrame("EditBox", nil, f, "SearchBoxTemplate")
-	f.search:SetSize(f:GetWidth() - 60, 22)
+	f.search = Skin.Search(f, f:GetWidth() - 60)
 	f.search:SetPoint("TOP", 0, -36)
-	f.search:SetAutoFocus(false)
 	f.search:HookScript("OnTextChanged", function() f:Refresh() end)
 	f.search:SetScript("OnEscapePressed", function() f:Hide() end)
 
-	f.scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+	f.scroll = Skin.ScrollFrame(f, COLS * (CELL + PAD))
 	f.scroll:SetPoint("TOPLEFT", 16, -66)
-	f.scroll:SetPoint("BOTTOMRIGHT", -26, 16)
-
-	f.content = CreateFrame("Frame", nil, f.scroll)
-	f.content:SetSize(COLS * (CELL + PAD), 10)
-	f.scroll:SetScrollChild(f.content)
+	f.scroll:SetPoint("BOTTOMRIGHT", -Skin.SCROLL_W, 16)
+	f.content = f.scroll.content
 
 	f.buttons = {}
 	f.headers = {}
@@ -162,7 +135,7 @@ local function CreatePicker()
 	function f:GetHeader(i)
 		local h = self.headers[i]
 		if h then return h end
-		h = self.content:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		h = Skin.Label(self.content, "", "GameFontNormalSmall", "head")
 		h:SetJustifyH("LEFT")
 		self.headers[i] = h
 		return h
@@ -249,9 +222,6 @@ local function CreatePicker()
 		self:Refresh()
 		self.search:SetFocus()
 	end)
-
-	tinsert(UISpecialFrames, f:GetName())
-	f:Hide()
 	return f
 end
 

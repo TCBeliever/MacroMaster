@@ -75,6 +75,10 @@ Your list is entirely yours: edit, delete, add. A built-in you never edited pick
 
 Templates of your own are welcome in the comments here: paste the string.
 
+## Look
+
+*Settings → Theme*: *Classic*, the look the game draws, or *Modern* (beta), flat panels drawn by the addon itself, in blue (*Tide*) or violet (*Dusk*).
+
 ## Slash commands
 
 | Command | Effect |

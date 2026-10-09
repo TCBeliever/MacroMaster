@@ -135,3 +135,7 @@
 
 - **Three hunter templates** under Pet: *Misdirect to focus or pet* (focus, then your pet, then your target's target, then your target), *Pet care* (one button revives a dead pet, calls one when none is out, mends it otherwise) and *Feign Death and Play Dead* (you and your pet drop combat together). A fresh hunter install starts with them in place of *External to focus*.
 - A placeholder can be tied to one spell and opens filled with that spell's name in the client's language; the two pet templates use it, so they are ready to create as they open.
+
+## 1.7.0 (2026-10-10)
+
+- **Modern look (beta).** *Theme* in Settings offers *Modern: Tide* (blue) and *Modern: Dusk* (violet) next to *Classic*: flat panels and 1px borders drawn by the addon itself, the tabs in a strip under the title bar, the same palettes as CombatKit. Classic, the look the game draws, stays the default and is untouched. Switching between Classic and Modern takes a UI reload; between Tide and Dusk the windows change colour at once.

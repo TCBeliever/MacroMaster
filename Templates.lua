@@ -436,6 +436,9 @@ function ns.InitDB()
 	db.settings.importMode = db.settings.importMode or "replace"
 	-- closeAfterCopy: the share window closes itself after Ctrl+C
 	if db.settings.closeAfterCopy == nil then db.settings.closeAfterCopy = true end
+	-- theme: the look ("classic", or a modern palette), read before any window
+	-- is built; a key that is gone reads as classic
+	db.settings.theme = ns.Skin.Init(db.settings.theme)
 	db.icons = db.icons or {}          -- template id -> macro icon fileID chosen by the user
 	-- language: settings.locale ("enUS" / "zhTW") overrides the client's; nil = follow the client
 	if db.settings.locale then ns.ApplyLocale(db.settings.locale) end

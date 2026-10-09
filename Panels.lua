@@ -1,5 +1,6 @@
 local ADDON, ns = ...
 local L = ns.L
+local Skin = ns.Skin
 
 -- ---------------------------------------------------------------------------
 -- Shared bits
@@ -16,42 +17,7 @@ local function SavePosition(f)
 end
 
 local function Popup(name, w, h, title)
-	local f = CreateFrame("Frame", name, UIParent, "BackdropTemplate")
-	f:SetSize(w, h)
-	f:SetFrameStrata("DIALOG")
-	f:SetToplevel(true)
-	f:SetClampedToScreen(true)
-	f:SetMovable(true)
-	f:EnableMouse(true)
-	f:RegisterForDrag("LeftButton")
-	f:SetScript("OnDragStart", f.StartMoving)
-	f:SetScript("OnDragStop", function(self)
-		self:StopMovingOrSizing()
-		SavePosition(self)
-	end)
-	f:SetBackdrop({
-		bgFile = "Interface\\Buttons\\WHITE8x8",
-		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-		tile = true, tileSize = 32, edgeSize = 24,
-		insets = { left = 6, right = 6, top = 6, bottom = 6 },
-	})
-	f:SetBackdropColor(0.05, 0.05, 0.07, 0.96)
-	f.title = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	f.title:SetPoint("TOP", 0, -14)
-	f.title:SetText(title)
-	f.close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-	f.close:SetPoint("TOPRIGHT", -4, -4)
-	tinsert(UISpecialFrames, name)
-	f:Hide()
-	return f
-end
-
--- widen a button whose label (other language) is longer than its width
-local function Fit(b)
-	local fs = b:GetFontString()
-	if not fs then return end
-	local need = fs:GetStringWidth() + 20
-	if need > b:GetWidth() then b:SetWidth(need) end
+	return Skin.Window(name, w, h, title, { onDragStop = SavePosition })
 end
 
 local function Anchor(f)
@@ -62,6 +28,15 @@ local function Anchor(f)
 	else
 		f:SetPoint("CENTER")
 	end
+end
+
+local function Tip(widget, text)
+	widget:HookScript("OnEnter", function(self)
+		GameTooltip:SetOwner(self, "ANCHOR_TOP")
+		GameTooltip:SetText(type(text) == "function" and text(self) or text, 1, 1, 1, 1, true)
+		GameTooltip:Show()
+	end)
+	widget:HookScript("OnLeave", GameTooltip_Hide)
 end
 
 -- ---------------------------------------------------------------------------
@@ -101,43 +76,40 @@ local varPanel
 function ns.ShowVariablesPanel(parent)
 	if not varPanel then
 		local f = Popup("MacroMasterVariables", 560, 440, L["Built-in variables"])
-		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.intro = Skin.Label(f, L["VAR_INTRO"], "GameFontHighlightSmall")
 		f.intro:SetPoint("TOPLEFT", 16, -36)
 		f.intro:SetWidth(528)
 		f.intro:SetJustifyH("LEFT")
-		f.intro:SetText(L["VAR_INTRO"])
 
-		f.scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+		f.scroll = Skin.ScrollFrame(f, 560 - 16 - Skin.SCROLL_W - 4)
 		f.scroll:SetPoint("TOPLEFT", 16, -96)
-		f.scroll:SetPoint("BOTTOMRIGHT", -30, 40)
-		f.content = CreateFrame("Frame", nil, f.scroll)
-		f.content:SetSize(500, 10)
-		f.scroll:SetScrollChild(f.content)
-		f.text = f.content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.scroll:SetPoint("BOTTOMRIGHT", -(Skin.SCROLL_W + 4), 40)
+		f.content = f.scroll.content
+		f.text = Skin.Label(f.content, "", "GameFontHighlightSmall")
 		f.text:SetPoint("TOPLEFT")
 		f.text:SetWidth(500)
 		f.text:SetJustifyH("LEFT")
 		f.text:SetSpacing(3)
 
-		f.footer = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+		f.footer = Skin.Label(f, L["VAR_ALIASES"], "GameFontDisableSmall")
 		f.footer:SetPoint("BOTTOMLEFT", 16, 16)
 		f.footer:SetWidth(528)
 		f.footer:SetJustifyH("LEFT")
-		f.footer:SetText(L["VAR_ALIASES"])
 
-		f:SetScript("OnShow", function(self)
+		function f:Refresh()
 			local lines = {}
 			for _, d in ipairs(VariableDocs()) do
 				local key, meaning, cat, choices, itemCat = d[1], d[2], d[3], d[4], d[5]
-				local line = "|cffffd100{" .. key .. "}|r  " .. meaning
-				if cat then line = line .. "\n      |cff66ccff" .. L["VAR_SUGGEST"] .. ":|r " .. L["CAT_" .. cat] end
-				if itemCat then line = line .. "\n      |cff66ccff" .. L["VAR_ITEM"] .. ":|r " .. L["CAT_" .. itemCat] end
-				if choices then line = line .. "\n      |cff66ccff" .. L["VAR_OPTIONS"] .. ":|r " .. choices end
+				local line = Skin.Text("head", "{" .. key .. "}") .. "  " .. meaning
+				if cat then line = line .. "\n      " .. Skin.Text("accent", L["VAR_SUGGEST"] .. ":") .. " " .. L["CAT_" .. cat] end
+				if itemCat then line = line .. "\n      " .. Skin.Text("accent", L["VAR_ITEM"] .. ":") .. " " .. L["CAT_" .. itemCat] end
+				if choices then line = line .. "\n      " .. Skin.Text("accent", L["VAR_OPTIONS"] .. ":") .. " " .. choices end
 				lines[#lines + 1] = line
 			end
 			self.text:SetText(table.concat(lines, "\n\n"))
 			self.content:SetHeight(self.text:GetStringHeight() + 10)
-		end)
+		end
+		f:SetScript("OnShow", f.Refresh)
 		varPanel = f
 	end
 	Anchor(varPanel)
@@ -147,19 +119,6 @@ end
 -- ---------------------------------------------------------------------------
 -- Built-in templates: catalogue of what ships with the addon (Settings -> Add more built-ins)
 -- ---------------------------------------------------------------------------
-
-local function InsetBox(parent)
-	local box = CreateFrame("Frame", nil, parent, "BackdropTemplate")
-	box:SetBackdrop({
-		bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-		edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-		tile = true, tileSize = 16, edgeSize = 12,
-		insets = { left = 3, right = 3, top = 3, bottom = 3 },
-	})
-	box:SetBackdropColor(0, 0, 0, 0.6)
-	box:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
-	return box
-end
 
 StaticPopupDialogs["MACROMASTER_OVERWRITE_DEFAULT"] = {
 	text = L["Overwrite your copy of '%s' with the default?"],
@@ -208,58 +167,51 @@ function ns.ShowDefaultsPanel(parent)
 		for _, c in ipairs(ns.templateCategories) do filters[#filters + 1] = c end
 		local prev
 		for i, key in ipairs(filters) do
-			local btn = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-			btn:SetSize(60, 22)
+			local btn = Skin.Button(f, "", 60, 22, function(self) f.filter = self.filter; f.selected = nil; f:Refresh() end)
 			btn.filter = key
 			if i == 1 then btn:SetPoint("TOPLEFT", 14, -38) else btn:SetPoint("LEFT", prev, "RIGHT", 4, 0) end
-			btn:SetScript("OnClick", function(self) f.filter = self.filter; f.selected = nil; f:Refresh() end)
 			f.tabs[i] = btn
 			prev = btn
 		end
 
-		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.intro = Skin.Label(f, L["DEFAULTS_INTRO"], "GameFontHighlightSmall")
 		f.intro:SetPoint("TOPLEFT", 16, -68)
 		f.intro:SetWidth(W - 32)
 		f.intro:SetJustifyH("LEFT")
-		f.intro:SetText(L["DEFAULTS_INTRO"])
 
 		-- left: list
-		local listBox = InsetBox(f)
+		local listBox = Skin.Box(f)
 		listBox:SetPoint("TOPLEFT", 14, -104)
 		listBox:SetSize(240, H - 104 - 50)
-		f.scroll = CreateFrame("ScrollFrame", nil, listBox, "UIPanelScrollFrameTemplate")
+		f.scroll = Skin.ScrollFrame(listBox, 240 - 6 - Skin.SCROLL_W)
 		f.scroll:SetPoint("TOPLEFT", 6, -6)
-		f.scroll:SetPoint("BOTTOMRIGHT", -26, 6)
-		f.content = CreateFrame("Frame", nil, f.scroll)
-		f.content:SetSize(200, 10)
-		f.scroll:SetScrollChild(f.content)
+		f.scroll:SetPoint("BOTTOMRIGHT", -Skin.SCROLL_W, 6)
+		f.content = f.scroll.content
 		f.buttons = {}
 
 		-- right: read-only preview
-		f.pname = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		f.pname = Skin.Label(f, "", "GameFontNormal")
 		f.pname:SetPoint("TOPLEFT", listBox, "TOPRIGHT", 12, -2)
 		f.pname:SetWidth(W - 240 - 14 - 12 - 14)
 		f.pname:SetJustifyH("LEFT")
-		f.pdesc = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.pdesc = Skin.Label(f, "", "GameFontHighlightSmall")
 		f.pdesc:SetPoint("TOPLEFT", f.pname, "BOTTOMLEFT", 0, -4)
 		f.pdesc:SetWidth(W - 240 - 14 - 12 - 14)
 		f.pdesc:SetJustifyH("LEFT")
 		f.pdesc:SetHeight(56)
 		f.pdesc:SetJustifyV("TOP")
-		local bodyBox = InsetBox(f)
+		local bodyBox = Skin.Box(f)
 		bodyBox:SetPoint("TOPLEFT", f.pdesc, "BOTTOMLEFT", -6, -6)
 		bodyBox:SetPoint("BOTTOMRIGHT", -14, 118)   -- leaves room for two status lines above the buttons
-		f.bodyScroll = CreateFrame("ScrollFrame", nil, bodyBox, "UIPanelScrollFrameTemplate")
+		f.bodyScroll = Skin.ScrollFrame(bodyBox, 400)
 		f.bodyScroll:SetPoint("TOPLEFT", 8, -8)
-		f.bodyScroll:SetPoint("BOTTOMRIGHT", -26, 8)
-		f.bodyContent = CreateFrame("Frame", nil, f.bodyScroll)
-		f.bodyContent:SetSize(400, 10)
-		f.bodyScroll:SetScrollChild(f.bodyContent)
-		f.pbody = f.bodyContent:CreateFontString(nil, "OVERLAY", "ChatFontNormal")
+		f.bodyScroll:SetPoint("BOTTOMRIGHT", -Skin.SCROLL_W, 8)
+		f.bodyContent = f.bodyScroll.content
+		f.pbody = Skin.Label(f.bodyContent, "", "ChatFontNormal")
 		f.pbody:SetPoint("TOPLEFT")
 		f.pbody:SetWidth(400)
 		f.pbody:SetJustifyH("LEFT")
-		f.status = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.status = Skin.Label(f, "", "GameFontHighlightSmall")
 		f.status:SetPoint("TOPLEFT", bodyBox, "BOTTOMLEFT", 2, -6)
 		f.status:SetWidth(W - 240 - 14 - 12 - 14)
 		f.status:SetJustifyH("LEFT")
@@ -268,21 +220,7 @@ function ns.ShowDefaultsPanel(parent)
 
 		-- actions: Add = the selected template, Add all = every template on
 		-- this tab that is not in the list yet
-		local function Tip(btn, text)
-			btn:SetScript("OnEnter", function(self)
-				GameTooltip:SetOwner(self, "ANCHOR_TOP")
-				GameTooltip:SetText(text, 1, 1, 1, 1, true)
-				GameTooltip:Show()
-			end)
-			btn:SetScript("OnLeave", GameTooltip_Hide)
-		end
-		f.add = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.add:SetSize(100, 22)
-		f.add:SetPoint("BOTTOMLEFT", listBox, "BOTTOMRIGHT", 12, 0)
-		f.add:SetText(L["Add template"])
-		Fit(f.add)
-		Tip(f.add, L["ADD_HELP"])
-		f.add:SetScript("OnClick", function()
+		f.add = Skin.Button(f, L["Add template"], 100, 22, function()
 			local id = f.selected
 			if not id then return end
 			local b = ns.ShippedTemplate(id)
@@ -295,14 +233,10 @@ function ns.ShowDefaultsPanel(parent)
 				f:Refresh()
 			end
 		end)
+		f.add:SetPoint("BOTTOMLEFT", listBox, "BOTTOMRIGHT", 12, 0)
+		Tip(f.add, L["ADD_HELP"])
 
-		f.addAll = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.addAll:SetSize(100, 22)
-		f.addAll:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
-		f.addAll:SetText(L["Add all"])
-		Fit(f.addAll)
-		Tip(f.addAll, L["ADD_ALL_HELP"])
-		f.addAll:SetScript("OnClick", function()
+		f.addAll = Skin.Button(f, L["Add all"], 100, 22, function()
 			local n = 0
 			for _, b in ipairs(f.list or {}) do
 				if ns.ImportBuiltin(b.id, false) == "added" then n = n + 1 end
@@ -311,22 +245,19 @@ function ns.ShowDefaultsPanel(parent)
 			ns.Msg(L["MSG_ALL_ADDED"], n)
 			f:Refresh()
 		end)
+		f.addAll:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
+		Tip(f.addAll, L["ADD_ALL_HELP"])
 
-		f.reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.reset:SetSize(160, 22)
+		f.reset = Skin.Button(f, L["Reset all to defaults"], 160, 22, function() StaticPopup_Show("MACROMASTER_RESET_ALL") end)
 		f.reset:SetPoint("BOTTOMRIGHT", -14, 14)
-		f.reset:SetText(L["Reset all to defaults"])
-		Fit(f.reset)
-		f.reset:SetScript("OnClick", function() StaticPopup_Show("MACROMASTER_RESET_ALL") end)
 
 		function f:Refresh()
 			local className = UnitClass("player")
 			for _, btn in ipairs(self.tabs) do
 				local key = btn.filter
-				btn:SetText(key == "REC" and string.format(L["Recommended for %s"], className)
+				btn:SetLabel(key == "REC" and string.format(L["Recommended for %s"], className)
 					or key == "ALL" and L["All"] or L["TCAT_" .. key])
-				Fit(btn)
-				btn:SetEnabled(key ~= self.filter)
+				btn:SetSelected(key == self.filter)
 			end
 
 			-- which shipped templates this view lists
@@ -357,29 +288,26 @@ function ns.ShowDefaultsPanel(parent)
 			for i, b in ipairs(list) do
 				local btn = self.buttons[i]
 				if not btn then
-					btn = CreateFrame("Button", nil, self.content)
-					btn:SetSize(200, 22)
-					btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+					btn = Skin.Row(self.content)
+					btn:SetHeight(22)
+					btn.text = Skin.Label(btn, "", "GameFontHighlightSmall")
 					btn.text:SetPoint("LEFT", 6, 0)
 					btn.text:SetPoint("RIGHT", -4, 0)
 					btn.text:SetJustifyH("LEFT")
 					btn.text:SetWordWrap(false)
-					btn.sel = btn:CreateTexture(nil, "BACKGROUND")
-					btn.sel:SetAllPoints()
-					btn.sel:SetColorTexture(0.3, 0.55, 0.9, 0.35)
-					btn:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
 					btn:SetScript("OnClick", function(self) f.selected = self.templateID; f:Refresh() end)
 					self.buttons[i] = btn
 				end
 				btn.templateID = b.id
 				local mine = ns.FindTemplate(b.id)
 				local fits = ns.TemplateFitsClass(b)
-				local name = fits and b.name or ("|cff808080" .. b.name .. "|r")
-				local tag = (not known[b.id]) and (" |cff40ff40" .. L["NEW"] .. "|r") or ""
-				btn.text:SetText((mine and "   " or "|cffffd100+|r ") .. name .. tag)
-				btn.sel:SetShown(b.id == self.selected)
+				local name = fits and b.name or Skin.Text("dim", b.name)
+				local tag = (not known[b.id]) and (" " .. Skin.Text("ok", L["NEW"])) or ""
+				btn.text:SetText((mine and "   " or (Skin.Text("head", "+") .. " ")) .. name .. tag)
+				btn:SetSelected(b.id == self.selected)
 				btn:ClearAllPoints()
 				btn:SetPoint("TOPLEFT", 0, -(i - 1) * 22)
+				btn:SetPoint("TOPRIGHT", 0, -(i - 1) * 22)
 				btn:Show()
 			end
 			for i = #list + 1, #self.buttons do self.buttons[i]:Hide() end
@@ -387,7 +315,7 @@ function ns.ShowDefaultsPanel(parent)
 
 			local b = self.selected and ns.ShippedTemplate(self.selected)
 			if b then
-				self.pname:SetText(b.name .. "  |cff808080" .. L["TCAT_" .. (b.cat or "CORE")] .. "|r")
+				self.pname:SetText(b.name .. "  " .. Skin.Text("dim", L["TCAT_" .. (b.cat or "CORE")]))
 				self.pdesc:SetText(b.desc or "")
 				self.pbody:SetText(b.body)
 				self.bodyContent:SetHeight(self.pbody:GetStringHeight() + 10)
@@ -397,7 +325,7 @@ function ns.ShowDefaultsPanel(parent)
 				elseif mine.body == b.body then lines[1] = L["(in your list, unchanged)"]
 				else lines[1] = L["(in your list, edited)"] end
 				if recIndex[b.id] then lines[#lines + 1] = string.format(L["Recommended for %s"], className) .. "." end
-				if not ns.TemplateFitsClass(b) then lines[#lines + 1] = "|cff808080" .. string.format(L["FIT_NO"], className) .. "|r" end
+				if not ns.TemplateFitsClass(b) then lines[#lines + 1] = Skin.Text("dim", string.format(L["FIT_NO"], className)) end
 				self.status:SetText(table.concat(lines, "\n"))
 			else
 				self.pname:SetText(""); self.pdesc:SetText(""); self.pbody:SetText(""); self.status:SetText("")
@@ -445,49 +373,33 @@ local function ShowCopyPanel(title, text)
 		local W, H = 520, 200
 		local f = Popup("MacroMasterCopy", W, H, "")
 
-		local box = InsetBox(f)
+		local box = Skin.MultiLine(f, W - 28, H - 36 - 44, 0, true)
 		box:SetPoint("TOPLEFT", 14, -36)
-		box:SetPoint("BOTTOMRIGHT", -14, 44)
-		local sf = CreateFrame("ScrollFrame", nil, box, "InputScrollFrameTemplate")
-		sf:SetPoint("TOPLEFT", 8, -8)
-		sf:SetPoint("BOTTOMRIGHT", -8, 8)
-		sf.EditBox:SetMaxLetters(0)
-		sf.EditBox:SetWidth(W - 28 - 16 - 24)
-		sf.EditBox:SetFontObject(ChatFontNormal)
-		sf.EditBox:SetAutoFocus(false)
-		sf.EditBox:SetScript("OnEscapePressed", function() f:Hide() end)
+		local e = box.EditBox
+		e:SetScript("OnEscapePressed", function() f:Hide() end)
 		-- meant to be copied, not edited: a click reselects it, typing restores it
-		sf.EditBox:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-		sf.EditBox:SetScript("OnTextChanged", function(self, userInput)
+		e:HookScript("OnEditFocusGained", function(self) self:HighlightText() end)
+		e:SetScript("OnTextChanged", function(self, userInput)
 			if userInput then
 				self:SetText(f.text or "")
 				self:HighlightText()
 			end
 		end)
 		-- Ctrl+C is the whole point of the window: close right after it
-		sf.EditBox:SetScript("OnKeyDown", function(self, key)
+		e:SetScript("OnKeyDown", function(self, key)
 			if key == "C" and IsControlKeyDown() and ns.db.settings.closeAfterCopy then
 				C_Timer.After(0.1, function() f:Hide() end)
 			end
 		end)
-		if sf.CharCount then sf.CharCount:Hide() end
-		f.edit = sf.EditBox
+		f.edit = e
 
-		f.closeAfter = CreateFrame("CheckButton", "MacroMasterCopyCloseAfter", f, "UICheckButtonTemplate")
-		f.closeAfter:SetSize(24, 24)
-		f.closeAfter:SetPoint("BOTTOMLEFT", 12, 12)
-		local text = f.closeAfter.Text or f.closeAfter.text or _G[f.closeAfter:GetName() .. "Text"]
-		text:SetText(L["Close after copy"])
-		f.closeAfter:SetScript("OnClick", function(self)
+		f.closeAfter = Skin.Checkbox(f, "MacroMasterCopyCloseAfter", L["Close after copy"], function(self)
 			ns.db.settings.closeAfterCopy = self:GetChecked() and true or false
 		end)
+		f.closeAfter:SetPoint("BOTTOMLEFT", 12, 12)
 
-		f.okay = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.okay:SetSize(90, 22)
+		f.okay = Skin.Button(f, OKAY, 90, 22, function() f:Hide() end)
 		f.okay:SetPoint("BOTTOMRIGHT", -14, 14)
-		f.okay:SetText(OKAY)
-		Fit(f.okay)
-		f.okay:SetScript("OnClick", function() f:Hide() end)
 		copyPanel = f
 	end
 	local f = copyPanel
@@ -522,55 +434,32 @@ function ns.ShowImportPanel()
 		local W, H = 520, 260
 		local f = Popup("MacroMasterImport", W, H, L["Import"])
 
-		local box = InsetBox(f)
+		local box = Skin.MultiLine(f, W - 28, H - 36 - 44, 0, true)
 		box:SetPoint("TOPLEFT", 14, -36)
-		box:SetPoint("BOTTOMRIGHT", -14, 44)
-		local sf = CreateFrame("ScrollFrame", nil, box, "InputScrollFrameTemplate")
-		sf:SetPoint("TOPLEFT", 8, -8)
-		sf:SetPoint("BOTTOMRIGHT", -8, 8)
-		sf.EditBox:SetMaxLetters(0)
-		sf.EditBox:SetWidth(W - 28 - 16 - 24)
-		sf.EditBox:SetFontObject(ChatFontNormal)
-		sf.EditBox:SetAutoFocus(false)
-		sf.EditBox:SetScript("OnEscapePressed", function() f:Hide() end)
-		if sf.CharCount then sf.CharCount:Hide() end
-		f.edit = sf.EditBox
+		box.EditBox:SetScript("OnEscapePressed", function() f:Hide() end)
+		f.edit = box.EditBox
 
 		-- what happens to a template whose id is already in the list
-		f.modeLabel = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+		f.modeLabel = Skin.Label(f, L["Same id:"], "GameFontNormalSmall")
 		f.modeLabel:SetPoint("BOTTOMLEFT", 16, 19)
-		f.modeLabel:SetText(L["Same id:"])
 		f.modes = {}
 		local prev = f.modeLabel
 		for i, mode in ipairs({ "replace", "add" }) do
-			local r = CreateFrame("CheckButton", "MacroMasterImportMode" .. i, f, "UIRadioButtonTemplate")
-			r:SetPoint("LEFT", prev, "RIGHT", i == 1 and 6 or 10, 0)
-			local text = r.Text or r.text or _G[r:GetName() .. "Text"]
-			text:SetText(mode == "replace" and L["Replace"] or L["Add new"])
-			r.mode = mode
-			r:SetScript("OnClick", function(self)
+			local r = Skin.Radio(f, "MacroMasterImportMode" .. i, mode == "replace" and L["Replace"] or L["Add new"], function(self)
 				ns.db.settings.importMode = self.mode
 				f:RefreshMode()
 			end)
-			r:SetScript("OnEnter", function(self)
-				GameTooltip:SetOwner(self, "ANCHOR_TOP")
-				GameTooltip:SetText(self.mode == "replace" and L["MODE_REPLACE_HELP"] or L["MODE_ADD_HELP"], 1, 1, 1, 1, true)
-				GameTooltip:Show()
-			end)
-			r:SetScript("OnLeave", GameTooltip_Hide)
+			r:SetPoint("LEFT", prev, "RIGHT", i == 1 and 6 or 10, 0)
+			r.mode = mode
+			Tip(r, function(self) return self.mode == "replace" and L["MODE_REPLACE_HELP"] or L["MODE_ADD_HELP"] end)
 			f.modes[i] = r
-			prev = text
+			prev = r.label
 		end
 		function f:RefreshMode()
 			for _, r in ipairs(self.modes) do r:SetChecked(r.mode == ns.db.settings.importMode) end
 		end
 
-		f.import = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.import:SetSize(100, 22)
-		f.import:SetPoint("BOTTOMRIGHT", -14, 14)
-		f.import:SetText(L["Import"])
-		Fit(f.import)
-		f.import:SetScript("OnClick", function()
+		f.import = Skin.Button(f, L["Import"], 100, 22, function()
 			local list, err = ns.ParseTemplates(f.edit:GetText())
 			if not list then ns.Msg(err); return end
 			if #list == 0 then ns.Msg(L["MSG_IMPORT_EMPTY"]); return end
@@ -583,10 +472,11 @@ function ns.ShowImportPanel()
 			local code = 0
 			for _, e in ipairs(list) do if e.code then code = code + 1 end end
 			if code > 0 then
-				text = text .. "\n\n|cffff4040" .. string.format(L["IMPORT_CODE_WARNING"], code) .. "|r"
+				text = text .. "\n\n" .. Skin.Text("bad", string.format(L["IMPORT_CODE_WARNING"], code))
 			end
 			StaticPopup_Show("MACROMASTER_IMPORT_TEXT", text, nil, { list = list, mode = mode })
 		end)
+		f.import:SetPoint("BOTTOMRIGHT", -14, 14)
 		function ns.HideImportPanel() f:Hide() end
 		importPanel = f
 	end
@@ -608,57 +498,36 @@ function ns.ShowSpellTablePanel(parent)
 		local f = Popup("MacroMasterSpellTable", 620, 480, "")
 		f.category = ns.categories[1]
 
-		f.intro = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		f.intro = Skin.Label(f, L["TABLE_INTRO"], "GameFontHighlightSmall")
 		f.intro:SetPoint("TOPLEFT", 16, -36)
 		f.intro:SetWidth(588)
 		f.intro:SetJustifyH("LEFT")
-		f.intro:SetText(L["TABLE_INTRO"])
 
 		-- category tabs
 		f.tabs = {}
-		local prev
 		local PER_ROW = 6
 		for i, cat in ipairs(ns.categories) do
-			local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-			b:SetSize(96, 22)
-			b:SetText(L["CAT_" .. cat])
+			local b = Skin.Button(f, L["CAT_" .. cat], 96, 22, function(self) f.category = self.category; f:Refresh() end)
 			b.category = cat
 			local row, col = math.floor((i - 1) / PER_ROW), (i - 1) % PER_ROW
 			b:SetPoint("TOPLEFT", 14 + col * 100, -100 - row * 26)
-			b:SetScript("OnClick", function(self) f.category = self.category; f:Refresh() end)
 			f.tabs[i] = b
-			prev = b
 		end
 
-		f.status = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+		f.status = Skin.Label(f, "", "GameFontDisableSmall")
 		f.status:SetPoint("TOPLEFT", 16, -156)
 
-		local box = CreateFrame("Frame", nil, f, "BackdropTemplate")
-		box:SetBackdrop({
-			bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
-			edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-			tile = true, tileSize = 16, edgeSize = 12,
-			insets = { left = 3, right = 3, top = 3, bottom = 3 },
-		})
-		box:SetBackdropColor(0, 0, 0, 0.6)
-		box:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+		local box = Skin.Box(f)
 		box:SetPoint("TOPLEFT", 14, -170)
 		box:SetPoint("BOTTOMRIGHT", -14, 44)
 
-		f.scroll = CreateFrame("ScrollFrame", nil, box, "UIPanelScrollFrameTemplate")
+		f.scroll = Skin.ScrollFrame(box, 620 - 28 - 6 - Skin.SCROLL_W)
 		f.scroll:SetPoint("TOPLEFT", 6, -6)
-		f.scroll:SetPoint("BOTTOMRIGHT", -26, 6)
-		f.content = CreateFrame("Frame", nil, f.scroll)
-		f.content:SetSize(550, 10)
-		f.scroll:SetScrollChild(f.content)
+		f.scroll:SetPoint("BOTTOMRIGHT", -Skin.SCROLL_W, 6)
+		f.content = f.scroll.content
 		f.rows = {}
 
-		f.add = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.add:SetSize(90, 22)
-		f.add:SetPoint("BOTTOMLEFT", 14, 14)
-		f.add:SetText(L["Add"])
-		Fit(f.add)
-		f.add:SetScript("OnClick", function()
+		f.add = Skin.Button(f, L["Add"], 90, 22, function()
 			ns.ShowSpellPicker(f, function(name, spellID)
 				if spellID then
 					ns.AddSuggestion(f.category, spellID)
@@ -666,22 +535,19 @@ function ns.ShowSpellTablePanel(parent)
 				end
 			end)
 		end)
+		f.add:SetPoint("BOTTOMLEFT", 14, 14)
 
-		f.reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-		f.reset:SetSize(110, 22)
-		f.reset:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
-		f.reset:SetText(L["Reset to shipped"])
-		Fit(f.reset)
-		f.reset:SetScript("OnClick", function()
+		f.reset = Skin.Button(f, L["Reset to shipped"], 110, 22, function()
 			ns.ResetSuggestions(f.category)
 			f:Refresh()
 		end)
+		f.reset:SetPoint("LEFT", f.add, "RIGHT", 6, 0)
 
 		function f:Refresh()
 			local className = UnitClass("player")
 			self.title:SetText(string.format(L["Spell table for %s"], className))
 			for _, b in ipairs(self.tabs) do
-				b:SetEnabled(b.category ~= self.category)
+				b:SetSelected(b.category == self.category)
 			end
 			self.status:SetText(ns.IsSuggestionCustomized(self.category) and L["(custom)"] or "")
 
@@ -691,21 +557,20 @@ function ns.ShowSpellTablePanel(parent)
 				local r = self.rows[i]
 				if not r then
 					r = CreateFrame("Frame", nil, self.content)
-					r:SetSize(540, 24)
+					r:SetHeight(24)
 					r.icon = r:CreateTexture(nil, "ARTWORK")
 					r.icon:SetSize(20, 20)
 					r.icon:SetPoint("LEFT", 2, 0)
-					r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+					r.name = Skin.Label(r, "", "GameFontHighlightSmall")
 					r.name:SetPoint("LEFT", r.icon, "RIGHT", 8, 0)
 					r.name:SetWidth(420)
 					r.name:SetJustifyH("LEFT")
-					r.remove = CreateFrame("Button", nil, r, "UIPanelCloseButton")
-					r.remove:SetSize(22, 22)
-					r.remove:SetPoint("RIGHT", -2, 0)
-					r.remove:SetScript("OnClick", function(self)
+					r.remove = Skin.CloseButton(r, function(self)
 						ns.RemoveSuggestion(f.category, self:GetParent().spellID)
 						f:Refresh()
 					end)
+					r.remove:SetSize(22, 22)
+					r.remove:SetPoint("RIGHT", -2, 0)
 					r:SetScript("OnEnter", function(self)
 						GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 						GameTooltip:SetSpellByID(self.spellID)
@@ -718,9 +583,10 @@ function ns.ShowSpellTablePanel(parent)
 				r.spellID = s.id
 				r.icon:SetTexture(s.icon)
 				r.icon:SetDesaturated(not s.known)
-				r.name:SetText(s.known and s.name or ("|cff808080" .. s.name .. " " .. L["(not known by this character)"] .. "|r"))
+				r.name:SetText(s.known and s.name or Skin.Text("dim", s.name .. " " .. L["(not known by this character)"]))
 				r:ClearAllPoints()
 				r:SetPoint("TOPLEFT", 0, -(i - 1) * 24)
+				r:SetPoint("TOPRIGHT", 0, -(i - 1) * 24)
 				r:Show()
 			end
 			for i = #list + 1, #self.rows do self.rows[i]:Hide() end
@@ -734,9 +600,16 @@ function ns.ShowSpellTablePanel(parent)
 	tablePanel:Show()
 end
 
+-- After a palette switch: the windows that build inline colours draw them again
+function ns.RefreshPanels()
+	for _, f in pairs({ varPanel, defaultsPanel, tablePanel }) do
+		if f:IsShown() then f:Refresh() end
+	end
+end
+
 -- ---------------------------------------------------------------------------
--- Settings page (second tab of the main window): language, and the doors to
--- the defaults catalogue and export/import. `main` anchors those panels.
+-- Settings page (second tab of the main window): language, theme, and the
+-- doors to the defaults catalogue and export/import. `main` anchors those panels.
 -- ---------------------------------------------------------------------------
 
 local LANGUAGES = {
@@ -754,90 +627,88 @@ function ns.BuildSettingsPage(f, main)
 	}
 
 	local x, y = 24, -64
-	local lang = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	local lang = Skin.Label(f, L["Language"], "GameFontNormal")
 	lang:SetPoint("TOPLEFT", x, y)
-	lang:SetText(L["Language"])
-	local note = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	local note = Skin.Label(f, L["LANG_NOTE"], "GameFontDisableSmall")
 	note:SetPoint("LEFT", lang, "RIGHT", 8, 0)
-	note:SetText(L["LANG_NOTE"])
 
 	f.radios = {}
 	for i, entry in ipairs(LANGUAGES) do
-		local r = CreateFrame("CheckButton", "MacroMasterLang" .. i, f, "UIRadioButtonTemplate")
-		r:SetPoint("TOPLEFT", x + 4, y - 22 - (i - 1) * 22)
-		local text = r.Text or r.text or _G[r:GetName() .. "Text"]
-		text:SetText(entry.code and entry.label or L["Auto (client language)"])
-		r.code = entry.code
-		r:SetScript("OnClick", function(self)
+		local r = Skin.Radio(f, "MacroMasterLang" .. i, entry.code and entry.label or L["Auto (client language)"], function(self)
 			local before = ns.db.settings.locale
 			ns.db.settings.locale = self.code
 			f:Refresh()
 			if before ~= self.code then StaticPopup_Show("MACROMASTER_RELOAD") end
 		end)
+		r:SetPoint("TOPLEFT", x + 4, y - 22 - (i - 1) * 22)
+		r.code = entry.code
 		f.radios[i] = r
 	end
 
-	local lib = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	lib:SetPoint("TOPLEFT", x, y - 110)
-	lib:SetText(L["Templates"])
-	f.hint = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	f.hint:SetPoint("TOPLEFT", x + 4, y - 132)
+	-- the look: the game's own frames, or the flat modern one (beta) in one
+	-- of two palettes. Between the looks the frames are built differently,
+	-- so that switch waits for a reload; between the palettes it is at once.
+	local theme = Skin.Label(f, L["Theme"], "GameFontNormal")
+	theme:SetPoint("TOPLEFT", x, y - 110)
+	local themeNote = Skin.Label(f, L["THEME_NOTE"], "GameFontDisableSmall")
+	themeNote:SetPoint("LEFT", theme, "RIGHT", 8, 0)
+	f.themes = {}
+	for i, entry in ipairs(Skin.THEMES) do
+		local r = Skin.Radio(f, "MacroMasterTheme" .. i, L["THEME_" .. entry.key], function(self)
+			ns.db.settings.theme = self.key
+			f:Refresh()
+			if Skin.IsModernKey(self.key) ~= Skin.modern then
+				StaticPopup_Show("MACROMASTER_RELOAD")
+			elseif Skin.modern then
+				ns.SetTheme(self.key)
+			end
+		end)
+		r:SetPoint("TOPLEFT", x + 4, y - 132 - (i - 1) * 22)
+		r.key = entry.key
+		f.themes[i] = r
+	end
+
+	local lib = Skin.Label(f, L["Templates"], "GameFontNormal")
+	lib:SetPoint("TOPLEFT", x, y - 220)
+	f.hint = Skin.Label(f, string.format(L["SETTINGS_TEMPLATES_HINT"], #ns.builtinTemplates), "GameFontHighlightSmall")
+	f.hint:SetPoint("TOPLEFT", x + 4, y - 242)
 	f.hint:SetWidth(520)
 	f.hint:SetJustifyH("LEFT")
-	f.hint:SetText(string.format(L["SETTINGS_TEMPLATES_HINT"], #ns.builtinTemplates))
 
-	f.defaults = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	f.defaults:SetSize(160, 22)
+	f.defaults = Skin.Button(f, L["Add more built-ins"], 160, 22, function() ns.ShowDefaultsPanel(main) end)
 	f.defaults:SetPoint("TOPLEFT", f.hint, "BOTTOMLEFT", 0, -10)
-	f.defaults:SetText(L["Add more built-ins"])
-	Fit(f.defaults)
-	f.defaults:SetScript("OnClick", function() ns.ShowDefaultsPanel(main) end)
 
-	f.export = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	f.export:SetSize(100, 22)
+	f.export = Skin.Button(f, L["Export"], 100, 22, ns.ShowExportPanel)
 	f.export:SetPoint("LEFT", f.defaults, "RIGHT", 8, 0)
-	f.export:SetText(L["Export"])
-	Fit(f.export)
-	f.export:SetScript("OnClick", ns.ShowExportPanel)
 
-	f.import = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	f.import:SetSize(100, 22)
+	f.import = Skin.Button(f, L["Import"], 100, 22, ns.ShowImportPanel)
 	f.import:SetPoint("LEFT", f.export, "RIGHT", 8, 0)
-	f.import:SetText(L["Import"])
-	Fit(f.import)
-	f.import:SetScript("OnClick", ns.ShowImportPanel)
 
 	-- community: templates of your own are welcome on the project's comments.
 	-- The game cannot open a browser, so the address sits in a box to copy.
 	local COMMUNITY_URL = "https://www.curseforge.com/wow/addons/macromaster/comments"
-	local share = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	share:SetPoint("TOPLEFT", x, y - 236)
-	share:SetText(L["Share your templates"])
-	f.shareHint = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-	f.shareHint:SetPoint("TOPLEFT", x + 4, y - 258)
+	local share = Skin.Label(f, L["Share your templates"], "GameFontNormal")
+	share:SetPoint("TOPLEFT", x, y - 346)
+	f.shareHint = Skin.Label(f, L["SHARE_COMMUNITY_HINT"], "GameFontHighlightSmall")
+	f.shareHint:SetPoint("TOPLEFT", x + 4, y - 368)
 	f.shareHint:SetWidth(520)
 	f.shareHint:SetJustifyH("LEFT")
-	f.shareHint:SetText(L["SHARE_COMMUNITY_HINT"])
-	f.shareURL = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
-	f.shareURL:SetSize(420, 22)
-	f.shareURL:SetPoint("TOPLEFT", f.shareHint, "BOTTOMLEFT", 6, -8)
-	f.shareURL:SetAutoFocus(false)
+	f.shareURL = Skin.EditBox(f, 420)
+	f.shareURL:SetPoint("TOPLEFT", f.shareHint, "BOTTOMLEFT", Skin.EDIT_INSET, -8)
 	f.shareURL:SetText(COMMUNITY_URL)
-	f.shareURL:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+	f.shareURL:HookScript("OnEditFocusGained", function(self) self:HighlightText() end)
 	f.shareURL:SetScript("OnTextChanged", function(self, userInput)
 		if userInput then
 			self:SetText(COMMUNITY_URL)
 			self:HighlightText()
 		end
 	end)
-	f.shareURL:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
-	f.shareURL:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
 
 	function f:Refresh()
 		for _, r in ipairs(self.radios) do r:SetChecked(r.code == ns.db.settings.locale) end
+		for _, r in ipairs(self.themes) do r:SetChecked(r.key == ns.db.settings.theme) end
 		local n = ns.NewBuiltinCount()
-		f.defaults:SetText(n > 0 and string.format(L["Add more built-ins (%d new)"], n) or L["Add more built-ins"])
-		Fit(f.defaults)
+		f.defaults:SetLabel(n > 0 and string.format(L["Add more built-ins (%d new)"], n) or L["Add more built-ins"])
 	end
 	f:SetScript("OnShow", f.Refresh)
 	ns.RefreshSettingsPage = function() if f:IsShown() then f:Refresh() end end

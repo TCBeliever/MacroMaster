@@ -13,33 +13,21 @@ local function HookMacroFrame()
 
 	-- A bar attached under the macro window: far more visible than buttons
 	-- squeezed into the frame itself. It is a child, so it shows/hides with it.
+	local Skin = ns.Skin
 	local bar = CreateFrame("Frame", "MacroMasterMacroBar", MacroFrame, "BackdropTemplate")
 	bar:SetPoint("TOPLEFT", MacroFrame, "BOTTOMLEFT", 0, 4)
 	bar:SetPoint("TOPRIGHT", MacroFrame, "BOTTOMRIGHT", 0, 4)
 	bar:SetHeight(40)
-	bar:SetBackdrop({
-		bgFile = "Interface\\Buttons\\WHITE8x8",
-		edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-		tile = true, tileSize = 32, edgeSize = 16,
-		insets = { left = 4, right = 4, top = 4, bottom = 4 },
-	})
-	bar:SetBackdropColor(0.05, 0.05, 0.07, 0.96)
+	Skin.Backdrop(bar, "bar")
 
-	bar.label = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	bar.label = Skin.Label(bar, "", "GameFontNormal")
 	bar.label:SetPoint("LEFT", 14, 0)
-	bar.label:SetText("|cff66ccffMacro|rMaster")
+	Skin.Paint(bar.label, function(fs) fs:SetText(Skin.Text("accent", "Macro") .. "Master") end)
 
-	local open = CreateFrame("Button", nil, bar, "UIPanelButtonTemplate")
-	open:SetSize(100, 24)
+	local open = Skin.Button(bar, L["Open"], 100, 24, ns.ShowMain)
 	open:SetPoint("LEFT", bar.label, "RIGHT", 12, 0)
-	open:SetText(L["Open"])
-	open:SetScript("OnClick", ns.ShowMain)
 
-	local save = CreateFrame("Button", nil, bar, "UIPanelButtonTemplate")
-	save:SetSize(110, 24)
-	save:SetPoint("RIGHT", -12, 0)
-	save:SetText(L["Save as template"])
-	save:SetScript("OnClick", function()
+	local save = Skin.Button(bar, L["Save as template"], 110, 24, function()
 		-- 12.x MacroFrameMixin: selection lives in MacroSelector
 		local index
 		if MacroFrame.GetSelectedIndex and MacroFrame.GetMacroDataIndex then
@@ -52,6 +40,7 @@ local function HookMacroFrame()
 		if not index or index == 0 then ns.Msg(L["MSG_NO_MACRO"]); return end
 		ns.ImportMacroAsTemplate(index)
 	end)
+	save:SetPoint("RIGHT", -12, 0)
 end
 
 driver:SetScript("OnEvent", function(_, event, arg1)

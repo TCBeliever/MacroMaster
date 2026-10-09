@@ -134,9 +134,10 @@ How empty placeholders behave: an *optional* one drops its whole line; one insid
 
 ## Settings
 
-The *Settings* tab (bottom of the window) holds:
+The *Settings* tab holds:
 
 - **Language**: auto, English or 繁體中文, applied after a UI reload. Built-in names and descriptions you never edited follow the language.
+- **Theme**: *Classic*, the look the game draws (the default), or *Modern: Tide* (blue) and *Modern: Dusk* (violet), flat panels drawn by the addon itself; the modern look is in beta. Classic and Modern swap after a UI reload, Tide and Dusk at once.
 - **Add more built-ins**: the catalogue of shipped templates. *Add* puts the selected one in your list, *Add all* takes everything on the current tab you do not have yet, a copy you already have can be overwritten with the default, and *Reset all to defaults* returns to your class's recommended set.
 - **Export** and **Import**: see above.
 
@@ -169,6 +170,7 @@ Macro scope (account or character) and *Pick up after creating* are remembered. 
 MacroMaster/
 ├── MacroMaster.toc
 ├── Locales.lua        -- enUS defaults + zhTW
+├── Skin.lua           -- the two looks behind one set of widgets: classic (the game's templates) and modern (flat; Tide / Dusk)
 ├── Templates.lua      -- built-in templates, DB, placeholder parsing and substitution, share strings, macro -> template
 ├── SpellPicker.lua    -- spell book / bag / icon pickers
 ├── Suggestions.lua    -- per-class spell tables and categories
