@@ -848,10 +848,8 @@ function Skin.Tabs(f, labels, onSelect)
 		return
 	end
 
-	local template = (C_XMLUtil and C_XMLUtil.GetTemplateInfo and C_XMLUtil.GetTemplateInfo("PanelTabButtonTemplate"))
-		and "PanelTabButtonTemplate" or "CharacterFrameTabButtonTemplate"
 	for i, text in ipairs(labels) do
-		local t = CreateFrame("Button", f:GetName() .. "Tab" .. i, f, template)
+		local t = CreateFrame("Button", f:GetName() .. "Tab" .. i, f, "PanelTabButtonTemplate")
 		t:SetID(i)
 		t:SetText(text)
 		if i == 1 then

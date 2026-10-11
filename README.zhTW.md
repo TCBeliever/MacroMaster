@@ -42,7 +42,7 @@
 
 ## 內建模板
 
-內附 29 個模板。全新安裝時清單只有你這個職業的推薦組（約八個），其餘在「設定 → 加入其他內建模板」依分類列出，適合你職業的排前面。清單完全是你的：改、刪、加都可以。沒改過的內建模板更新時會自動跟上新版，改過的不動。
+內附 23 個模板。每個職業各有一份清單，一開始只有該職業的推薦組（約八個），其餘在「設定 → 加入其他內建模板」依分類列出，適合你職業的排前面。清單完全是你的：改、刪、加都可以。沒改過的內建模板更新時會自動跟上新版，改過的不動。
 
 大多數模板第一行是 `#showtooltip`，下表省略；`·` 分隔巨集的行。
 
@@ -50,50 +50,44 @@
 
 | 模板 | 用途 | 內容 |
 |---|---|---|
-| 斷法 | 打斷目標；按住 Shift 改打斷焦點。施放前先停止施法。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}` |
-| 游標地板技 | 地板技能直接放在游標位置，不出準星。 | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
-| 滑鼠指向傷害 | 敵對技能：滑鼠指向 > 目標。 | `/cast [@mouseover,harm,nodead][] {HARM}` |
-| 停讀條施放 | 取消當前讀條後立刻施放。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
-| 取消 buff 後施放 | 先取消免疫或引導（寒冰屏障、巨龜守護、深層吐息…）再施放。 | `/cancelaura {AURA}` · `/cast {SPELL}` |
-| 飾品加爆發 | 一鍵使用飾品（13 或 14 格）並施放爆發。 | `/use {TRINKET}` · `/cast {CD}` |
-| 自救序列 | 自療 → 治療石 → 藥水，每按一次一步，脫戰後重來。 | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
-| 多技能切換 | 一顆鍵最多三個技能，Ctrl、Shift 各放另一個。 | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
-| 自我施放 | 不管選著誰，都放在自己身上。 | `/cast [@player] {SPELL}` |
-| 外援給焦點 | 誤導、嫁禍或祝福給焦點；沒焦點就給目標的目標，再沒有就給目標。 | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
-| 戰鬥內外切換 | 戰鬥中放一個、戰鬥外放另一個（復生／甦醒）。 | `/cast [combat] {INCOMBAT}; {SPELL}` |
-| 同時施放 | 不吃公共冷卻的爆發技和主技能一鍵放出。 | `/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}` |
-| 設定焦點 | 把目標設為焦點，上標記，並在隊伍裡喊話（每次換焦點只喊一次）。 | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
+| interrupt | 打斷目標；按住 Shift 改打斷焦點。施放前先停止施法。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}` |
+| cursor 地板技 | 地板技能直接放在游標位置，不出準星。 | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
+| mouseover | 技能列上的下拉選那一格要填什麼。治療、驅散、外援：滑鼠指向 > 目標 > 自己；傷害、purge：滑鼠指向 > 目標。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {MO}` 或 `/cast [@mouseover,harm,nodead][] {MO}` |
+| stopcasting + cast | 取消當前讀條後立刻施放。 | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
+| cancelaura + cast | 先取消免疫或引導（寒冰屏障、巨龜守護、深層吐息…）再施放。 | `/cancelaura {AURA}` · `/cast {SPELL}` |
+| burst + trinket | 一鍵使用飾品（13 或 14 格）並施放爆發。 | `/use {TRINKET}` · `/cast {CD}` |
+| 急救按鈕 | 自療 → 治療石 → 藥水，每按一次一步，脫戰後重來。 | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
+| mod 切換技能 | 一顆鍵最多三個技能，Ctrl、Shift 各放另一個。 | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
+| focus 外援 | 誤導、嫁禍或祝福給焦點；沒焦點就給目標的目標，再沒有就給目標。 | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
+| combat 內外切換 | 戰鬥中放一個、戰鬥外放另一個（復生／甦醒）。 | `/cast [combat] {INCOMBAT}; {SPELL}` |
+| 多 cast 合併 | 不吃公共冷卻的爆發技和主技能一鍵放出。 | `/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}` |
+| 設定 focus | 把目標設為焦點，上標記，並在隊伍裡喊話（每次換焦點只喊一次）。 | `/focus` · `/tm [@focus] ~{MARK}` · `/mmfocus {MSG} {rt{MARK}}` |
 
 ### 治療
 
 | 模板 | 用途 | 內容 |
 |---|---|---|
-| 滑鼠指向治療 | 友方技能：滑鼠指向 > 目標 > 自己。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}` |
-| 滑鼠指向驅散 | 友方驅散，同樣的順序。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {DISPEL}` |
-| 滑鼠指向外援 | 外援技能，同樣的順序。 | `/cast [@mouseover,help,nodead][help,nodead][@player] {EXTERNAL}` |
-| 打目標的目標 | 選著坦克或隊友就能打他正在打的怪，不用換目標。 | `/cast [@targettarget,harm,nodead][] {HARM}` |
+| targettarget | 選著坦克或隊友就能打他正在打的怪，不用換目標。 | `/cast [@targettarget,harm,nodead][] {HARM}` |
 
 ### PvP
 
 | 模板 | 用途 | 內容 |
 |---|---|---|
-| 競技場目標 | 不切目標，直接對固定的競技場欄位施放；選「全部」一次做三個。 | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
-| 滑鼠指向進攻驅散 | 進攻驅散：滑鼠指向 > 目標。 | `/cast [@mouseover,harm,nodead][] {PURGE}` |
-| 滑鼠指向 Alt 焦點 | 敵對技能打滑鼠指向，沒有就打目標；按住 Alt 改打焦點。 | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
-| FrameSort 斷法 | 打斷焦點，沒有就打斷 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 解析的框架（預設敵方補師）。 | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
-| FrameSort 外援 | 外援給滑鼠指向，沒有就給 FrameSort 解析的隊友（預設補師）。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |
-| FrameSort 驅散 | 驅散，同樣的 FrameSort 後備順序。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}` |
+| arena123 | 不切目標，直接對固定的競技場欄位施放；選「全部」一次做三個。 | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
+| mouseover, Alt = focus | 敵對技能打滑鼠指向，沒有就打目標；按住 Alt 改打焦點。 | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
+| FrameSort interrupt | 打斷焦點，沒有就打斷 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 解析的框架（預設敵方補師）。 | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
+| FrameSort 隊友 | 外援或驅散（列上的下拉選）：優先給滑鼠指向，其次 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 決定的隊友（預設補師）。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {FSALLY}` |
 
 ### 順序施放與寵物
 
 | 模板 | 用途 | 內容 |
 |---|---|---|
-| 技能序列 | 兩到三個技能照順序放，每按一次一個；可選重置時機。 | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
-| 每目標放一次 | 對同一個目標只放一次，換目標或脫戰後才會再放。 | `/castsequence reset=target/combat {SPELL}, null` |
-| 寵物一起攻擊 | 寵物上去打的同時施放技能。 | `/petattack` · `/cast {SPELL}` |
-| 誤導給焦點或寵物 | 獵人。誤導優先給焦點，其次寵物，再來目標的目標，最後目標。 | `/cast [@focus,help,nodead][@pet,exists,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
+| castsequence 序列 | 兩到三個技能照順序放，每按一次一個；可選重置時機。 | `/castsequence reset={RESET} {SPELL}, {SPELL_2}, {SPELL_3}` |
+| 每目標一次 | 對同一個目標只放一次，換目標或脫戰後才會再放。 | `/castsequence reset=target/combat {SPELL}, null` |
+| petattack + cast | 寵物上去打的同時施放技能。 | `/petattack` · `/cast {SPELL}` |
+| 誤導 focus／pet | 獵人。誤導優先給焦點，其次寵物，再來目標的目標，最後目標。 | `/cast [@focus,help,nodead][@pet,exists,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
 | 照顧寵物 | 獵人。寵物死了復活，不在場就召喚，其他時候治療；三格都已填好。 | `/cast [@pet,dead] {REVIVE}; [nopet] {CALLPET}; {MENDPET}` |
-| 假死加裝死 | 獵人。你和寵物一起脫戰。 | `/cast {FEIGN}` · `/cast {PLAYDEAD}` |
+| 假死 + 裝死 | 獵人。你和寵物一起脫戰。 | `/cast {FEIGN}` · `/cast {PLAYDEAD}` |
 
 `/castsequence` 遇到某一步技能在冷卻或物品不在身上，會停在那一步直到重置。自救序列用不到的欄位請留空。
 
@@ -116,6 +110,7 @@
 | `{MARK}` `{MSG}` | 團隊標記；喊話文字（`%f` 焦點名、`%t` 目標名） |
 | `{FS}` `{FSENEMY}` | FrameSort 要解析的隊友或敵方框架（Healer、OtherDps、EnemyHealer…） |
 | `{TRINKET}` `{RESET}` `{CTRL}` `{SHIFT}` `{INCOMBAT}` | 飾品 13 或 14 格；`castsequence` 的重置條件；修飾鍵與戰鬥模板裡的技能 |
+| `{MO}` `{FSALLY}` | mouseover 與 FrameSort 隊友模板的那一格；列上的下拉（治療、驅散、外援、傷害、purge）決定建議清單，`{MO}` 的還決定條件式 |
 | `{REVIVE}` `{CALLPET}` `{MENDPET}` `{FEIGN}` `{PLAYDEAD}` | 獵人模板裡的技能（復活寵物、召喚寵物 1、治療寵物、假死、裝死），已自動填好 |
 
 別名：`KICK` = INTERRUPT、`CD` = BURST、`DEF` = DEFENSIVE、`MOVE` = MOVEMENT、`AOE` = GROUND、`CLEANSE` = DISPEL、`EXT` = EXTERNAL、`AURA`／`CANCEL` = CANCELAURA、`HEALPOT` = POTION。
@@ -126,7 +121,7 @@
 
 ## 分享模板
 
-- 模板名稱旁的「分享」會把目前的模板變成一串 `!MM1!...` 字串，已反白，直接 Ctrl+C。「設定 → 匯出」則是所有模板一串，適合備份。
+- 模板名稱旁的「分享」會把目前的模板變成一串 `!MM1!...` 字串，已反白，直接 Ctrl+C。「設定 → 匯出」則是這個職業整份清單一串，適合備份或搬到別的職業。
 - 「設定 → 匯入」：把字串（或舊版的純文字）貼進去按「匯入」。「同 id」決定遇到你已經有的模板怎麼辦：「取代」覆蓋你的那份（還原備份用），「另外新增」並排加一份（保留你的）。
 - **安全。** 巨集可以執行 Lua（`/run`、`/script`、`/dump`、`/console`），陌生人給的這種行能做到插件能做的任何事。MacroMaster 會在編輯區下方和預覽裡用紅字標出這種模板，匯入確認視窗會算有幾個，建立巨集時會再跳紅字確認並列出那些行。你自己寫的 `/run` 模板照常能用。只匯入你信任的人給的東西。
 
@@ -136,10 +131,10 @@
 
 - **語言**：自動、English、繁體中文，重新載入介面後生效。沒改過的內建模板名稱與說明會跟著語言走。
 - **主題**：「經典」是遊戲本身的框架樣式（預設）；「現代：潮汐藍」「現代：暮紫」是插件自己畫的平面面板，目前是 beta。經典與現代互換要重新載入介面，潮汐藍與暮紫互換立即生效。
-- **加入其他內建模板**：內附模板的目錄。「加入」放進選取的那一個，「全部加入」拿走這個分頁裡你還沒有的，已經有的可以用預設覆蓋，「全部還原成預設」回到職業推薦組。
+- **加入其他內建模板**：內附模板的目錄。「加入」放進選取的那一個，「全部加入」拿走這個分頁裡你還沒有的，已經有的可以用預設覆蓋，「全部還原成預設」把這個職業的清單還原成推薦組。
 - **匯出**、**匯入**：見上一節。
 
-巨集範圍（共用或角色專屬）和「建立後拾取到游標」會記住。模板、每隻角色填過的值、選的圖示、技能表的修改都存在 `MacroMasterDB`（帳號共用的 SavedVariables）。
+巨集範圍（共用或角色專屬）和「建立後拾取到游標」會記住。模板和選的圖示每個職業一份，填過的值每隻角色一份，連同技能表的修改都存在 `MacroMasterDB`（帳號共用的 SavedVariables）。同職業的角色共用一份清單；升級到 1.8.1 後每個職業第一次登入時，從舊的帳號共用清單接手你自己做的模板、改過的內建模板，以及沒改過但適合這個職業的內建模板。
 
 ## 斜線指令
 

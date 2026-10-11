@@ -8,10 +8,8 @@ ns.Msg = Msg
 
 local MACRO_NAME_MAX = 16
 local MACRO_BODY_MAX = 255
--- 12.1 moved these to Constants.MacroConsts (character macros are 30 now)
-local MC = Constants and Constants.MacroConsts
-local MAX_ACCOUNT_MACROS   = (MC and MC.MAX_ACCOUNT_MACROS)   or _G.MAX_ACCOUNT_MACROS   or 120
-local MAX_CHARACTER_MACROS = (MC and MC.MAX_CHARACTER_MACROS) or _G.MAX_CHARACTER_MACROS or 30
+local MAX_ACCOUNT_MACROS   = Constants.MacroConsts.MAX_ACCOUNT_MACROS     -- 120
+local MAX_CHARACTER_MACROS = Constants.MacroConsts.MAX_CHARACTER_MACROS   -- 30
 local QUESTION_ICON = 134400   -- INV_MISC_QUESTIONMARK
 local MAX_ROWS       = 6
 local W, H           = 780, 670   -- the editor page; the modern look adds its tab strip above
@@ -19,7 +17,7 @@ local LEFT_W         = 220
 
 -- UTF-8 aware helpers (macro names are counted in characters, and a byte
 -- cut in the middle of a CJK character produces garbage)
-local function Utf8Len(s) return strlenutf8 and strlenutf8(s) or #s end
+local function Utf8Len(s) return strlenutf8(s) end
 local function Utf8Sub(s, n)
 	local out, count, i = {}, 0, 1
 	while i <= #s and count < n do
@@ -186,9 +184,9 @@ local function UpdateMacroNameDefault()
 	main.macroName:SetText(candidate)
 end
 
--- Icon the user picked for the current template (ns.db.icons), or nil.
+-- Icon the user picked for the current template (ns.list.icons), or nil.
 local function ChosenIcon()
-	return state.templateID and ns.db.icons and ns.db.icons[state.templateID] or nil
+	return state.templateID and ns.list.icons[state.templateID] or nil
 end
 
 local function UpdateIconButton()
@@ -248,11 +246,33 @@ local function UpdatePreview()
 	UpdateIconButton()
 end
 
+-- A slot with `kinds` (Templates.lua) takes one of several things; the kind
+-- chosen on its row is remembered per character under key.."~kind".
+local function KindOf(key, m)
+	if not (m and m.kinds) then return nil end
+	local want = state.values[key .. "~kind"]
+	for _, k in ipairs(m.kinds) do
+		if k.id == want then return k end
+	end
+	return m.kinds[1]
+end
+
+-- suggestion category of a slot: the chosen kind's, else the key's
+local function CategoryFor(key, m)
+	local kind = KindOf(key, m)
+	if kind then return kind.category end
+	return ns.CategoryForKey(key, m)
+end
+
 local function RefreshRows()
 	local body = CurrentBody()
-	local keys = ns.GetPlaceholders(body)
 	local t = CurrentTemplate()
 	local meta = t and t.meta or {}
+	-- a hidden placeholder is written by a kind, never by hand: no row
+	local keys = {}
+	for _, key in ipairs(ns.GetPlaceholders(body)) do
+		if not (meta[key] and meta[key].hidden) then keys[#keys + 1] = key end
+	end
 	local rows = main.rows
 
 	for i, key in ipairs(keys) do
@@ -305,10 +325,27 @@ local function RefreshRows()
 				if itemCat then
 					ns.ShowItemPicker(main, set, itemCat)
 				else
-					ns.ShowSpellPicker(main, set, ns.CategoryForKey(key, m))
+					ns.ShowSpellPicker(main, set, CategoryFor(key, m))
 				end
 			end)
 			r.pick:SetPoint("LEFT", r.edit, "RIGHT", 6, 0)
+			-- in place of the label when the slot has kinds: what the slot takes
+			r.kind = Skin.Button(r, "", 150, 22, function(self)
+				local row = self:GetParent()
+				local key, m = row.edit.key, CurrentMeta()[row.edit.key]
+				if not (m and m.kinds) then return end
+				local items = {}
+				for _, k in ipairs(m.kinds) do
+					items[#items + 1] = { value = k.id, label = L[k.labelKey] }
+				end
+				Skin.OptionList(self, items, function(item)
+					state.values[key .. "~kind"] = item.value
+					state.values[key] = nil   -- refilled with the new kind's first suggestion
+					RefreshRows()
+				end)
+			end)
+			r.kind:SetPoint("LEFT", 4, 0)
+			r.kind:Hide()
 			r.list = Skin.Button(r, L["Options"] .. " " .. Skin.Text("dim", "▼"), 80, 22, function(self)
 				local row = self:GetParent()
 				local m = CurrentMeta()[row.edit.key]
@@ -342,6 +379,14 @@ local function RefreshRows()
 		r.label:SetText(((m and m.label) or key) .. ((m and m.optional) and (" " .. Skin.Text("dim", L["(optional)"])) or ""))
 		r.edit.key = key
 		r.edit.hint = m and m.hint
+		-- the kind names the slot and writes what it writes (the conditions)
+		local kind = KindOf(key, m)
+		r.kind:SetShown(kind ~= nil)
+		r.label:SetShown(kind == nil)
+		if kind then
+			r.kind:SetLabel(L[kind.labelKey] .. " " .. Skin.Text("dim", "▼"))
+			for k2, v in pairs(kind.set or {}) do state.values[k2] = v end
+		end
 		-- "one macro per option" placeholders default to All
 		-- defaults apply only to a never-set value; clearing a box keeps it empty
 		local itemCat = ns.ItemCategoryForKey(key, m)
@@ -356,7 +401,7 @@ local function RefreshRows()
 			-- categorised, required spell placeholders with the first suggestion
 			-- this character knows; an optional slot stays empty until you fill it
 			elseif not (m and (m.options or m.text or m.optional)) then
-				local cat = ns.CategoryForKey(key, m)
+				local cat = CategoryFor(key, m)
 				local first = cat and ns.ResolveSuggestions(cat, true)[1]
 				if first then state.values[key] = first.name end
 			end
@@ -681,13 +726,20 @@ local function CreateMain()
 	f.pages = { page }
 
 	-- ===== left: template list ==========================================
-	local lh = Skin.Label(page, L["Templates"])
+	-- the list belongs to the class playing: its header names it, in class colour
+	local className, classToken = UnitClass("player")
+	local cc = classToken and C_ClassColor.GetClassColor(classToken)
+	if cc then className = cc:WrapTextInColorCode(className) end
+	local lh = Skin.Label(page, string.format(L["Templates (%s)"], className or ""))
 	lh:SetPoint("TOPLEFT", 20, -44)
+	lh:SetJustifyH("LEFT")
+	lh:SetWordWrap(false)
 	f.sortBtn = Skin.Button(page, "", 96, 18, function()
 		ns.db.settings.sort = (ns.db.settings.sort == "name") and "created" or "name"
 		RefreshList()
 	end)
 	f.sortBtn:SetPoint("TOPRIGHT", page, "TOPLEFT", 16 + LEFT_W, -42)
+	lh:SetPoint("RIGHT", f.sortBtn, "LEFT", -4, 0)   -- a long class name is cut, not overlapped
 	f.sortBtn:HookScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_TOP")
 		GameTooltip:SetText(L["Click to switch between name order and creation order."], 1, 1, 1, 1, true)
@@ -832,11 +884,11 @@ local function CreateMain()
 	f.iconBtn:SetScript("OnClick", function(self, button)
 		if not state.templateID then return end
 		if button == "RightButton" then
-			ns.db.icons[state.templateID] = nil
+			ns.list.icons[state.templateID] = nil
 			UpdateIconButton()
 		else
 			ns.ShowIconPicker(f, function(_, fileID)
-				ns.db.icons[state.templateID] = fileID
+				ns.list.icons[state.templateID] = fileID
 				UpdateIconButton()
 			end)
 		end

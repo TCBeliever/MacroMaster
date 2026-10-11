@@ -28,15 +28,10 @@ local function HookMacroFrame()
 	open:SetPoint("LEFT", bar.label, "RIGHT", 12, 0)
 
 	local save = Skin.Button(bar, L["Save as template"], 110, 24, function()
-		-- 12.x MacroFrameMixin: selection lives in MacroSelector
-		local index
-		if MacroFrame.GetSelectedIndex and MacroFrame.GetMacroDataIndex then
-			if MacroFrame.SaveMacro then MacroFrame:SaveMacro() end   -- capture unsaved edits
-			local sel = MacroFrame:GetSelectedIndex()
-			index = sel and MacroFrame:GetMacroDataIndex(sel)
-		else
-			index = MacroFrame.selectedMacro
-		end
+		-- MacroFrameMixin: the selection lives in MacroSelector
+		if MacroFrame.SaveMacro then MacroFrame:SaveMacro() end   -- capture unsaved edits
+		local sel = MacroFrame:GetSelectedIndex()
+		local index = sel and MacroFrame:GetMacroDataIndex(sel)
 		if not index or index == 0 then ns.Msg(L["MSG_NO_MACRO"]); return end
 		ns.ImportMacroAsTemplate(index)
 	end)

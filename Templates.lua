@@ -21,8 +21,6 @@ local L = ns.L
 local PH_PATTERN = "{([^{}%%s]+)}"
 ns.PH_PATTERN = PH_PATTERN
 
-local DB_VERSION = 3
-
 -- Names, descriptions, labels and hints are locale keys resolved through L;
 -- the keys are kept so ns.RelocalizeBuiltins can resolve them again after
 -- the saved language is applied.
@@ -78,6 +76,14 @@ end
 
 local FRAMESORT_FRIENDLY = { "Healer", "OtherDps", "Tank", "DPS", "Frame1", "Frame2", "Frame3", "Frame4", "Frame5" }
 
+-- A slot with `kinds` takes one of several things; the kind chosen on the
+-- row (remembered per character) sets the suggestion category and may write
+-- other placeholders through `set`. The mouseover template is one template
+-- for heal / dispel / external / damage / purge this way: the kind also
+-- writes the conditions into the hidden {MO_COND}.
+local MO_FRIENDLY = "[@mouseover,help,nodead][help,nodead][@player]"
+local MO_HOSTILE  = "[@mouseover,harm,nodead][]"
+
 ns.builtinTemplates = {
 	-- {CANCEL} (optional, dropped with its line when empty) lets the press go
 	-- through an immunity or a channel: Deep Breath, Ice Block, Turtle...
@@ -103,25 +109,18 @@ ns.builtinTemplates = {
 			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
 		}),
 
-	B("mouseover_help", "T_MOUSEOVER_HELP", "T_MOUSEOVER_HELP_D",
-		"#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}",
-		{ HEAL = P("P_HEAL", "P_HEAL_H") }),
-
-	B("mouseover_harm", "T_MOUSEOVER_HARM", "T_MOUSEOVER_HARM_D",
-		"#showtooltip\n/cast [@mouseover,harm,nodead][] {HARM}",
-		{ HARM = P("P_HARM", "P_HARM_H") }),
-
-	B("mouseover_dispel", "T_MOUSEOVER_DISPEL", "T_MOUSEOVER_DISPEL_D",
-		"#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {DISPEL}",
-		{ DISPEL = P("P_DISPEL", "P_DISPEL_H") }),
-
-	B("mouseover_purge", "T_MOUSEOVER_PURGE", "T_MOUSEOVER_PURGE_D",
-		"#showtooltip\n/cast [@mouseover,harm,nodead][] {PURGE}",
-		{ PURGE = P("P_PURGE", "P_PURGE_H") }),
-
-	B("mouseover_external", "T_MOUSEOVER_EXTERNAL", "T_MOUSEOVER_EXTERNAL_D",
-		"#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {EXTERNAL}",
-		{ EXTERNAL = P("P_EXTERNAL", "P_EXTERNAL_H") }),
+	B("mouseover", "T_MOUSEOVER", "T_MOUSEOVER_D",
+		"#showtooltip\n/cast {MO_COND} {MO}",
+		{
+			MO = PX("P_SPELL", "P_SPELL_H", { kinds = {
+				{ id = "HEAL",     labelKey = "CAT_HEAL",     category = "HEAL",     set = { MO_COND = MO_FRIENDLY } },
+				{ id = "DISPEL",   labelKey = "CAT_DISPEL",   category = "DISPEL",   set = { MO_COND = MO_FRIENDLY } },
+				{ id = "EXTERNAL", labelKey = "CAT_EXTERNAL", category = "EXTERNAL", set = { MO_COND = MO_FRIENDLY } },
+				{ id = "HARM",     labelKey = "KIND_HARM",                           set = { MO_COND = MO_HOSTILE } },
+				{ id = "PURGE",    labelKey = "CAT_PURGE",    category = "PURGE",    set = { MO_COND = MO_HOSTILE } },
+			} }),
+			MO_COND = { hidden = true, text = true },
+		}),
 
 	B("stopcast", "T_STOPCAST", "T_STOPCAST_D",
 		"#showtooltip {SPELL}\n/stopcasting\n/cancelaura {CANCEL}\n/cast {SPELL}",
@@ -154,18 +153,14 @@ ns.builtinTemplates = {
 			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
 		}),
 
-	B("framesort_external", "T_FRAMESORT_EXTERNAL", "T_FRAMESORT_EXTERNAL_D",
-		"#showtooltip {EXTERNAL}\n#FrameSort X {FS}\n/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}",
+	B("framesort_ally", "T_FRAMESORT_ALLY", "T_FRAMESORT_ALLY_D",
+		"#showtooltip {FSALLY}\n#FrameSort X {FS}\n/cast [@mouseover,help,nodead][@none,help,nodead] {FSALLY}",
 		{
-			EXTERNAL = P("P_EXTERNAL", "P_EXTERNAL_H"),
-			FS       = PX("P_FS", "P_FS_H", { options = FRAMESORT_FRIENDLY, default = "Healer" }),
-		}),
-
-	B("framesort_dispel", "T_FRAMESORT_DISPEL", "T_FRAMESORT_DISPEL_D",
-		"#showtooltip {DISPEL}\n#FrameSort X {FS}\n/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}",
-		{
-			DISPEL = P("P_DISPEL", "P_DISPEL_H"),
-			FS     = PX("P_FS", "P_FS_H", { options = FRAMESORT_FRIENDLY, default = "Healer" }),
+			FSALLY = PX("P_SPELL", "P_SPELL_H", { kinds = {
+				{ id = "EXTERNAL", labelKey = "CAT_EXTERNAL", category = "EXTERNAL" },
+				{ id = "DISPEL",   labelKey = "CAT_DISPEL",   category = "DISPEL" },
+			} }),
+			FS = PX("P_FS", "P_FS_H", { options = FRAMESORT_FRIENDLY, default = "Healer" }),
 		}),
 
 	-- Every press does the next step; the sequence restarts when combat ends.
@@ -188,10 +183,6 @@ ns.builtinTemplates = {
 			SHIFT = PX("P_SHIFT", "P_SHIFT_H", { optional = true, token = true, noname = true }),
 			SPELL = P("P_SPELL", "P_SPELL_H"),
 		}),
-
-	B("selfcast", "T_SELFCAST", "T_SELFCAST_D",
-		"#showtooltip\n/cast [@player] {SPELL}",
-		{ SPELL = P("P_SPELL", "P_SPELL_H") }),
 
 	B("cancel_cast", "T_CANCEL_CAST", "T_CANCEL_CAST_D",
 		"#showtooltip {SPELL}\n/cancelaura {AURA}\n/cast {SPELL}",
@@ -279,12 +270,11 @@ ns.builtinTemplates = {
 ns.templateCategories = { "CORE", "HEAL", "PVP", "SEQ", "PET" }
 
 local CATEGORY = {
-	focus_interrupt = "CORE", cursor = "CORE", mouseover_harm = "CORE", stopcast = "CORE", trinket_spell = "CORE",
-	selfheal = "CORE", mod2 = "CORE", selfcast = "CORE", focus_external = "CORE", combat_switch = "CORE", cancel_cast = "CORE",
+	focus_interrupt = "CORE", cursor = "CORE", mouseover = "CORE", stopcast = "CORE", trinket_spell = "CORE",
+	selfheal = "CORE", mod2 = "CORE", focus_external = "CORE", combat_switch = "CORE", cancel_cast = "CORE",
 	set_focus = "CORE", cast_together = "CORE",
-	mouseover_help = "HEAL", mouseover_dispel = "HEAL", mouseover_external = "HEAL", targettarget = "HEAL",
-	arena_cc = "PVP", mouseover_purge = "PVP", framesort_kick = "PVP", framesort_external = "PVP",
-	framesort_dispel = "PVP", mouseover_altfocus = "PVP",
+	targettarget = "HEAL",
+	arena_cc = "PVP", framesort_kick = "PVP", framesort_ally = "PVP", mouseover_altfocus = "PVP",
 	sequence = "SEQ", once_per_target = "SEQ",
 	petattack = "PET", misdirect_pet = "PET", pet_care = "PET", feign_playdead = "PET",
 }
@@ -296,19 +286,19 @@ ns.builtinClasses = {
 }
 
 ns.classRecommended = {
-	DEATHKNIGHT = { "focus_interrupt", "mouseover_harm", "cursor", "petattack", "mod2", "selfheal", "set_focus" },
-	DEMONHUNTER = { "focus_interrupt", "mouseover_harm", "cursor", "mod2", "cancel_cast", "selfheal", "set_focus" },
-	DRUID       = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "combat_switch", "cursor", "mod2", "selfheal" },
-	EVOKER      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cursor", "cancel_cast", "selfheal", "set_focus" },
-	HUNTER      = { "focus_interrupt", "petattack", "misdirect_pet", "pet_care", "feign_playdead", "mouseover_harm", "cursor", "cancel_cast", "selfheal", "set_focus" },
-	MAGE        = { "focus_interrupt", "mouseover_harm", "cursor", "mouseover_purge", "cancel_cast", "mod2", "selfheal", "set_focus" },
-	MONK        = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cursor", "mod2", "selfheal", "set_focus" },
-	PALADIN     = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "cancel_cast", "mod2", "selfheal", "set_focus" },
-	PRIEST      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_external", "mouseover_purge", "selfcast", "selfheal", "set_focus" },
-	ROGUE       = { "focus_interrupt", "focus_external", "mouseover_harm", "cancel_cast", "mod2", "selfheal", "set_focus" },
-	SHAMAN      = { "focus_interrupt", "mouseover_help", "mouseover_dispel", "mouseover_purge", "cursor", "mod2", "selfheal", "set_focus" },
-	WARLOCK     = { "focus_interrupt", "petattack", "mouseover_harm", "cursor", "mouseover_purge", "sequence", "selfheal", "set_focus" },
-	WARRIOR     = { "focus_interrupt", "mouseover_harm", "cursor", "mouseover_external", "mod2", "selfheal", "set_focus" },
+	DEATHKNIGHT = { "focus_interrupt", "mouseover", "cursor", "petattack", "mod2", "selfheal", "set_focus" },
+	DEMONHUNTER = { "focus_interrupt", "mouseover", "cursor", "mod2", "cancel_cast", "selfheal", "set_focus" },
+	DRUID       = { "focus_interrupt", "mouseover", "combat_switch", "cursor", "mod2", "selfheal" },
+	EVOKER      = { "focus_interrupt", "mouseover", "cursor", "cancel_cast", "selfheal", "set_focus" },
+	HUNTER      = { "focus_interrupt", "petattack", "misdirect_pet", "pet_care", "feign_playdead", "mouseover", "cursor", "cancel_cast", "selfheal", "set_focus" },
+	MAGE        = { "focus_interrupt", "mouseover", "cursor", "cancel_cast", "mod2", "selfheal", "set_focus" },
+	MONK        = { "focus_interrupt", "mouseover", "cursor", "mod2", "selfheal", "set_focus" },
+	PALADIN     = { "focus_interrupt", "mouseover", "cancel_cast", "mod2", "selfheal", "set_focus" },
+	PRIEST      = { "focus_interrupt", "mouseover", "selfheal", "set_focus" },
+	ROGUE       = { "focus_interrupt", "focus_external", "mouseover", "cancel_cast", "mod2", "selfheal", "set_focus" },
+	SHAMAN      = { "focus_interrupt", "mouseover", "cursor", "mod2", "selfheal", "set_focus" },
+	WARLOCK     = { "focus_interrupt", "petattack", "mouseover", "cursor", "sequence", "selfheal", "set_focus" },
+	WARRIOR     = { "focus_interrupt", "mouseover", "cursor", "mod2", "selfheal", "set_focus" },
 }
 
 -- Ids recommended for the current class (CORE templates when the class is
@@ -381,6 +371,20 @@ local function CopyMeta(meta)
 				for i, o in ipairs(m[listKey]) do out[k][listKey][i] = o end
 			end
 		end
+		if m.kinds then
+			out[k].kinds = {}
+			for i, kind in ipairs(m.kinds) do
+				local c = {}
+				for field, v in pairs(kind) do
+					if type(v) ~= "table" then c[field] = v end
+				end
+				if kind.set then
+					c.set = {}
+					for key2, v in pairs(kind.set) do c.set[key2] = v end
+				end
+				out[k].kinds[i] = c
+			end
+		end
 	end
 	return out
 end
@@ -407,28 +411,136 @@ local function IsShippedText(key, value)
 	return false
 end
 
--- Copies the class's recommended templates into db.templates (which is
--- expected to be empty) and marks them known.
-local function SeedTemplates(db)
-	db.knownBuiltins = db.knownBuiltins or {}
-	local want = {}
-	for i, id in ipairs(ns.RecommendedTemplates()) do want[id] = i end
-	local picked = {}
-	for _, t in ipairs(ns.builtinTemplates) do
-		if want[t.id] then picked[#picked + 1] = t end
+-- ---------------------------------------------------------------------------
+-- One list per class. A template is a recipe for a class: a druid's list is
+-- no use to a priest, while alts of one class want the same recipes with
+-- their own filled-in values (charValues, per character). So:
+--
+--   db.classes[CLASS] = { templates = {...}, icons = { id -> fileID }, seeded = true }
+--
+-- ns.list is the record of the class playing, set in InitDB; every list
+-- function in this file works on it. Before 1.8.1 the account had one list
+-- (db.templates / db.icons); it is kept as db.legacyTemplates / db.legacyIcons
+-- so that each class, on its first login after the upgrade, can take from it
+-- what applies to it (MigrateList).
+-- ---------------------------------------------------------------------------
+
+function ns.PlayerClass()
+	local _, class = UnitClass("player")
+	return class or "UNKNOWN"
+end
+
+local function Has(list, id)
+	for _, t in ipairs(list.templates) do
+		if t.id == id then return true end
 	end
-	table.sort(picked, function(a, b) return want[a.id] < want[b.id] end)
-	for _, t in ipairs(picked) do
-		db.templates[#db.templates + 1] = CopyTemplate(t)
-		db.knownBuiltins[t.id] = true
+	return false
+end
+
+-- Appends the class's recommended templates that are not in `list` yet and
+-- marks them known.
+local function SeedTemplates(db, list)
+	db.knownBuiltins = db.knownBuiltins or {}
+	for _, id in ipairs(ns.RecommendedTemplates()) do
+		if not Has(list, id) then
+			list.templates[#list.templates + 1] = CopyTemplate(ns.ShippedTemplate(id))
+		end
+		db.knownBuiltins[id] = true
+	end
+end
+
+-- An exact copy of a stored template (CopyTemplate is for shipped ones: it
+-- resets seedBody, which would turn a user's edit into "what we shipped").
+local function CloneTemplate(t)
+	local c = {}
+	for k, v in pairs(t) do
+		if type(v) ~= "table" then c[k] = v end
+	end
+	c.meta = CopyMeta(t.meta)
+	return c
+end
+
+-- A built-in copy counts as edited when its body is neither what we ship
+-- now nor what it was seeded with.
+local function IsEditedBuiltin(t, shipped)
+	return t.body ~= shipped.body and t.body ~= t.seedBody
+end
+
+-- Built-ins a later release folded into another one or dropped. An unedited
+-- copy in a list is replaced by its successor, once, where it stood (or just
+-- removed); an edited copy stays, as the user's own template from then on.
+local RETIRED = {
+	mouseover_help = "mouseover", mouseover_harm = "mouseover", mouseover_dispel = "mouseover",
+	mouseover_purge = "mouseover", mouseover_external = "mouseover",
+	framesort_external = "framesort_ally", framesort_dispel = "framesort_ally",
+	selfcast = false,
+}
+-- bodies those shipped with (any release), for copies without a seedBody
+local RETIRED_BODIES = {
+	mouseover_help     = { "#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}" },
+	mouseover_harm     = { "#showtooltip\n/cast [@mouseover,harm,nodead][] {HARM}" },
+	mouseover_dispel   = { "#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {DISPEL}" },
+	mouseover_purge    = { "#showtooltip\n/cast [@mouseover,harm,nodead][] {PURGE}" },
+	mouseover_external = { "#showtooltip\n/cast [@mouseover,help,nodead][help,nodead][@player] {EXTERNAL}" },
+	framesort_external = { "#showtooltip {EXTERNAL}\n#FrameSort X {FS}\n/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}" },
+	framesort_dispel   = { "#showtooltip {DISPEL}\n#FrameSort X {FS}\n/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}" },
+	selfcast = { "#showtooltip\n/cast [@player] {SPELL}" },
+}
+
+local function RetireBuiltins(templates)
+	local i = 1
+	while i <= #templates do
+		local t = templates[i]
+		local successor = t.builtin and RETIRED[t.id]
+		if successor == nil then
+			i = i + 1
+		else
+			local unedited = (t.seedBody ~= nil and t.body == t.seedBody)
+			for _, old in ipairs(RETIRED_BODIES[t.id] or {}) do
+				if t.body == old then unedited = true end
+			end
+			if not unedited then
+				t.builtin, t.seedBody = nil, nil
+				i = i + 1
+			else
+				table.remove(templates, i)
+				local present = false
+				for _, o in ipairs(templates) do
+					if o.id == successor then present = true end
+				end
+				if successor and not present then
+					table.insert(templates, i, CopyTemplate(ns.ShippedTemplate(successor)))
+					ns.db.knownBuiltins[successor] = true
+					i = i + 1
+				end
+			end
+		end
+	end
+end
+ns.RetireBuiltins = RetireBuiltins
+
+-- First login of a class after 1.8.1: from the account-wide list, take what
+-- is the user's own (templates they made, built-ins they edited) and the
+-- unedited built-ins that fit this class; the rest stays in the catalogue.
+-- Icons follow their templates. SeedTemplates tops the list up afterwards.
+local function MigrateList(db, list)
+	local legacy = db.legacyTemplates
+	if not legacy then return end
+	for _, t in ipairs(legacy) do
+		local shipped = t.builtin and ns.ShippedTemplate(t.id)
+		local keep = not shipped or IsEditedBuiltin(t, shipped) or ns.TemplateFitsClass(shipped)
+		if keep and not Has(list, t.id) then
+			list.templates[#list.templates + 1] = CloneTemplate(t)
+		end
+	end
+	for id, icon in pairs(db.legacyIcons or {}) do
+		if Has(list, id) then list.icons[id] = icon end
 	end
 end
 
 function ns.InitDB()
 	if type(MacroMasterDB) ~= "table" then MacroMasterDB = {} end
 	local db = MacroMasterDB
-	db.version   = db.version or DB_VERSION
-	db.templates = db.templates or {}
 	db.settings  = db.settings or { pickup = true, scope = "character" }   -- fresh install: character macros, picked up after creating
 	db.settings.sort = db.settings.sort or "created"
 	-- importMode: what an import does with a template whose id is already in
@@ -439,7 +551,6 @@ function ns.InitDB()
 	-- theme: the look ("classic", or a modern palette), read before any window
 	-- is built; a key that is gone reads as classic
 	db.settings.theme = ns.Skin.Init(db.settings.theme)
-	db.icons = db.icons or {}          -- template id -> macro icon fileID chosen by the user
 	-- language: settings.locale ("enUS" / "zhTW") overrides the client's; nil = follow the client
 	if db.settings.locale then ns.ApplyLocale(db.settings.locale) end
 	ns.RelocalizeBuiltins()
@@ -456,53 +567,38 @@ function ns.InitDB()
 			end
 		end
 	end
-	-- a fresh install starts with the set recommended for this class; the
-	-- rest waits in the catalogue (Settings -> Add more built-ins)
-	if not db.seeded then
-		SeedTemplates(db)
-		db.seeded = true
-	end
 	-- knownBuiltins: every built-in this DB has seen; the others show as new
 	-- in the catalogue. Nothing is added to the list behind the user's back.
-	if not db.knownBuiltins then
-		-- a DB from before this bookkeeping existed: it has seen exactly the
-		-- built-ins that shipped up to 1.1.1, whether or not they still exist
-		db.knownBuiltins = {}
-		for _, id in ipairs({ "focus_interrupt", "arena_cc", "cursor", "mouseover_help", "mouseover_harm",
-			"stopcast", "trinket_spell", "set_focus" }) do
-			db.knownBuiltins[id] = true
-		end
-	end
+	db.knownBuiltins = db.knownBuiltins or {}
 	ns.db = db
+	-- 1.8.1: one list per class (see above). The account-wide list of earlier
+	-- versions becomes the source each class migrates from on its first
+	-- login; a class with nothing to migrate starts with its recommended set.
+	if db.templates then
+		db.legacyTemplates, db.legacyIcons = db.templates, db.icons
+		db.templates, db.icons, db.seeded = nil, nil, nil
+	end
+	if db.legacyTemplates then RetireBuiltins(db.legacyTemplates) end
+	db.classes = db.classes or {}
+	local list = db.classes[ns.PlayerClass()]
+	if not list then
+		list = { templates = {}, icons = {} }
+		db.classes[ns.PlayerClass()] = list
+	end
+	ns.list = list
+	if not list.seeded then
+		MigrateList(db, list)
+		SeedTemplates(db, list)
+		list.seeded = true
+	end
+	RetireBuiltins(list.templates)
 	ns.RefreshUneditedBuiltins()
-	-- 1.2.5: FrameSort placeholders renamed (FS enemy -> FSENEMY, FST ally -> FS)
-	if (db.version or 1) < 2 then
-		for _, values in pairs(db.charValues or {}) do
-			local enemy, ally = values.FS, values.FST
-			values.FSENEMY = values.FSENEMY or enemy
-			values.FS = ally
-			values.FST = nil
-			if values.FS and values.FS:find("^Enemy") then values.FS = nil end
-		end
-		for _, values in pairs(db.charValues or {}) do
-			if values.FS == "OtherDPS" then values.FS = "OtherDps" end
-		end
-		db.version = 2
-	end
-	-- 1.3.0: the set-focus announcement no longer names the enemy; a stored
-	-- old default gives way to the new one (an edited message is kept)
-	if db.version < 3 then
-		for _, values in pairs(db.charValues or {}) do
-			if values.MSG == "Focus: %f" then values.MSG = nil end
-		end
-		db.version = 3
-	end
 end
 
-function ns.GetTemplates() return ns.db.templates end
+function ns.GetTemplates() return ns.list.templates end
 
 function ns.FindTemplate(id)
-	for i, t in ipairs(ns.db.templates) do
+	for i, t in ipairs(ns.list.templates) do
 		if t.id == id then return t, i end
 	end
 end
@@ -523,59 +619,19 @@ function ns.AddTemplate(name, desc, body, meta)
 		body = body or "",
 		meta = meta,
 	}
-	ns.db.templates[#ns.db.templates + 1] = t
+	ns.list.templates[#ns.list.templates + 1] = t
 	return t
 end
 
 function ns.DeleteTemplate(id)
 	local _, i = ns.FindTemplate(id)
-	if i then table.remove(ns.db.templates, i) end
+	if i then table.remove(ns.list.templates, i) end
 end
-
--- Bodies shipped by earlier releases, so a 1.0.0 DB (no seedBody yet) can
--- still be recognised as unedited.
-local LEGACY_BODIES = {
-	set_focus = {
-		"/focus [@mouseover,exists][]",                                        -- up to 1.2.3
-		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/p {MSG}",        -- 1.2.4 – 1.2.6
-		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {rt{MARK}} {MSG}",  -- 1.2.7 – 1.2.8
-		"/focus [@mouseover,exists][]\n/tm [@focus] {MARK}\n/mmfocus {MSG} {rt{MARK}}",  -- 1.3.0 dev
-	},
-	trinket_spell = { "#showtooltip {CD}\n/use 13\n/cast {CD}" },                                                  -- up to 1.3.0
-	framesort_kick = { "#showtooltip {INTERRUPT}\n#FrameSort X {FS}\n/cancelaura {CANCEL}\n/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}" },  -- 1.2.0 – 1.2.4
-	framesort_external = { "#showtooltip {EXTERNAL}\n#FrameSort X {FST}\n/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}" },      -- 1.2.3 – 1.2.4
-	framesort_dispel = { "#showtooltip {DISPEL}\n#FrameSort X {FST}\n/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}" },            -- 1.2.3 – 1.2.4
-	focus_interrupt = {
-		"#showtooltip\n/stopcasting\n/cast [@focus,harm,nodead][] {INTERRUPT}",   -- 1.0.0
-		"#showtooltip\n/cast [@focus,harm,nodead][] {INTERRUPT}",                  -- 1.0.1 – 1.2.1
-		"#showtooltip\n/stopcasting\n/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}",  -- 1.2.2 – 1.3.0
-	},
-	arena_cc = { "#showtooltip {CC}\n/cast [@{ARENA}] {CC}" },                                                      -- up to 1.3.0
-	cursor   = { "#showtooltip\n/cast [@cursor] {GROUND}" },                                                        -- up to 1.3.0
-	stopcast = { "#showtooltip\n/stopcasting\n/cast {SPELL}" },                                                     -- up to 1.3.0
-	mouseover_altfocus = { "#showtooltip\n/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}" },   -- 1.3.0 dev
-}
-
--- Names shipped by earlier releases (any locale); a template still carrying
--- one of these gets the current name.
-local LEGACY_NAMES = {
-	focus_interrupt = { "Interrupt: focus, else target", "斷法：有焦點斷焦點，否則斷目標" },
-	arena_cc        = { "Arena: cast on arena1/2/3", "競技場：對 arena1/2/3 施放" },
-	cursor          = { "Ground spell @cursor", "地板技能 @cursor" },
-	mouseover_help  = { "Heal: mouseover > target > self", "治療：滑鼠指向 > 目標 > 自己" },
-	mouseover_harm  = { "Damage: mouseover > target", "傷害：滑鼠指向 > 目標" },
-	stopcast        = { "Stopcasting + cast", "停止施法 + 施放" },
-	trinket_spell   = { "飾品 + 技能" },
-	set_focus       = { "Set focus: mouseover > target", "設定焦點：滑鼠指向 > 目標" },
-}
 
 function ns.RefreshUneditedBuiltins()
 	for _, b in ipairs(ns.builtinTemplates) do
 		local t = ns.FindTemplate(b.id)
 		if t then
-			for _, old in ipairs(LEGACY_NAMES[b.id] or {}) do
-				if t.name == old then t.name = b.name end
-			end
 			-- a name / description the user left as shipped follows the language
 			if t.name ~= b.name and IsShippedText(b.nameKey, t.name) then t.name = b.name end
 			if t.desc ~= b.desc and IsShippedText(b.descKey, t.desc) then t.desc = b.desc end
@@ -583,12 +639,9 @@ function ns.RefreshUneditedBuiltins()
 			-- so always take the shipped version
 			if b.meta then t.meta = CopyMeta(b.meta) end
 		end
+		-- a body still equal to what it was seeded with follows the shipped one
 		if t and t.body ~= b.body then
-			local unedited = (t.seedBody and t.body == t.seedBody)
-			for _, old in ipairs(LEGACY_BODIES[b.id] or {}) do
-				if t.body == old then unedited = true end
-			end
-			if unedited then
+			if t.seedBody and t.body == t.seedBody then
 				t.body, t.seedBody = b.body, b.body
 				t.desc = b.desc
 				if t.name == "" then t.name = b.name end
@@ -622,16 +675,16 @@ function ns.ImportBuiltin(id, overwrite)
 		for k, v in pairs(c) do t[k] = v end
 		return "replaced"
 	end
-	ns.db.templates[#ns.db.templates + 1] = c
+	ns.list.templates[#ns.list.templates + 1] = c
 	ns.db.knownBuiltins[id] = true
 	return "added"
 end
 
--- Throws the whole list away (user templates included) and re-seeds it
+-- Throws this class's list away (user templates included) and re-seeds it
 -- with the class's recommended set.
 function ns.ResetAllTemplates()
-	ns.db.templates = {}
-	SeedTemplates(ns.db)
+	ns.list.templates = {}
+	SeedTemplates(ns.db, ns.list)
 end
 
 -- ---------------------------------------------------------------------------
@@ -653,10 +706,10 @@ local function Unesc(s)
 	end))
 end
 
--- `list` defaults to every template.
+-- `list` defaults to this class's whole list.
 function ns.ExportTemplates(list)
 	local out = { EXPORT_HEADER }
-	for _, t in ipairs(list or ns.db.templates) do
+	for _, t in ipairs(list or ns.list.templates) do
 		out[#out + 1] = ""
 		out[#out + 1] = "[template]"
 		out[#out + 1] = "id=" .. Esc(t.id)
@@ -781,7 +834,7 @@ function ns.ImportTemplates(list, mode)
 				-- from here on, not the built-in's slot
 				t.id, t.builtin, t.seedBody = NewID(), nil, nil
 			end
-			ns.db.templates[#ns.db.templates + 1] = t
+			ns.list.templates[#ns.list.templates + 1] = t
 			added = added + 1
 		end
 	end

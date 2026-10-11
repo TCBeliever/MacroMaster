@@ -82,8 +82,7 @@ end
 -- ---------------------------------------------------------------------------
 
 local macroIcons = {}
-local MC = Constants and Constants.MacroConsts
-local MAX_ACCOUNT = (MC and MC.MAX_ACCOUNT_MACROS) or _G.MAX_ACCOUNT_MACROS or 120
+local MAX_ACCOUNT = Constants.MacroConsts.MAX_ACCOUNT_MACROS
 
 function ns.ScanMacroIcons()
 	wipe(macroIcons)

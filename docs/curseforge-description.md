@@ -20,19 +20,18 @@
 
 ## What's inside
 
-29 templates. A fresh install starts with the eight or so recommended for your class; the rest sit in *Settings → Add more built-ins*, grouped as below.
+23 templates. Each class has its own list, starting with the eight or so recommended for it; the rest sit in *Settings → Add more built-ins*, grouped as below.
 
 **Core**
 
 - **Interrupt**: interrupts your target, hold Shift for your focus. Stops your own cast first.
 - **Cast at cursor**: ground spell where the mouse is, no reticle.
-- **Mouseover damage**: mouseover first, then your target.
+- **Mouseover**: a dropdown on the spell row picks heal, dispel, external, damage or purge; friendly ones go to mouseover, then your target, then yourself, hostile ones to mouseover, then your target.
 - **Stopcast and cast**: fires even mid-cast.
 - **Cancel aura and cast**: act straight out of an immunity or a channel.
 - **Trinket and burst**: trinket slot 13 or 14 and a cooldown in one press. On-use trinkets only.
 - **Self-heal combo**: self-heal > Healthstone > potion, one step per press; restarts after combat.
 - **Modifier switch**: one button, Ctrl and Shift each switch to another spell.
-- **Self-cast**: casts on yourself and leaves your current target alone.
 - **External to focus**: focus first, then your target's target, then your target.
 - **Combat switch**: one spell in combat, another out of it; battle rez and normal rez on one slot, for example.
 - **Cast together**: off-GCD cooldowns and a spell in one press.
@@ -40,21 +39,16 @@
 
 **Healing**
 
-- **Mouseover heal**: mouseover first, then your target, then yourself.
-- **Mouseover dispel**: same order, for a friendly dispel.
-- **Mouseover external**: same order, for an external cooldown.
 - **Hit target's target**: with a tank or ally targeted, hits whatever they are fighting.
 
 **PvP**
 
 - **Arena target**: casts straight at arena1/2/3 without switching targets; *All* makes the three macros at once.
-- **Mouseover purge**: mouseover first, then your target.
 - **Mouseover with Alt focus**: mouseover first, then your target; hold Alt for your focus.
 - **FrameSort interrupt**: focus first, then the frame FrameSort picks, enemy healer by default.
-- **FrameSort external**: mouseover first, then the ally FrameSort picks, your healer by default.
-- **FrameSort dispel**: same as the external, for a dispel.
+- **FrameSort ally**: external or dispel (dropdown); mouseover first, then the ally FrameSort picks, your healer by default.
 
-The three FrameSort templates need the [FrameSort](https://www.curseforge.com/wow/addons/framesort) addon.
+The two FrameSort templates need the [FrameSort](https://www.curseforge.com/wow/addons/framesort) addon.
 
 **Sequence and pet**
 
@@ -69,7 +63,7 @@ Your list is entirely yours: edit, delete, add. A built-in you never edited pick
 
 ## Sharing templates
 
-- **Share**, next to the template name, gives the current template as one string, selected and ready for Ctrl+C. *Settings → Export* gives your whole list as one string, handy as a backup.
+- **Share**, next to the template name, gives the current template as one string, selected and ready for Ctrl+C. *Settings → Export* gives this class's whole list as one string, handy as a backup.
 - **Import** (*Settings → Import*): paste a string, press Import. A template you already have is either replaced or added as a copy; you choose.
 - **Safety.** A macro line can run Lua (`/run`, `/script`), and such a line from a stranger can do anything an addon can. MacroMaster marks such templates in red in the editor and the preview, counts them in the import confirmation, and asks once more, in red, before creating the macro. Your own `/run` templates work as before.
 

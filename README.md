@@ -44,7 +44,7 @@ Tips
 
 ## Built-in templates
 
-29 templates ship with the addon. A fresh install starts with the set recommended for your class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
+23 templates ship with the addon. Each class has its own list, which starts with the set recommended for that class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. The list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
 Most bodies start with a `#showtooltip` line, omitted below. `·` separates macro lines.
 
@@ -54,13 +54,12 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 |---|---|---|
 | Interrupt | Interrupts your target; hold Shift for your focus. Stops casting first. | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead,mod:shift][] {INTERRUPT}` |
 | Cast at cursor | Ground-targeted spell at the cursor, no reticle. | `/cancelaura {CANCEL}` · `/cast [@cursor] {GROUND}` |
-| Mouseover damage | Hostile spell on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {HARM}` |
+| Mouseover | A dropdown on the spell row picks what the slot takes. Heal, dispel or external: mouseover, else target, else yourself. Damage or purge: mouseover, else target. | `/cast [@mouseover,help,nodead][help,nodead][@player] {MO}` or `/cast [@mouseover,harm,nodead][] {MO}` |
 | Stopcast and cast | Cancels the current cast, then casts. | `/stopcasting` · `/cancelaura {CANCEL}` · `/cast {SPELL}` |
 | Cancel aura and cast | Drops an immunity or a channel (Ice Block, Aspect of the Turtle, Deep Breath...), then casts. | `/cancelaura {AURA}` · `/cast {SPELL}` |
 | Trinket and burst | A trinket (slot 13 or 14) and a cooldown in one press. | `/use {TRINKET}` · `/cast {CD}` |
 | Self-heal combo | Self-heal, then Healthstone, then potion; one step per press, restarts after combat. | `/stopcasting` · `/castsequence [@player] reset=combat {SELFHEAL}, {HEALTHSTONE}, {POTION}` |
 | Modifier switch | One button, up to three spells; Ctrl and Shift each pick another. | `/cast [mod:ctrl] {CTRL}; [mod:shift] {SHIFT}; {SPELL}` |
-| Self-cast | Casts on yourself whatever you target. | `/cast [@player] {SPELL}` |
 | External to focus | Misdirection, Tricks or a blessing to your focus, else your target's target, else your target. | `/cast [@focus,help,nodead][@targettarget,help,nodead][] {EXTERNAL}` |
 | Combat switch | One spell in combat, another out of it (Rebirth / Revive). | `/cast [combat] {INCOMBAT}; {SPELL}` |
 | Cast together | Off-GCD cooldowns and a spell in one press. | `/cast {CD}` · `/cast {CD_2}` · `/cast {SPELL}` |
@@ -70,9 +69,6 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 
 | Template | What it does | Body |
 |---|---|---|
-| Mouseover heal | Friendly spell on mouseover, else target, else yourself. | `/cast [@mouseover,help,nodead][help,nodead][@player] {HEAL}` |
-| Mouseover dispel | Friendly dispel with the same fallbacks. | `/cast [@mouseover,help,nodead][help,nodead][@player] {DISPEL}` |
-| Mouseover external | External cooldown with the same fallbacks. | `/cast [@mouseover,help,nodead][help,nodead][@player] {EXTERNAL}` |
 | Hit target's target | Hit what your tank or friend is fighting without retargeting. | `/cast [@targettarget,harm,nodead][] {HARM}` |
 
 ### PvP
@@ -80,11 +76,9 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Template | What it does | Body |
 |---|---|---|
 | Arena target | Casts on a fixed arena slot without changing your target. *All* makes three macros. | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
-| Mouseover purge | Offensive dispel on mouseover, else target. | `/cast [@mouseover,harm,nodead][] {PURGE}` |
 | Mouseover with Alt focus | Hostile spell on mouseover, else target; hold Alt for your focus. | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
 | FrameSort interrupt | Interrupts your focus, else the frame [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (enemy healer by default). | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
-| FrameSort ally external | External on mouseover, else the ally FrameSort resolves (your healer by default). | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {EXTERNAL}` |
-| FrameSort ally dispel | Dispel with the same FrameSort fallback. | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {DISPEL}` |
+| FrameSort ally | External or dispel (dropdown on the row) on mouseover, else the ally [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (your healer by default). | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {FSALLY}` |
 
 ### Sequence and pet
 
@@ -118,6 +112,7 @@ Anything in braces is a placeholder: `{INTERRUPT}`, `{地板技能}`, any name y
 | `{MARK}` `{MSG}` | a raid marker; an announcement text (`%f` focus name, `%t` target name) |
 | `{FS}` `{FSENEMY}` | the ally or enemy frame FrameSort should resolve (Healer, OtherDps, EnemyHealer...) |
 | `{TRINKET}` `{RESET}` `{CTRL}` `{SHIFT}` `{INCOMBAT}` | trinket slot 13 or 14; a `castsequence` reset rule; the spells of the modifier and combat templates |
+| `{MO}` `{FSALLY}` | the slot of the mouseover and FrameSort ally templates; the dropdown on its row (heal, dispel, external, damage, purge) picks the suggestions, and for `{MO}` the conditions |
 | `{REVIVE}` `{CALLPET}` `{MENDPET}` `{FEIGN}` `{PLAYDEAD}` | the hunter templates' spells (Revive Pet, Call Pet 1, Mend Pet, Feign Death, Play Dead), pre-filled |
 
 Aliases: `KICK` = INTERRUPT, `CD` = BURST, `DEF` = DEFENSIVE, `MOVE` = MOVEMENT, `AOE` = GROUND, `CLEANSE` = DISPEL, `EXT` = EXTERNAL, `AURA` / `CANCEL` = CANCELAURA, `HEALPOT` = POTION.
@@ -128,7 +123,7 @@ How empty placeholders behave: an *optional* one drops its whole line; one insid
 
 ## Sharing templates
 
-- **Share** next to the template name gives the current template as one string, `!MM1!...`, selected and ready for Ctrl+C. *Settings → Export* gives all your templates as one string, handy as a backup.
+- **Share** next to the template name gives the current template as one string, `!MM1!...`, selected and ready for Ctrl+C. *Settings → Export* gives this class's whole list as one string, handy as a backup or for moving templates to another class.
 - *Settings → Import*: paste a string (or an older plain-text export) and press *Import*. The **Same id** choice decides what happens to a template you already have: *Replace* overwrites your copy (restoring a backup), *Add new* adds it next to yours (keeping your version).
 - **Safety.** A macro line can run Lua (`/run`, `/script`, `/dump`, `/console`), and such a line from a stranger can do anything an addon can. MacroMaster flags such templates in red under the editor and in the preview, the import confirmation counts them, and creating the macro asks for a red confirmation that lists the code lines. Your own `/run` templates work as before. Import only from people you trust.
 
@@ -138,10 +133,10 @@ The *Settings* tab holds:
 
 - **Language**: auto, English or 繁體中文, applied after a UI reload. Built-in names and descriptions you never edited follow the language.
 - **Theme**: *Classic*, the look the game draws (the default), or *Modern: Tide* (blue) and *Modern: Dusk* (violet), flat panels drawn by the addon itself; the modern look is in beta. Classic and Modern swap after a UI reload, Tide and Dusk at once.
-- **Add more built-ins**: the catalogue of shipped templates. *Add* puts the selected one in your list, *Add all* takes everything on the current tab you do not have yet, a copy you already have can be overwritten with the default, and *Reset all to defaults* returns to your class's recommended set.
+- **Add more built-ins**: the catalogue of shipped templates. *Add* puts the selected one in your list, *Add all* takes everything on the current tab you do not have yet, a copy you already have can be overwritten with the default, and *Reset all to defaults* returns this class's list to its recommended set.
 - **Export** and **Import**: see above.
 
-Macro scope (account or character) and *Pick up after creating* are remembered. Templates, the values you filled in per character, chosen icons and spell-table edits live in `MacroMasterDB` (account-wide SavedVariables).
+Macro scope (account or character) and *Pick up after creating* are remembered. Templates and chosen icons are kept per class, the values you filled in per character; all of it, with the spell-table edits, lives in `MacroMasterDB` (account-wide SavedVariables). Characters of one class share a list. On each class's first login after 1.8.1, the old account-wide list hands over your own templates, built-ins you edited and the unedited built-ins that fit the class.
 
 ## Slash commands
 
