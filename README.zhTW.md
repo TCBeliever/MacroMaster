@@ -160,4 +160,4 @@
 
 ## 授權
 
-MIT，見 [LICENSE](LICENSE)。內附函式庫：[LibDeflate](https://github.com/SafeteeWoW/LibDeflate)（zlib 授權）與 LibStub（公有領域）。FrameSort 系列模板使用 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 插件的 `#FrameSort` 指令。
+保留所有權利，見 [LICENSE](LICENSE)。可以在 GitHub 上 fork 與修改；其他用途請先詢問。內附函式庫：[LibDeflate](https://github.com/SafeteeWoW/LibDeflate)（zlib 授權）與 LibStub（公有領域）。FrameSort 系列模板使用 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 插件的 `#FrameSort` 指令。

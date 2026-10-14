@@ -4,7 +4,7 @@
 
 [繁體中文](README.zhTW.md) · [CurseForge](https://www.curseforge.com/wow/addons/macromaster) · [Report a bug](https://github.com/TCBeliever/MacroMaster/issues) · [Changelog](CHANGELOG.md)
 
-![CurseForge downloads](https://cf.way2muchnoise.eu/1690683.svg) ![Game version](https://cf.way2muchnoise.eu/versions/1690683.svg) ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
+![CurseForge downloads](https://cf.way2muchnoise.eu/1690683.svg) ![Game version](https://cf.way2muchnoise.eu/versions/1690683.svg) ![License: All Rights Reserved](https://img.shields.io/badge/license-All%20Rights%20Reserved-lightgrey.svg)
 
 Makes writing macros as easy as picking a spell. Choose a proven template (mouseover heal, focus interrupt, arena target, cancel aura, cast sequence), fill in your own spells, create. Turn any macro into a template and share it as a string.
 
@@ -184,4 +184,4 @@ MacroMaster/
 
 ## Credits and license
 
-MIT, see [LICENSE](LICENSE). Bundled libraries: [LibDeflate](https://github.com/SafeteeWoW/LibDeflate) by SafeteeWoW (zlib licence) and LibStub (public domain). The FrameSort templates target the `#FrameSort` directive of the [FrameSort](https://www.curseforge.com/wow/addons/framesort) addon.
+All rights reserved, see [LICENSE](LICENSE). Fork and modify on GitHub as you like; ask about anything else. Bundled libraries: [LibDeflate](https://github.com/SafeteeWoW/LibDeflate) by SafeteeWoW (zlib licence) and LibStub (public domain). The FrameSort templates target the `#FrameSort` directive of the [FrameSort](https://www.curseforge.com/wow/addons/framesort) addon.

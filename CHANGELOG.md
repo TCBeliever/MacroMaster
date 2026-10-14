@@ -146,3 +146,8 @@
 - **One mouseover template.** *Mouseover* replaces the five mouseover heal / dispel / external / damage / purge templates: a dropdown on the spell row picks what the slot takes, and with it the suggestions and the conditions (friendly: mouseover, target, yourself; hostile: mouseover, target). *FrameSort ally* replaces the FrameSort external and dispel pair the same way. *Self-cast* is gone. An unedited copy of a replaced template becomes the new one in its place; an edited copy stays as your own template. 23 built-ins now.
 - **繁體中文 names use the macro's own words**: interrupt, cursor 地板技, cancelaura + cast, burst + trinket, 設定 focus, arena123, targettarget, castsequence 序列, 多 cast 合併... Copies you never renamed follow.
 - **Housekeeping.** A database last saved by a release before 1.5.1 (all of them from the first week, September 2026) is no longer migrated: FrameSort values from 1.2.x, the old focus message, built-in copies from before per-template seed bodies. Fallbacks for pre-12.x client APIs are gone; the addon only loads on 12.1.
+
+## 1.8.2 (2026-10-14)
+
+- **Game version 12.1.5.** The addon is marked for the 12.1.5 client, so it no longer shows as out of date.
+- **Licence.** MacroMaster is now All Rights Reserved instead of MIT: fork and modify it on GitHub for your own use and to send changes back; ask the author before redistributing it, bundling it in another addon or pack, or selling it. Bundled libraries keep their own licences.

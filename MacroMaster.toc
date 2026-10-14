@@ -1,13 +1,13 @@
-## Interface: 120100
+## Interface: 120105
 ## Title: |cff66ccffMacro|rMaster
 ## Notes: Makes writing macros as easy as picking a spell. Choose a proven template (mouseover heal, focus interrupt, arena target, cancel aura, cast sequence), fill in your own spells, create. Turn any macro into a template and share it as a string.
 ## Notes-zhTW: 寫巨集變得像選技能一樣簡單。選一個驗證過的模板（滑鼠指向治療、焦點斷法、競技場目標、取消光環、施法序列），填入自己的技能，建立。任何巨集都能存成模板，模板可以用一串字分享。
 ## Author: Venser
-## Version: 1.8.1
+## Version: 1.8.2
 ## SavedVariables: MacroMasterDB
 ## IconTexture: Interface\Icons\INV_Misc_Note_06
 ## Category: venMOD
-## X-License: MIT
+## X-License: All Rights Reserved: you are free to fork and modify on GitHub, please ask about anything else.
 ## X-Curse-Project-ID: 1690683
 
 Libs\LibStub\LibStub.lua
