@@ -38,13 +38,13 @@ Tips
 - The preview shows the finished macro and its character count. Red means it is over Blizzard's 255.
 - The icon button left of the macro name picks an icon one of your existing macros already uses; right-click returns to the question mark. With `#showtooltip` the game shows the spell's icon anyway.
 - A macro with the same name is overwritten only after you confirm.
-- *All* on the arena placeholder creates `Name1`, `Name2` and `Name3` in one click.
+- *All* on the arena or party placeholder creates `Name1`, `Name2` and `Name3` in one click.
 - Untick *Pick up after creating* and the macro window opens instead, so you can drag the macro from there.
 - *Import* under the template list turns one of your existing macros into a template; so does *Save as template* under Blizzard's macro window. Spell and item names become `{INTERRUPT}`, `{HEAL}`, `{POTION}`... when the spell table knows them, `{SPELL}` or `{ITEM}` otherwise (`{SPELL_2}` for a second one).
 
 ## Built-in templates
 
-23 templates ship with the addon. Each class has its own list, which starts with the set recommended for that class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. The list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
+24 templates ship with the addon. Each class has its own list, which starts with the set recommended for that class (about eight); the rest wait in *Settings → Add more built-ins*, grouped by category, with what fits your class listed first. The list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
 Most bodies start with a `#showtooltip` line, omitted below. `·` separates macro lines.
 
@@ -76,6 +76,7 @@ Most bodies start with a `#showtooltip` line, omitted below. `·` separates macr
 | Template | What it does | Body |
 |---|---|---|
 | Arena target | Casts on a fixed arena slot without changing your target. *All* makes three macros. | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
+| Party target | The same on a fixed party slot: external, dispel or heal (dropdown on the row). *All* makes three macros. | `/cancelaura {CANCEL}` · `/cast [@{PARTY}] {ALLY}` |
 | Mouseover with Alt focus | Hostile spell on mouseover, else target; hold Alt for your focus. | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
 | FrameSort interrupt | Interrupts your focus, else the frame [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (enemy healer by default). | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
 | FrameSort ally | External or dispel (dropdown on the row) on mouseover, else the ally [FrameSort](https://www.curseforge.com/wow/addons/framesort) resolves (your healer by default). | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {FSALLY}` |
@@ -108,11 +109,11 @@ Anything in braces is a placeholder: `{INTERRUPT}`, `{地板技能}`, any name y
 | `{SELFHEAL}` | an instant self-heal (Renewal, Exhilaration, Word of Glory...) |
 | `{AURA}` `{CANCEL}` | an aura to `/cancelaura`: Ice Block, Aspect of the Turtle, Deep Breath, Ghost Wolf... |
 | `{HEALTHSTONE}` `{POTION}` `{ITEM}` | items from your bags; a Healthstone and the strongest healing potion you carry are pre-filled |
-| `{ARENA}` | arena1, arena2, arena3, or *All* for one macro per slot |
+| `{ARENA}` `{PARTY}` | arena1, arena2, arena3 / party1, party2, party3, or *All* for one macro per slot |
 | `{MARK}` `{MSG}` | a raid marker; an announcement text (`%f` focus name, `%t` target name) |
 | `{FS}` `{FSENEMY}` | the ally or enemy frame FrameSort should resolve (Healer, OtherDps, EnemyHealer...) |
 | `{TRINKET}` `{RESET}` `{CTRL}` `{SHIFT}` `{INCOMBAT}` | trinket slot 13 or 14; a `castsequence` reset rule; the spells of the modifier and combat templates |
-| `{MO}` `{FSALLY}` | the slot of the mouseover and FrameSort ally templates; the dropdown on its row (heal, dispel, external, damage, purge) picks the suggestions, and for `{MO}` the conditions |
+| `{MO}` `{FSALLY}` `{ALLY}` | the slot of the mouseover, FrameSort ally and party target templates; the dropdown on its row (heal, dispel, external, damage, purge) picks the suggestions, and for `{MO}` the conditions |
 | `{REVIVE}` `{CALLPET}` `{MENDPET}` `{FEIGN}` `{PLAYDEAD}` | the hunter templates' spells (Revive Pet, Call Pet 1, Mend Pet, Feign Death, Play Dead), pre-filled |
 
 Aliases: `KICK` = INTERRUPT, `CD` = BURST, `DEF` = DEFENSIVE, `MOVE` = MOVEMENT, `AOE` = GROUND, `CLEANSE` = DISPEL, `EXT` = EXTERNAL, `AURA` / `CANCEL` = CANCELAURA, `HEALPOT` = POTION.

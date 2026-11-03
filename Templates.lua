@@ -102,6 +102,19 @@ ns.builtinTemplates = {
 			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
 		}),
 
+	-- The same on party1/2/3; the kind on the spell row picks the suggestions.
+	B("party_help", "T_PARTY_HELP", "T_PARTY_HELP_D",
+		"#showtooltip {ALLY}\n/cancelaura {CANCEL}\n/cast [@{PARTY}] {ALLY}",
+		{
+			ALLY      = PX("P_SPELL", "P_SPELL_H", { kinds = {
+				{ id = "EXTERNAL", labelKey = "CAT_EXTERNAL", category = "EXTERNAL" },
+				{ id = "DISPEL",   labelKey = "CAT_DISPEL",   category = "DISPEL" },
+				{ id = "HEAL",     labelKey = "CAT_HEAL",     category = "HEAL" },
+			} }),
+			PARTY     = P("P_PARTY", "P_PARTY_H", { "party1", "party2", "party3" }, true, { "1", "2", "3" }),
+			CANCEL    = PX("P_CANCEL", "P_CANCEL_H", { optional = true }),
+		}),
+
 	B("cursor", "T_CURSOR", "T_CURSOR_D",
 		"#showtooltip {GROUND}\n/cancelaura {CANCEL}\n/cast [@cursor] {GROUND}",
 		{
@@ -274,7 +287,7 @@ local CATEGORY = {
 	selfheal = "CORE", mod2 = "CORE", focus_external = "CORE", combat_switch = "CORE", cancel_cast = "CORE",
 	set_focus = "CORE", cast_together = "CORE",
 	targettarget = "HEAL",
-	arena_cc = "PVP", framesort_kick = "PVP", framesort_ally = "PVP", mouseover_altfocus = "PVP",
+	arena_cc = "PVP", party_help = "PVP", framesort_kick = "PVP", framesort_ally = "PVP", mouseover_altfocus = "PVP",
 	sequence = "SEQ", once_per_target = "SEQ",
 	petattack = "PET", misdirect_pet = "PET", pet_care = "PET", feign_playdead = "PET",
 }

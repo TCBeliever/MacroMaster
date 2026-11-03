@@ -20,7 +20,7 @@
 
 ## What's inside
 
-23 templates. Each class has its own list, starting with the eight or so recommended for it; the rest sit in *Settings → Add more built-ins*, grouped as below.
+24 templates. Each class has its own list, starting with the eight or so recommended for it; the rest sit in *Settings → Add more built-ins*, grouped as below.
 
 **Core**
 
@@ -44,6 +44,7 @@
 **PvP**
 
 - **Arena target**: casts straight at arena1/2/3 without switching targets; *All* makes the three macros at once.
+- **Party target**: the same on party1/2/3, for an external, dispel or heal (dropdown).
 - **Mouseover with Alt focus**: mouseover first, then your target; hold Alt for your focus.
 - **FrameSort interrupt**: focus first, then the frame FrameSort picks, enemy healer by default.
 - **FrameSort ally**: external or dispel (dropdown); mouseover first, then the ally FrameSort picks, your healer by default.

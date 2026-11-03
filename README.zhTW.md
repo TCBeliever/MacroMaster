@@ -36,13 +36,13 @@
 - 預覽區顯示完成後的巨集和字數，紅色代表超過暴雪的 255 字上限。
 - 巨集名稱左邊的圖示按鈕可以選一個你現有巨集已在用的圖示，右鍵還原成問號。有 `#showtooltip` 時遊戲本來就會顯示技能圖示。
 - 同名巨集會先問你，確認後才覆蓋。
-- 競技場佔位符選「全部」會一次建立 `名稱1`、`名稱2`、`名稱3`。
+- 競技場或隊伍佔位符選「全部」會一次建立 `名稱1`、`名稱2`、`名稱3`。
 - 取消「建立後拾取到游標」時會改開巨集視窗，讓你自己拖。
 - 清單下方的「匯入」能把你現有的巨集轉成模板；暴雪巨集視窗下方的「存成模板」也一樣。技能與物品名稱會依技能表變成 `{INTERRUPT}`、`{HEAL}`、`{POTION}`…，不認得的變成 `{SPELL}` 或 `{ITEM}`（第二個是 `{SPELL_2}`）。
 
 ## 內建模板
 
-內附 23 個模板。每個職業各有一份清單，一開始只有該職業的推薦組（約八個），其餘在「設定 → 加入其他內建模板」依分類列出，適合你職業的排前面。清單完全是你的：改、刪、加都可以。沒改過的內建模板更新時會自動跟上新版，改過的不動。
+內附 24 個模板。每個職業各有一份清單，一開始只有該職業的推薦組（約八個），其餘在「設定 → 加入其他內建模板」依分類列出，適合你職業的排前面。清單完全是你的：改、刪、加都可以。沒改過的內建模板更新時會自動跟上新版，改過的不動。
 
 大多數模板第一行是 `#showtooltip`，下表省略；`·` 分隔巨集的行。
 
@@ -74,6 +74,7 @@
 | 模板 | 用途 | 內容 |
 |---|---|---|
 | arena123 | 不切目標，直接對固定的競技場欄位施放；選「全部」一次做三個。 | `/cancelaura {CANCEL}` · `/cast [@{ARENA}] {CC}` |
+| party123 | 同上，對固定的隊伍欄位施放外援、驅散或治療（列上的下拉選）；選「全部」一次做三個。 | `/cancelaura {CANCEL}` · `/cast [@{PARTY}] {ALLY}` |
 | mouseover, Alt = focus | 敵對技能打滑鼠指向，沒有就打目標；按住 Alt 改打焦點。 | `/cancelaura {CANCEL}` · `/cast [mod:alt,@focus,harm,nodead][@mouseover,harm,nodead][] {HARM}` |
 | FrameSort interrupt | 打斷焦點，沒有就打斷 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 解析的框架（預設敵方補師）。 | `#FrameSort X {FSENEMY}` · `/cancelaura {CANCEL}` · `/cast [@focus,harm,nodead][@none,harm,nodead] {INTERRUPT}` |
 | FrameSort 隊友 | 外援或驅散（列上的下拉選）：優先給滑鼠指向，其次 [FrameSort](https://www.curseforge.com/wow/addons/framesort) 決定的隊友（預設補師）。 | `#FrameSort X {FS}` · `/cast [@mouseover,help,nodead][@none,help,nodead] {FSALLY}` |
@@ -106,11 +107,11 @@
 | `{SELFHEAL}` | 瞬發自療（復甦、振奮、榮耀聖言…） |
 | `{AURA}` `{CANCEL}` | 要 `/cancelaura` 的光環：寒冰屏障、巨龜守護、深層吐息、幽魂之狼… |
 | `{HEALTHSTONE}` `{POTION}` `{ITEM}` | 背包裡的物品；治療石和身上最強的治療藥水會自動填好 |
-| `{ARENA}` | arena1、arena2、arena3，或「全部」一個欄位一個巨集 |
+| `{ARENA}` `{PARTY}` | arena1、arena2、arena3／party1、party2、party3，或「全部」一個欄位一個巨集 |
 | `{MARK}` `{MSG}` | 團隊標記；喊話文字（`%f` 焦點名、`%t` 目標名） |
 | `{FS}` `{FSENEMY}` | FrameSort 要解析的隊友或敵方框架（Healer、OtherDps、EnemyHealer…） |
 | `{TRINKET}` `{RESET}` `{CTRL}` `{SHIFT}` `{INCOMBAT}` | 飾品 13 或 14 格；`castsequence` 的重置條件；修飾鍵與戰鬥模板裡的技能 |
-| `{MO}` `{FSALLY}` | mouseover 與 FrameSort 隊友模板的那一格；列上的下拉（治療、驅散、外援、傷害、purge）決定建議清單，`{MO}` 的還決定條件式 |
+| `{MO}` `{FSALLY}` `{ALLY}` | mouseover、FrameSort 隊友與 party123 模板的那一格；列上的下拉（治療、驅散、外援、傷害、purge）決定建議清單，`{MO}` 的還決定條件式 |
 | `{REVIVE}` `{CALLPET}` `{MENDPET}` `{FEIGN}` `{PLAYDEAD}` | 獵人模板裡的技能（復活寵物、召喚寵物 1、治療寵物、假死、裝死），已自動填好 |
 
 別名：`KICK` = INTERRUPT、`CD` = BURST、`DEF` = DEFENSIVE、`MOVE` = MOVEMENT、`AOE` = GROUND、`CLEANSE` = DISPEL、`EXT` = EXTERNAL、`AURA`／`CANCEL` = CANCELAURA、`HEALPOT` = POTION。

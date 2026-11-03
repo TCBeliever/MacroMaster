@@ -56,6 +56,7 @@ local function VariableDocs()
 		{ "MOVEMENT",  L["CAT_MOVEMENT"],  "MOVEMENT" },
 		{ "SPELL",     L["P_SPELL_H"],     nil },
 		{ "ARENA",     L["P_ARENA_H"],     nil, L["VAR_ARENA_D"] },
+		{ "PARTY",     L["P_PARTY_H"],     nil, L["VAR_PARTY_D"] },
 		{ "DISPEL",    L["P_DISPEL_H"],    "DISPEL" },
 		{ "PURGE",     L["P_PURGE_H"],     "PURGE" },
 		{ "EXTERNAL",  L["P_EXTERNAL_H"],  "EXTERNAL" },
