@@ -20,45 +20,14 @@
 
 ## What's inside
 
-24 templates. Each class has its own list, starting with the eight or so recommended for it; the rest sit in *Settings → Add more built-ins*, grouped as below.
+Templates for the macros most players end up writing:
 
-**Core**
+- **Where the spell goes**: mouseover, focus, cursor, your target's target, a fixed arena or party slot.
+- **Getting the press through**: stop your own cast, or cancel an immunity or a channel first.
+- **One button, several spells**: modifier keys, in or out of combat, cast sequences, cooldowns together.
+- **Class extras**: hunter pet care and misdirection, pet attack and cast.
 
-- **Interrupt**: interrupts your target, hold Shift for your focus. Stops your own cast first.
-- **Cast at cursor**: ground spell where the mouse is, no reticle.
-- **Mouseover**: a dropdown on the spell row picks heal, dispel, external, damage or purge; friendly ones go to mouseover, then your target, then yourself, hostile ones to mouseover, then your target.
-- **Stopcast and cast**: fires even mid-cast.
-- **Cancel aura and cast**: act straight out of an immunity or a channel.
-- **Trinket and burst**: trinket slot 13 or 14 and a cooldown in one press. On-use trinkets only.
-- **Self-heal combo**: self-heal > Healthstone > potion, one step per press; restarts after combat.
-- **Modifier switch**: one button, Ctrl and Shift each switch to another spell.
-- **External to focus**: focus first, then your target's target, then your target.
-- **Combat switch**: one spell in combat, another out of it; battle rez and normal rez on one slot, for example.
-- **Cast together**: off-GCD cooldowns and a spell in one press.
-- **Set focus**: focus, mark, tell the group; no repeat for the same focus.
-
-**Healing**
-
-- **Hit target's target**: with a tank or ally targeted, hits whatever they are fighting.
-
-**PvP**
-
-- **Arena target**: casts straight at arena1/2/3 without switching targets; *All* makes the three macros at once.
-- **Party target**: the same on party1/2/3, for an external, dispel or heal (dropdown).
-- **Mouseover with Alt focus**: mouseover first, then your target; hold Alt for your focus.
-- **FrameSort interrupt**: focus first, then the frame FrameSort picks, enemy healer by default.
-- **FrameSort ally**: external or dispel (dropdown); mouseover first, then the ally FrameSort picks, your healer by default.
-
-The two FrameSort templates need the [FrameSort](https://www.curseforge.com/wow/addons/framesort) addon.
-
-**Sequence and pet**
-
-- **Spell sequence**: two or three spells in order, one per press; you choose when it restarts.
-- **Once per target**: fires again only after a target switch or leaving combat.
-- **Pet attack and cast**: the pet attacks your target while you cast.
-- **Misdirect to focus or pet** (hunter): focus first, then your pet, then your target's target, then your target.
-- **Pet care** (hunter): revives a dead pet, calls one when none is out, mends it otherwise. Comes filled in.
-- **Feign Death and Play Dead** (hunter): you and your pet drop combat together.
+Each class has its own list, starting with the templates recommended for it; the rest sit in *Settings → Add more built-ins*, grouped into Core, Healing, PvP, Sequence and Pet, with what fits your class listed first. A few PvP templates use the [FrameSort](https://www.curseforge.com/wow/addons/framesort) addon.
 
 Your list is entirely yours: edit, delete, add. A built-in you never edited picks up improvements on update; one you edited is left alone.
 
@@ -91,7 +60,7 @@ Templates of your own are welcome in the comments here: paste the string.
 
 ## Links
 
-- [Full documentation](https://github.com/TCBeliever/MacroMaster#readme): every placeholder and its category, the spell table, writing your own templates.
+- [Full documentation](https://github.com/TCBeliever/MacroMaster#readme): every template and placeholder, the spell table, writing your own templates.
 - [Bug reports and ideas](https://github.com/TCBeliever/MacroMaster/issues), or the comments here. Include the Lua error text if there is one.
 - Translations welcome: English and 繁體中文 so far, see [Locales.lua](https://github.com/TCBeliever/MacroMaster/blob/main/Locales.lua).
 
