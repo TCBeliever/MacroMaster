@@ -152,6 +152,6 @@
 - **Game version 12.1.5.** The addon is marked for the 12.1.5 client, so it no longer shows as out of date.
 - **Licence.** MacroMaster is now All Rights Reserved instead of MIT: fork and modify it on GitHub for your own use and to send changes back; ask the author before redistributing it, bundling it in another addon or pack, or selling it. Bundled libraries keep their own licences.
 
-## Unreleased
+## 1.8.3 (2026-11-03)
 
 - **Party target** (繁中 party123) under PvP: Arena target for your own side. Casts at party1/2/3 without switching targets, *All* makes the three macros at once, and a dropdown on the spell row picks external, dispel or heal for the suggestions. 24 built-ins now.
